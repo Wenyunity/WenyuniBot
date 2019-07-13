@@ -1,0 +1,4 @@
+{
+	"help": "This is the help command. Use **WY!help** to get a list of all commands.",
+	"choose": "Chooses between arguments separated by spaces. For example, WY!choose 1 2 3 will choose between 1, 2, and 3."
+}
