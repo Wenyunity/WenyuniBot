@@ -1,4 +1,5 @@
 const Discord = require('discord.io');
+const DiscordJS = require('discord.js');
 const logger = require('winston');
 const auth = require('./auth.json');
 const helpText = require('./help.json');
@@ -26,7 +27,7 @@ bot.on('ready', function (evt) {
 bot.on('message', function (user, userID, channelID, message, evt) {
     // It will listen for messages that will start with `WY!`
 	// Except for those that came from the bot itself.
-    if (message.substring(0, 3) == 'WY!' && userID != bot.id) {
+    if ((message.substring(0, 3) == 'WY!' || message.substring(0, 3) == 'wy!') && userID != bot.id) {
 		// Get rid of WY!
         let args = message.substring(3).split(' ');
 		// Find the main command
@@ -46,10 +47,19 @@ bot.on('message', function (user, userID, channelID, message, evt) {
 			case 'waluigi':
 			case 'Waluigi':
 			case 'WALUIGI':
-                bot.sendMessage({
-                    to: channelID,
-                    message: "WALUIGI"
-                });
+				let luigiRoll = Math.random()
+				if (luigiRoll < 0.1) {
+					bot.sendMessage({
+						to: channelID,
+						message: "Oh yeah! Luigi time!"
+					});
+				}
+				else {
+				    bot.sendMessage({
+						to: channelID,
+						message: "WALUIGI"
+					});
+				};
 				break;
 			// help
 			case 'help':
@@ -57,6 +67,9 @@ bot.on('message', function (user, userID, channelID, message, evt) {
 				break;
 			case 'choose':
 				chooseCommand(commandArgs, channelID)
+				break;
+			case 'random':
+				randomCommand(commandArgs, channelID)
 				break;
 			default:
 				bot.sendMessage({                    
@@ -71,18 +84,56 @@ bot.on('message', function (user, userID, channelID, message, evt) {
 
 // For help
 function helpCommand(commandArgs, channelID) {
-	// Probably should be replaced by a dictionary
+	// Replaced by a dictionary
 	if (commandArgs.length > 0) {
+		foundCommand = false;
+		for (x in helpText) {
+			if (commandArgs[0] in helpText[x]) {
+				bot.sendMessage({                    
+					to: channelID,
+					message: helpText[x][commandArgs[0]]
+				});
+				foundCommand = true;
+			}
+		}
+		if (!foundCommand) {
 		bot.sendMessage({                    
 			to: channelID,
-			message: helpText[commandArgs[0]] || "Command not found!"
+			message: "Command not found!"
 		});
+		}
 	}
 	// Generic command if no arguments given
 	else {
+		// Create list of all commands
+		let messageSend = "List of Commands:\r\n`";
+		messageSend = messageSend + "`";
+		let currentDate = new Date()
+		const helpEmbed = new DiscordJS.RichEmbed()
+			.setColor('#DECADE')
+			.setTitle('Wenyunity Help')
+			.setAuthor('WenyuniBot')
+			.setDescription("Wenyunibot is here to list all of the commands!")
+			.setFooter('WenyuniBot thinks today is: ' + currentDate.getFullYear()+'/'+(currentDate.getMonth()+1)+'/'+currentDate.getDate())
+			for (x in helpText) {
+				desc = ""
+				for (y in helpText[x]) {
+					desc = desc + " - " + y
+				}
+				desc = desc + " - "
+				helpEmbed.addField(x, desc)
+			};
+			//.setThumbnail('https://i.imgur.com/wSTFkRM.png')
+
+			//.addBlankField()
+			//.addField('Inline field title', 'Some value here', true)
+			//.addField('Inline field title', 'Some value here', true)
+			//.addField('Inline field title', 'Some value here', true)
+			//.setImage('https://i.imgur.com/wSTFkRM.png')
+			//.setTimestamp()
 		bot.sendMessage({                    
 			to: channelID,
-			message: "List of commands would go here! Unfortunately that's not quite done yet!"
+			embed: helpEmbed
 		});
 	}
 }
@@ -101,10 +152,17 @@ function chooseCommand(commandArgs, channelID) {
 		});
 	}
 	else {
-		randomNumber = Math.floor(Math.random() * (commandArgs.length + 1))
+		randomNumber = Math.floor(Math.random() * (commandArgs.length))
 		bot.sendMessage({                    
 			to: channelID,
 			message: "I choose " + commandArgs[randomNumber]
 		});
 	}
+}
+
+function randomCommand(commandArgs, channelID) {
+		bot.sendMessage({                    
+			to: channelID,
+			message: "Here's the random number: " + Math.toString(Math.random())
+		});
 }

@@ -1,4 +1,14 @@
 {
-	"help": "This is the help command. Use **WY!help** to get a list of all commands.",
-	"choose": "Chooses between arguments separated by spaces. For example, WY!choose 1 2 3 will choose between 1, 2, and 3."
+	"basic": 
+	{
+		"help": "This is the help command. Use **WY!help** to get a list of all commands.",
+		"choose": "Chooses between arguments separated by spaces. For example, WY!choose 1 2 3 will choose between 1, 2, and 3.",
+		"random": "Chooses a random number between 0 and 1"
+	},
+	"Wah":
+	{
+	"waluigi": "Most likely screams WALUIGI at you. Not an easter egg. \r\nYou may get screamed at using Waluigi or WALUIGI or waluigi",
+	"Waluigi": "Most likely screams WALUIGI at you. Not an easter egg. \r\nYou may get screamed at using Waluigi or WALUIGI or waluigi",
+	"WALUIGI": "Most likely screams WALUIGI at you. Not an easter egg. \r\nYou may get screamed at using Waluigi or WALUIGI or waluigi"
+	}
 }
