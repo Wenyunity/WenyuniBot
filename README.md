@@ -1,2 +1,3 @@
 # WenyuniBot
-Discord Bot written in JS
+
+Wenyunity's Discord Bot written in JS.
