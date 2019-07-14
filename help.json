@@ -2,8 +2,9 @@
 	"basic": 
 	{
 		"help": "This is the help command. Use **WY!help** to get a list of all commands.",
-		"choose": "Chooses between arguments separated by spaces. For example, WY!choose 1 2 3 will choose between 1, 2, and 3.",
-		"random": "Chooses a random number between 0 and 1"
+		"choose": "Chooses between arguments separated by spaces.\r\nFor example, WY!choose 1 2 3 will choose between 1, 2, and 3.",
+		"random": "Chooses a random number.\r\n\r\n- Given two numbers, it will pick between them.\r\n- Given one number, it will pick between 0 and that number.\r\n- Given no numbers, it picks between 0 and 1.",
+		"easterEgg": "Shows all easter egg texts that haven't been found yet."
 	},
 	"Wah":
 	{

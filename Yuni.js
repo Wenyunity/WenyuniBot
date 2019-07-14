@@ -3,7 +3,8 @@ const DiscordJS = require('discord.js');
 const logger = require('winston');
 const auth = require('./auth.json');
 const helpText = require('./help.json');
-const easterEgg = require('./easterEgg.json');
+const fs = require('fs');
+const easterEgg = JSON.parse(fs.readFileSync('./easterEgg.json', 'utf8'));
 
 // Configure logger settings
 logger.remove(logger.transports.Console);
@@ -71,17 +72,91 @@ bot.on('message', function (user, userID, channelID, message, evt) {
 			case 'random':
 				randomCommand(commandArgs, channelID)
 				break;
+			case 'easterEgg':
+				easterEggCommand(channelID)
+				break;
 			default:
-				bot.sendMessage({                    
-					to: channelID,
-						message: (easterEgg[mainCommand] || "Sorry!") + "\r\n Command not found. Try WY!help for a list of commands."
-                });
+				// Easter Egg
+				if (mainCommand in easterEgg) {
+					easterEggFound(mainCommand, channelID)
+				}
+				else {
+					bot.sendMessage({                    
+						to: channelID,
+						message: ("Sorry!\r\nCommand not found. Try WY!help for a list of commands.")
+					});
+				}
 				break;
             // Just add any case commands if you want to..
          }
      }
 });
 
+function easterEggFound(mainCommand, channelID) {
+	// Create text
+	let easterEggEmbed = new DiscordJS.RichEmbed()
+		.setColor(easterEgg[mainCommand]["color"])
+		.setTitle(mainCommand)
+		.setAuthor('WenyuniBot')
+		.setDescription(easterEgg[mainCommand]['text'])
+		.setFooter(textWenyuniFooter());
+	
+	// Determine if first find
+	if (easterEgg[mainCommand]["num"] == 0) {
+		easterEggEmbed.addField("First find!", "Congrats!", true)
+	}
+	else {
+		easterEggEmbed.addField("Easter Egg!", "Number of times used: " + easterEgg[mainCommand]["num"], true)
+	}
+	
+	// Send message
+	bot.sendMessage({                    
+		to: channelID,
+		embed: easterEggEmbed
+	});
+	
+	// Write the find down
+	easterEgg[mainCommand]["num"] = easterEgg[mainCommand]["num"] + 1;
+	fs.writeFile ("easterEgg.json", JSON.stringify(easterEgg, null, 4), function(err) {
+		if (err) throw err;
+		console.log('complete');
+	})
+}
+
+// Footer
+function textWenyuniFooter() {
+	let currentDate = new Date()
+	return 'WenyuniBot thinks today is ' + currentDate.getFullYear() + '/' + (currentDate.getMonth()+1)
+		+ '/' + currentDate.getDate()
+}
+
+// Lists all unfound easter egg text
+function easterEggCommand(channelID) {
+	message = "-Easter Egg Board-"
+	for (x in easterEgg) {
+		if (easterEgg[x]["num"] == 0) {
+			message += "\r\n" + easterEgg[x]["text"]
+		}
+	}
+	// If there's none
+	if (message == "-Easter Egg Board-") {
+		message += "\r\n" + "None at this time!"
+	}
+	
+	// Create text
+	let easterEggEmbed = new DiscordJS.RichEmbed()
+		.setColor("#567890")
+		.setTitle("Unfound Easter Egg Quotes")
+		.setAuthor('WenyuniBot')
+		.setDescription(message)
+		.setFooter(textWenyuniFooter());
+	
+	// Send message
+	bot.sendMessage({                    
+		to: channelID,
+		embed: easterEggEmbed
+	});
+}
 // For help
 function helpCommand(commandArgs, channelID) {
 	// Replaced by a dictionary
@@ -89,9 +164,15 @@ function helpCommand(commandArgs, channelID) {
 		foundCommand = false;
 		for (x in helpText) {
 			if (commandArgs[0] in helpText[x]) {
+				const helpEmbed = new DiscordJS.RichEmbed()
+				.setColor('#559955')
+				.setTitle(commandArgs[0])
+				.setAuthor('WenyuniBot')
+				.setDescription(helpText[x][commandArgs[0]])
+				.setFooter(textWenyuniFooter());
 				bot.sendMessage({                    
 					to: channelID,
-					message: helpText[x][commandArgs[0]]
+					embed: helpEmbed
 				});
 				foundCommand = true;
 			}
@@ -106,15 +187,12 @@ function helpCommand(commandArgs, channelID) {
 	// Generic command if no arguments given
 	else {
 		// Create list of all commands
-		let messageSend = "List of Commands:\r\n`";
-		messageSend = messageSend + "`";
-		let currentDate = new Date()
 		const helpEmbed = new DiscordJS.RichEmbed()
 			.setColor('#DECADE')
 			.setTitle('Wenyunity Help')
 			.setAuthor('WenyuniBot')
 			.setDescription("Wenyunibot is here to list all of the commands!")
-			.setFooter('WenyuniBot thinks today is: ' + currentDate.getFullYear()+'/'+(currentDate.getMonth()+1)+'/'+currentDate.getDate())
+			.setFooter(textWenyuniFooter())
 			for (x in helpText) {
 				desc = ""
 				for (y in helpText[x]) {
@@ -138,6 +216,7 @@ function helpCommand(commandArgs, channelID) {
 	}
 }
 
+// Chooses between choices
 function chooseCommand(commandArgs, channelID) {
 	if (commandArgs.length == 0) {
 		bot.sendMessage({                    
@@ -160,9 +239,45 @@ function chooseCommand(commandArgs, channelID) {
 	}
 }
 
+// Chooses a random number
 function randomCommand(commandArgs, channelID) {
+	// Two numbers: Minimum and maximum
+	if (commandArgs.length == 2) {
+		let randomNum = Math.random() * (Number(commandArgs[1]) - Number(commandArgs[0])) + Number(commandArgs[0])
+		if (isNaN(randomNum)) {
+			bot.sendMessage({                    
+				to: channelID,
+				message: "Those don't look like numbers to me..."
+			});
+		}
+		else {
+			bot.sendMessage({                    
+				to: channelID,
+				message: "Here's a number between " + commandArgs[0] + " and " + commandArgs[1] + ": " + randomNum
+			});
+		}
+	}
+	// One number: Assumed the other is 0
+	else if (commandArgs.length == 1) {
+		let randomNum = Math.random() * Number(commandArgs[0])
+		if (isNaN(randomNum)) {
+			bot.sendMessage({                    
+				to: channelID,
+				message: "That doesn't look like a number to me..."
+			});
+		}
+		else {
+			bot.sendMessage({                    
+				to: channelID,
+				message: "Here's a number between 0 and " + commandArgs[0] + ": " + randomNum
+			});
+		}
+	}
+	// No arguments: Between 0 and 1
+	else {
 		bot.sendMessage({                    
 			to: channelID,
-			message: "Here's the random number: " + Math.toString(Math.random())
+			message: "Here's a number between 0 and 1: " + Math.random()
 		});
+	}
 }
