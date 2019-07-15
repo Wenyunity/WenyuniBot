@@ -1,5 +1,4 @@
 const Discord = require('discord.js');
-const logger = require('winston');
 const auth = require('./auth.json');
 const helpText = require('./help.json');
 const fs = require('fs');
@@ -8,21 +7,12 @@ const SQLite = require("better-sqlite3");
 const sql = new SQLite('./scores.sqlite');
 const arena = require('./Arena.js');
 
-// Configure logger settings
-logger.remove(logger.transports.Console);
-logger.add(new logger.transports.Console, {
-    colorize: true
-});
-
-logger.level = 'debug';
 // Initialize Discord client
 const client = new Discord.Client({
 });
 
 client.on('ready', function (evt) {
-    logger.info('Connected');
-    logger.info('Logged in as: ');
-    logger.info(client.username + ' - (' + client.id + ')');
+    console.log(`Logged in as ${client.user.tag}!`);
 
 	// Check if the table "points" exists.
     const table = sql.prepare("SELECT count(*) FROM sqlite_master WHERE type='table' AND name = 'scores';").get();
@@ -36,10 +26,11 @@ client.on('ready', function (evt) {
 	}
 
     // And then we have two prepared statements to get and set the score data.
-    client.getScore = sql.prepare("SELECT * FROM scores WHERE user = ? AND guild = ?");
-    client.setScore = sql.prepare("INSERT OR REPLACE INTO scores (id, user, guild, points, level) VALUES (@id, @user, @guild, @points, @level);");
+    client.getScore = sql.prepare("SELECT * FROM scores WHERE user = ?");
+    client.setScore = sql.prepare("INSERT OR REPLACE INTO scores (id, user, points, level) VALUES (@id, @user, @points, @level);");
 });
 
+// Upon getting a message
 client.on('message', msg => {
     // It will listen for messages that will start with `WY!`
 	// Except for those that came from the client itself.
@@ -52,7 +43,7 @@ client.on('message', msg => {
 		let commandArgs = args.slice(1);
 		
 		// These messages will only work if it's a guild
-		//if (message.guild) {
+		if (msg.guild) {
 			switch(mainCommand) {
 				case 'arena':
 					arena.arenaCommand(sql, msg);
@@ -96,7 +87,7 @@ client.on('message', msg => {
 						msg.channel.send("Sorry!\r\nCommand not found. Try WY!help for a list of commands.");
 					}
 					break;
-			//}
+			}
 		}
      }
 });
@@ -106,58 +97,78 @@ function easterEggFound(mainCommand, msg) {
 	let easterEggEmbed = new Discord.RichEmbed()
 		.setColor(easterEgg[mainCommand]["color"])
 		.setTitle(mainCommand)
-		.setAuthor('Wenyuniclient')
+		.setAuthor('Wenyunibot')
 		.setDescription(easterEgg[mainCommand]['text'])
 		.setFooter(textWenyuniFooter());
 	
 	// Determine if first find
 	if (easterEgg[mainCommand]["num"] == 0) {
+		// Tell user it's first find
 		easterEggEmbed.addField("First find!", "Congrats!")
+		// Get tag of user
 		easterEgg[mainCommand]["found"] = msg.author.tag
 	}
-	else {
+	else { // Not first find
+		// How many times used
 		easterEggEmbed.addField("Easter Egg!", "Number of times used prior: " + easterEgg[mainCommand]["num"])
+		// Who found it first
 		easterEggEmbed.addField("First Found By", easterEgg[mainCommand]["found"])
 	}
 	
 	// Send message
 	msg.channel.send(easterEggEmbed);
 	
-	// Write the find down
+	// Write the number down
 	easterEgg[mainCommand]["num"] = easterEgg[mainCommand]["num"] + 1;
 	fs.writeFile ("easterEgg.json", JSON.stringify(easterEgg, null, 4), function(err) {
 		if (err) throw err;
-		console.log('complete');
+		console.log('completed writing to easterEgg.json');
 	})
 }
 
 // Footer
 function textWenyuniFooter() {
 	let currentDate = new Date()
-	return 'Wenyuniclient thinks today is ' + currentDate.getFullYear() + '/' + (currentDate.getMonth()+1)
+	return 'Wenyunibot thinks today is ' + currentDate.getFullYear() + '/' + (currentDate.getMonth()+1)
 		+ '/' + currentDate.getDate()
 }
+
 
 // Lists all unfound easter egg text
 function easterEggCommand(commandArgs, msg) {
 	if (commandArgs[0] == "found") {
-		message = ""
-		count = {}
+		let message = ""
+		let count = []
 		for (x in easterEgg) {
 			if (easterEgg[x]["num"] != 0) {
-				message += "\r\n" + x
+				count.push([x, easterEgg[x]["num"]])
 			}
 		}
 		// If there's none
-		if (message == "") {
+		if (count == []) {
 			message += "\r\n" + "None at this time!"
+		}
+		else {
+			// Sort all items
+			count.sort(function (a, b){return b[1]-a[1]});
+			let rank = 0
+			let lastSeen = -1
+			
+			// And then rank them.
+			for (x = 0; x < count.length; x++) {
+				if (lastSeen != count[x][1]) {
+					rank += 1;
+					lastSeen = count[x][1]
+				}
+				message += "R" + rank + " - " + count[x][0] + ": " + count[x][1] + "\r\n";
+			}
 		}
 		
 		// Create text
 		let easterEggEmbed = new Discord.RichEmbed()
 			.setColor("#987654")
 			.setTitle("Found Easter Eggs")
-			.setAuthor('Wenyuniclient')
+			.setAuthor('Wenyunibot')
 			.setDescription(message)
 			.setFooter(textWenyuniFooter());
 		
@@ -180,7 +191,7 @@ function easterEggCommand(commandArgs, msg) {
 		let easterEggEmbed = new Discord.RichEmbed()
 			.setColor("#567890")
 			.setTitle("Unfound Easter Egg Quotes")
-			.setAuthor('Wenyuniclient')
+			.setAuthor('Wenyunibot')
 			.setDescription(message)
 			.setFooter(textWenyuniFooter());
 		
@@ -198,7 +209,7 @@ function helpCommand(commandArgs, msg) {
 				const helpEmbed = new Discord.RichEmbed()
 				.setColor('#559955')
 				.setTitle(commandArgs[0])
-				.setAuthor('Wenyuniclient')
+				.setAuthor('Wenyunibot')
 				.setDescription(helpText[x][commandArgs[0]])
 				.setFooter(textWenyuniFooter());
 				
@@ -217,8 +228,8 @@ function helpCommand(commandArgs, msg) {
 		const helpEmbed = new Discord.RichEmbed()
 			.setColor('#DECADE')
 			.setTitle('Wenyunity Help')
-			.setAuthor('Wenyuniclient')
-			.setDescription("Wenyuniclient is here to list all of the commands!")
+			.setAuthor('Wenyunibot')
+			.setDescription("Wenyunibot is here to list all of the commands!")
 			.setFooter(textWenyuniFooter())
 			for (x in helpText) {
 				desc = ""

@@ -2,11 +2,21 @@
 	"base": 5,
 	"attack": {
 		"target": [["front", 1], ["any", 0], ["all", -5]],
-		"effect": [["none", 0], ["poison", -1], ["dizzy", -2], ["atk-down", -3]],
-		"length": [[1, -1], [2, -2], [3, -4], [4, -6]]
+		"effect": [["poison", -1], ["dizzy", -2], ["atk-down", -3]],
+		"length": [[1, 1], [2, 2], [3, 4], [4, 6]]
+	},
+	"basic": {
+		"target": [["front", 1], ["any", 0]],
+		"effect": [["poison", -1], ["dizzy", -2]],
+		"length": [[1, 1], [2, 2]]
+	},
+	"support": {
+		"target": [["self", 0], ["any", 1], ["all", 5]],
+		"effect": [["regen", 1], ["dodge", 2], ["atk-up", 3], ["def-up", 2], ["payback", 3]],
+		"length": [[1, 1], [2, 2], [3, 4], [4, 6], [5, 10]]
 	},
 	"name": {
-		"adjective": ["Wuigi", "Blue", "Red", "Green", "Spiky", "Orange", "Waluigi", "Tax-free", "Electric"],
-		"noun": ["Marble", "Sword", "Tree", "Bowl", "Algodoo", "Melmon", "Scream", "Sorter", "Elimination", "Move", "Yoshi"]
+		"adjective": ["United", "Wuigi", "Blue", "Red", "Green", "Spiky", "Orange", "Waluigi", "Tax-free", "Electric", "Smashing", "Purple", "Yellow", "Small", "Twirling", "Sick", "Light", "Downward", "Upward", "Sideways", "Grass", "Tall"],
+		"noun": ["Marble", "Sword", "Tree", "Bowl", "Algodoo", "Melmon", "Scream", "Sorter", "Elimination", "Move", "Yoshi", "Pickaxe", "Shovel", "Diamond", "Shop", "Hat", "Laser", "Cloud", "Castle", "Luigi", "Dragon", "Tail", "Sphere", "Klein Bottle"]
 	}
 }
