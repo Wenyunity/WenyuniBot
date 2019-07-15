@@ -1,5 +1,15 @@
 # Version Control
 
+### Version 0.0.5
+- Arena: create creates a full moveset.
+- Arena: create spits out moves in proper form; no more JSON.
+- Arena: create now includes support moves
+- Arena: Magic moves cost at least 1 MP.
+- Arena: With "none" selected, length is 0.
+- Arena: Strength/MP cost for effects adjusted based on move length.
+- Discord.io and Winston fully removed; bot converted to Discord.js
+- Added count and rank to easterEgg found command.
+
 ### Version 0.0.4
 - Arena.js connected with Yuni.js
 - Added unfinished (but stable) version of arena create.
