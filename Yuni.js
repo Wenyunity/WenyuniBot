@@ -5,6 +5,9 @@ const auth = require('./auth.json');
 const helpText = require('./help.json');
 const fs = require('fs');
 const easterEgg = JSON.parse(fs.readFileSync('./easterEgg.json', 'utf8'));
+const SQLite = require("better-sqlite3");
+const sql = new SQLite('./scores.sqlite');
+const arena = require('./Arena.js');
 
 // Configure logger settings
 logger.remove(logger.transports.Console);
@@ -14,7 +17,7 @@ logger.add(new logger.transports.Console, {
 
 logger.level = 'debug';
 // Initialize Discord Bot
-let bot = new Discord.Client({
+const bot = new Discord.Client({
    token: auth.token,
    autorun: true
 });
@@ -23,6 +26,21 @@ bot.on('ready', function (evt) {
     logger.info('Connected');
     logger.info('Logged in as: ');
     logger.info(bot.username + ' - (' + bot.id + ')');
+
+	// Check if the table "points" exists.
+    const table = sql.prepare("SELECT count(*) FROM sqlite_master WHERE type='table' AND name = 'scores';").get();
+    if (!table['count(*)']) {
+		// If the table isn't there, create it and setup the database correctly.
+		sql.prepare("CREATE TABLE scores (id TEXT PRIMARY KEY, user TEXT, guild TEXT, points INTEGER, level INTEGER);").run();
+		// Ensure that the "id" row is always unique and indexed.
+		sql.prepare("CREATE UNIQUE INDEX idx_scores_id ON scores (id);").run();
+		sql.pragma("synchronous = 1");
+		sql.pragma("journal_mode = wal");
+	}
+
+    // And then we have two prepared statements to get and set the score data.
+    bot.getScore = sql.prepare("SELECT * FROM scores WHERE user = ? AND guild = ?");
+    bot.setScore = sql.prepare("INSERT OR REPLACE INTO scores (id, user, guild, points, level) VALUES (@id, @user, @guild, @points, @level);");
 });
 
 bot.on('message', function (user, userID, channelID, message, evt) {
@@ -35,64 +53,70 @@ bot.on('message', function (user, userID, channelID, message, evt) {
         let mainCommand = args[0];
 		// And then the rest of the arguments
 		let commandArgs = args.slice(1);
-       
-        switch(mainCommand) {
-            // Default Test Message.
-            case 'Yuni':
-                bot.sendMessage({
-                    to: channelID,
-                    message: "Wen-Yuni-Ty. That's not how this works."
-                });
-				break;
-			// Waluigi is not an easter egg.
-			case 'waluigi':
-			case 'Waluigi':
-			case 'WALUIGI':
-				let luigiRoll = Math.random()
-				if (luigiRoll < 0.1) {
+		
+		// These messages will only work if it's a guild
+		//if (message.guild) {
+			switch(mainCommand) {
+				case 'arena':
+					arena.arenaCommand(sql, bot, message, channelID);
+					break;
+				// Default Test Message.
+				case 'Yuni':
 					bot.sendMessage({
 						to: channelID,
-						message: "Oh yeah! Luigi time!"
+						message: "Wen-Yuni-Ty. That's not how this works."
 					});
-				}
-				else {
-				    bot.sendMessage({
-						to: channelID,
-						message: "WALUIGI"
-					});
-				};
-				break;
-			// help
-			case 'help':
-				helpCommand(commandArgs, channelID)
-				break;
-			case 'choose':
-				chooseCommand(commandArgs, channelID)
-				break;
-			case 'random':
-				randomCommand(commandArgs, channelID)
-				break;
-			case 'easterEgg':
-				easterEggCommand(channelID)
-				break;
-			default:
-				// Easter Egg
-				if (mainCommand in easterEgg) {
-					easterEggFound(mainCommand, channelID)
-				}
-				else {
-					bot.sendMessage({                    
-						to: channelID,
-						message: ("Sorry!\r\nCommand not found. Try WY!help for a list of commands.")
-					});
-				}
-				break;
-            // Just add any case commands if you want to..
-         }
+					break;
+				// Waluigi is not an easter egg.
+				case 'waluigi':
+				case 'Waluigi':
+				case 'WALUIGI':
+					let luigiRoll = Math.random()
+					if (luigiRoll < 0.1) {
+						bot.sendMessage({
+							to: channelID,
+							message: "Oh yeah! Luigi time!"
+						});
+					}
+					else {
+						bot.sendMessage({
+							to: channelID,
+							message: "WALUIGI"
+						});
+					};
+					break;
+				// Main commands
+				case 'help':
+					helpCommand(commandArgs, channelID)
+					break;
+				case 'choose':
+					chooseCommand(commandArgs, channelID)
+					break;
+				case 'random':
+					randomCommand(commandArgs, channelID)
+					break;
+				case 'easterEgg':
+					easterEggCommand(commandArgs, channelID)
+					break;
+				// Not found
+				default:
+					// Easter Egg Support
+					if (mainCommand in easterEgg) {
+						easterEggFound(user, mainCommand, channelID)
+					}
+					else {
+						bot.sendMessage({                    
+							to: channelID,
+							message: ("Sorry!\r\nCommand not found. Try WY!help for a list of commands.")
+						});
+					}
+					break;
+			//}
+		}
      }
 });
 
-function easterEggFound(mainCommand, channelID) {
+function easterEggFound(user, mainCommand, channelID) {
 	// Create text
 	let easterEggEmbed = new DiscordJS.RichEmbed()
 		.setColor(easterEgg[mainCommand]["color"])
@@ -103,10 +127,12 @@ function easterEggFound(mainCommand, channelID) {
 	
 	// Determine if first find
 	if (easterEgg[mainCommand]["num"] == 0) {
-		easterEggEmbed.addField("First find!", "Congrats!", true)
+		easterEggEmbed.addField("First find!", "Congrats!")
+		easterEgg[mainCommand]["found"] = user
 	}
 	else {
-		easterEggEmbed.addField("Easter Egg!", "Number of times used: " + easterEgg[mainCommand]["num"], true)
+		easterEggEmbed.addField("Easter Egg!", "Number of times used prior: " + easterEgg[mainCommand]["num"])
+		easterEggEmbed.addField("First Found By", easterEgg[mainCommand]["found"])
 	}
 	
 	// Send message
@@ -131,31 +157,60 @@ function textWenyuniFooter() {
 }
 
 // Lists all unfound easter egg text
-function easterEggCommand(channelID) {
-	message = "-Easter Egg Board-"
-	for (x in easterEgg) {
-		if (easterEgg[x]["num"] == 0) {
-			message += "\r\n" + easterEgg[x]["text"]
+function easterEggCommand(commandArgs, channelID) {
+	if (commandArgs[0] == "found") {
+		message = ""
+		count = {}
+		for (x in easterEgg) {
+			if (easterEgg[x]["num"] != 0) {
+				message += "\r\n" + x
+			}
 		}
+		// If there's none
+		if (message == "") {
+			message += "\r\n" + "None at this time!"
+		}
+		
+		// Create text
+		let easterEggEmbed = new DiscordJS.RichEmbed()
+			.setColor("#987654")
+			.setTitle("Found Easter Eggs")
+			.setAuthor('WenyuniBot')
+			.setDescription(message)
+			.setFooter(textWenyuniFooter());
+		
+		// Send message
+		bot.sendMessage({                    
+			to: channelID,
+			embed: easterEggEmbed
+		});
 	}
-	// If there's none
-	if (message == "-Easter Egg Board-") {
-		message += "\r\n" + "None at this time!"
+	else {
+		message = ""
+		for (x in easterEgg) {
+			if (easterEgg[x]["num"] == 0) {
+				message += "\r\n" + easterEgg[x]["text"]
+			}
+		}
+		// If there's none
+		if (message == "") {
+			message += "\r\n" + "None at this time!"
+		}
+		
+		// Create text
+		let easterEggEmbed = new DiscordJS.RichEmbed()
+			.setColor("#567890")
+			.setTitle("Unfound Easter Egg Quotes")
+			.setAuthor('WenyuniBot')
+			.setDescription(message)
+			.setFooter(textWenyuniFooter());
+		
+		// Send message
+		bot.sendMessage({                    
+			to: channelID,
+			embed: easterEggEmbed
+		});
 	}
-	
-	// Create text
-	let easterEggEmbed = new DiscordJS.RichEmbed()
-		.setColor("#567890")
-		.setTitle("Unfound Easter Egg Quotes")
-		.setAuthor('WenyuniBot')
-		.setDescription(message)
-		.setFooter(textWenyuniFooter());
-	
-	// Send message
-	bot.sendMessage({                    
-		to: channelID,
-		embed: easterEggEmbed
-	});
 }
 // For help
 function helpCommand(commandArgs, channelID) {
