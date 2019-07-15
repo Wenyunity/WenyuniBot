@@ -1,5 +1,13 @@
 # Version Control
 
+### Version 0.0.4
+- Arena.js connected with Yuni.js
+- Added unfinished (but stable) version of arena create.
+- Added nickname of person who first found an easter egg.
+- Added easterEgg found command; lists all easterEggs found.
+- Updated help text for easterEgg.
+- Added SQL support for Yuni.js. Currently unused.
+
 ### Version 0.0.3
 - Added easterEgg command; lists all flavor texts for non-found easter eggs.
 - Easter egg now in embed
