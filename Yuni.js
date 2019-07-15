@@ -1,5 +1,4 @@
-const Discord = require('discord.io');
-const DiscordJS = require('discord.js');
+const Discord = require('discord.js');
 const logger = require('winston');
 const auth = require('./auth.json');
 const helpText = require('./help.json');
@@ -16,16 +15,14 @@ logger.add(new logger.transports.Console, {
 });
 
 logger.level = 'debug';
-// Initialize Discord Bot
-const bot = new Discord.Client({
-   token: auth.token,
-   autorun: true
+// Initialize Discord client
+const client = new Discord.Client({
 });
 
-bot.on('ready', function (evt) {
+client.on('ready', function (evt) {
     logger.info('Connected');
     logger.info('Logged in as: ');
-    logger.info(bot.username + ' - (' + bot.id + ')');
+    logger.info(client.username + ' - (' + client.id + ')');
 
 	// Check if the table "points" exists.
     const table = sql.prepare("SELECT count(*) FROM sqlite_master WHERE type='table' AND name = 'scores';").get();
@@ -39,16 +36,16 @@ bot.on('ready', function (evt) {
 	}
 
     // And then we have two prepared statements to get and set the score data.
-    bot.getScore = sql.prepare("SELECT * FROM scores WHERE user = ? AND guild = ?");
-    bot.setScore = sql.prepare("INSERT OR REPLACE INTO scores (id, user, guild, points, level) VALUES (@id, @user, @guild, @points, @level);");
+    client.getScore = sql.prepare("SELECT * FROM scores WHERE user = ? AND guild = ?");
+    client.setScore = sql.prepare("INSERT OR REPLACE INTO scores (id, user, guild, points, level) VALUES (@id, @user, @guild, @points, @level);");
 });
 
-bot.on('message', function (user, userID, channelID, message, evt) {
+client.on('message', msg => {
     // It will listen for messages that will start with `WY!`
-	// Except for those that came from the bot itself.
-    if ((message.substring(0, 3) == 'WY!' || message.substring(0, 3) == 'wy!') && userID != bot.id) {
+	// Except for those that came from the client itself.
+    if ((msg.content.substring(0, 3) == 'WY!' || msg.content.substring(0, 3) == 'wy!') && !msg.author.bot) {
 		// Get rid of WY!
-        let args = message.substring(3).split(' ');
+        let args = msg.content.substring(3).split(' ');
 		// Find the main command
         let mainCommand = args[0];
 		// And then the rest of the arguments
@@ -58,14 +55,11 @@ bot.on('message', function (user, userID, channelID, message, evt) {
 		//if (message.guild) {
 			switch(mainCommand) {
 				case 'arena':
-					arena.arenaCommand(sql, bot, message, channelID);
+					arena.arenaCommand(sql, msg);
 					break;
 				// Default Test Message.
 				case 'Yuni':
-					bot.sendMessage({
-						to: channelID,
-						message: "Wen-Yuni-Ty. That's not how this works."
-					});
+					msg.channel.send('Wen-Yuni-Ty. Uh...');
 					break;
 				// Waluigi is not an easter egg.
 				case 'waluigi':
@@ -73,42 +67,33 @@ bot.on('message', function (user, userID, channelID, message, evt) {
 				case 'WALUIGI':
 					let luigiRoll = Math.random()
 					if (luigiRoll < 0.1) {
-						bot.sendMessage({
-							to: channelID,
-							message: "Oh yeah! Luigi time!"
-						});
+						msg.channel.send('Oh yeah! Luigi time!');
 					}
 					else {
-						bot.sendMessage({
-							to: channelID,
-							message: "WALUIGI"
-						});
+						msg.channel.send('WALUIGI');
 					};
 					break;
 				// Main commands
 				case 'help':
-					helpCommand(commandArgs, channelID)
+					helpCommand(commandArgs, msg)
 					break;
 				case 'choose':
-					chooseCommand(commandArgs, channelID)
+					chooseCommand(commandArgs, msg)
 					break;
 				case 'random':
-					randomCommand(commandArgs, channelID)
+					randomCommand(commandArgs, msg)
 					break;
 				case 'easterEgg':
-					easterEggCommand(commandArgs, channelID)
+					easterEggCommand(commandArgs, msg)
 					break;
 				// Not found
 				default:
 					// Easter Egg Support
 					if (mainCommand in easterEgg) {
-						easterEggFound(user, mainCommand, channelID)
+						easterEggFound(mainCommand, msg)
 					}
 					else {
-						bot.sendMessage({                    
-							to: channelID,
-							message: ("Sorry!\r\nCommand not found. Try WY!help for a list of commands.")
-						});
+						msg.channel.send("Sorry!\r\nCommand not found. Try WY!help for a list of commands.");
 					}
 					break;
 			//}
@@ -116,19 +101,19 @@ bot.on('message', function (user, userID, channelID, message, evt) {
      }
 });
 
-function easterEggFound(user, mainCommand, channelID) {
+function easterEggFound(mainCommand, msg) {
 	// Create text
-	let easterEggEmbed = new DiscordJS.RichEmbed()
+	let easterEggEmbed = new Discord.RichEmbed()
 		.setColor(easterEgg[mainCommand]["color"])
 		.setTitle(mainCommand)
-		.setAuthor('WenyuniBot')
+		.setAuthor('Wenyuniclient')
 		.setDescription(easterEgg[mainCommand]['text'])
 		.setFooter(textWenyuniFooter());
 	
 	// Determine if first find
 	if (easterEgg[mainCommand]["num"] == 0) {
 		easterEggEmbed.addField("First find!", "Congrats!")
-		easterEgg[mainCommand]["found"] = user
+		easterEgg[mainCommand]["found"] = msg.author.tag
 	}
 	else {
 		easterEggEmbed.addField("Easter Egg!", "Number of times used prior: " + easterEgg[mainCommand]["num"])
@@ -136,10 +121,7 @@ function easterEggFound(user, mainCommand, channelID) {
 	}
 	
 	// Send message
-	bot.sendMessage({                    
-		to: channelID,
-		embed: easterEggEmbed
-	});
+	msg.channel.send(easterEggEmbed);
 	
 	// Write the find down
 	easterEgg[mainCommand]["num"] = easterEgg[mainCommand]["num"] + 1;
@@ -152,12 +134,12 @@ function easterEggFound(user, mainCommand, channelID) {
 // Footer
 function textWenyuniFooter() {
 	let currentDate = new Date()
-	return 'WenyuniBot thinks today is ' + currentDate.getFullYear() + '/' + (currentDate.getMonth()+1)
+	return 'Wenyuniclient thinks today is ' + currentDate.getFullYear() + '/' + (currentDate.getMonth()+1)
 		+ '/' + currentDate.getDate()
 }
 
 // Lists all unfound easter egg text
-function easterEggCommand(commandArgs, channelID) {
+function easterEggCommand(commandArgs, msg) {
 	if (commandArgs[0] == "found") {
 		message = ""
 		count = {}
@@ -172,18 +154,15 @@ function easterEggCommand(commandArgs, channelID) {
 		}
 		
 		// Create text
-		let easterEggEmbed = new DiscordJS.RichEmbed()
+		let easterEggEmbed = new Discord.RichEmbed()
 			.setColor("#987654")
 			.setTitle("Found Easter Eggs")
-			.setAuthor('WenyuniBot')
+			.setAuthor('Wenyuniclient')
 			.setDescription(message)
 			.setFooter(textWenyuniFooter());
 		
 		// Send message
-		bot.sendMessage({                    
-			to: channelID,
-			embed: easterEggEmbed
-		});
+		msg.channel.send(easterEggEmbed);
 	}
 	else {
 		message = ""
@@ -198,55 +177,48 @@ function easterEggCommand(commandArgs, channelID) {
 		}
 		
 		// Create text
-		let easterEggEmbed = new DiscordJS.RichEmbed()
+		let easterEggEmbed = new Discord.RichEmbed()
 			.setColor("#567890")
 			.setTitle("Unfound Easter Egg Quotes")
-			.setAuthor('WenyuniBot')
+			.setAuthor('Wenyuniclient')
 			.setDescription(message)
 			.setFooter(textWenyuniFooter());
 		
 		// Send message
-		bot.sendMessage({                    
-			to: channelID,
-			embed: easterEggEmbed
-		});
+		msg.channel.send(easterEggEmbed);
 	}
 }
 // For help
-function helpCommand(commandArgs, channelID) {
+function helpCommand(commandArgs, msg) {
 	// Replaced by a dictionary
 	if (commandArgs.length > 0) {
 		foundCommand = false;
 		for (x in helpText) {
 			if (commandArgs[0] in helpText[x]) {
-				const helpEmbed = new DiscordJS.RichEmbed()
+				const helpEmbed = new Discord.RichEmbed()
 				.setColor('#559955')
 				.setTitle(commandArgs[0])
-				.setAuthor('WenyuniBot')
+				.setAuthor('Wenyuniclient')
 				.setDescription(helpText[x][commandArgs[0]])
 				.setFooter(textWenyuniFooter());
-				bot.sendMessage({                    
-					to: channelID,
-					embed: helpEmbed
-				});
+				
+				// Send
+				msg.channel.send(helpEmbed);
 				foundCommand = true;
 			}
 		}
-		if (!foundCommand) {
-		bot.sendMessage({                    
-			to: channelID,
-			message: "Command not found!"
-		});
+		if (!foundCommand) { // Failed to find
+		msg.channel.send("Command not found!");
 		}
 	}
 	// Generic command if no arguments given
 	else {
 		// Create list of all commands
-		const helpEmbed = new DiscordJS.RichEmbed()
+		const helpEmbed = new Discord.RichEmbed()
 			.setColor('#DECADE')
 			.setTitle('Wenyunity Help')
-			.setAuthor('WenyuniBot')
-			.setDescription("Wenyunibot is here to list all of the commands!")
+			.setAuthor('Wenyuniclient')
+			.setDescription("Wenyuniclient is here to list all of the commands!")
 			.setFooter(textWenyuniFooter())
 			for (x in helpText) {
 				desc = ""
@@ -264,75 +236,50 @@ function helpCommand(commandArgs, channelID) {
 			//.addField('Inline field title', 'Some value here', true)
 			//.setImage('https://i.imgur.com/wSTFkRM.png')
 			//.setTimestamp()
-		bot.sendMessage({                    
-			to: channelID,
-			embed: helpEmbed
-		});
+		msg.channel.send(helpEmbed);
 	}
 }
 
 // Chooses between choices
-function chooseCommand(commandArgs, channelID) {
+function chooseCommand(commandArgs, msg) {
 	if (commandArgs.length == 0) {
-		bot.sendMessage({                    
-			to: channelID,
-			message: "I choose the empty set!"
-		});
+		msg.channel.send("I choose the empty set!")
 	}
 	else if (commandArgs.length == 1) {
-		bot.sendMessage({                    
-			to: channelID,
-			message: "It appears I have no choice. I choose " + commandArgs[0]
-		});
+		msg.channel.send("It appears I have no choice. I choose " + commandArgs[0]);
 	}
 	else {
 		randomNumber = Math.floor(Math.random() * (commandArgs.length))
-		bot.sendMessage({                    
-			to: channelID,
-			message: "I choose " + commandArgs[randomNumber]
-		});
+		msg.channel.send("I choose " + commandArgs[randomNumber])
 	}
 }
 
 // Chooses a random number
-function randomCommand(commandArgs, channelID) {
+function randomCommand(commandArgs, msg) {
 	// Two numbers: Minimum and maximum
 	if (commandArgs.length == 2) {
 		let randomNum = Math.random() * (Number(commandArgs[1]) - Number(commandArgs[0])) + Number(commandArgs[0])
 		if (isNaN(randomNum)) {
-			bot.sendMessage({                    
-				to: channelID,
-				message: "Those don't look like numbers to me..."
-			});
+			msg.channel.send("Those don't look like numbers to me...")
 		}
 		else {
-			bot.sendMessage({                    
-				to: channelID,
-				message: "Here's a number between " + commandArgs[0] + " and " + commandArgs[1] + ": " + randomNum
-			});
+			msg.channel.send("Here's a number between " + commandArgs[0] + " and " + commandArgs[1] + ": " + randomNum)
 		}
 	}
 	// One number: Assumed the other is 0
 	else if (commandArgs.length == 1) {
 		let randomNum = Math.random() * Number(commandArgs[0])
 		if (isNaN(randomNum)) {
-			bot.sendMessage({                    
-				to: channelID,
-				message: "That doesn't look like a number to me..."
-			});
+			msg.channel.send("That doesn't look like a number to me...")
 		}
 		else {
-			bot.sendMessage({                    
-				to: channelID,
-				message: "Here's a number between 0 and " + commandArgs[0] + ": " + randomNum
-			});
+			msg.channel.send("Here's a number between 0 and " + commandArgs[0] + ": " + randomNum)
 		}
 	}
 	// No arguments: Between 0 and 1
 	else {
-		bot.sendMessage({                    
-			to: channelID,
-			message: "Here's a number between 0 and 1: " + Math.random()
-		});
+		msg.channel.send("Here's a number between 0 and 1: " + Math.random())
 	}
 }
+
+client.login(auth.token);
