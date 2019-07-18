@@ -5,7 +5,8 @@ const fs = require('fs');
 const easterEgg = JSON.parse(fs.readFileSync('./easterEgg.json', 'utf8'));
 const SQLite = require("better-sqlite3");
 const sql = new SQLite('./scores.sqlite');
-const arena = require('./Arena.js');
+const arena = require('./Arena/Arena.js');
+const chess = require('./Chess/Chess.js')
 
 // Initialize Discord client
 const client = new Discord.Client({
@@ -48,6 +49,9 @@ client.on('message', msg => {
 				case 'arena':
 					arena.arenaCommand(sql, msg);
 					break;
+				case 'chess':
+					chess.chessCommand(msg);
+					break;
 				// Default Test Message.
 				case 'Yuni':
 					msg.channel.send('Wen-Yuni-Ty. Uh...');
@@ -56,11 +60,26 @@ client.on('message', msg => {
 				case 'waluigi':
 				case 'Waluigi':
 				case 'WALUIGI':
+					const guildMember = msg.member;
+					const waluigiAdd = msg.guild.roles.find(role => role.name === "WALUIGI");
+					const luigiAdd = msg.guild.roles.find(role => role.name === "Luigi");
 					let luigiRoll = Math.random()
-					if (luigiRoll < 0.1) {
+					if (luigiRoll < 0.5) {
+						if (luigiAdd) {
+							guildMember.addRole(luigiAdd);
+						}
+						if (waluigiAdd) {
+							guildMember.removeRole(waluigiAdd);
+						}
 						msg.channel.send('Oh yeah! Luigi time!');
 					}
 					else {
+						if (waluigiAdd) {
+							guildMember.addRole(waluigiAdd);
+						}
+						if (luigiAdd) {
+							guildMember.removeRole(luigiAdd);
+						}
 						msg.channel.send('WALUIGI');
 					};
 					break;
@@ -74,7 +93,7 @@ client.on('message', msg => {
 				case 'random':
 					randomCommand(commandArgs, msg)
 					break;
-				case 'easterEgg':
+				case 'easteregg':
 					easterEggCommand(commandArgs, msg)
 					break;
 				// Not found
@@ -136,7 +155,31 @@ function textWenyuniFooter() {
 
 // Lists all unfound easter egg text
 function easterEggCommand(commandArgs, msg) {
-	if (commandArgs[0] == "found") {
+	// Default
+	if (commandArgs.length == 0) {
+		message = ""
+		for (x in easterEgg) {
+			if (easterEgg[x]["num"] == 0) {
+				message += "\r\n" + easterEgg[x]["text"]
+			}
+		}
+		// If there's none
+		if (message == "") {
+			message += "\r\n" + "None at this time!"
+		}
+		
+		// Create text
+		let easterEggEmbed = new Discord.RichEmbed()
+			.setColor("#567890")
+			.setTitle("Unfound Easter Egg Quotes")
+			.setAuthor('Wenyunibot')
+			.setDescription(message)
+			.setFooter(textWenyuniFooter());
+		
+		// Send message
+		msg.channel.send(easterEggEmbed);
+	}	
+	else if (commandArgs[0] == "found") { // Found
 		let message = ""
 		let count = []
 		for (x in easterEgg) {
@@ -175,28 +218,63 @@ function easterEggCommand(commandArgs, msg) {
 		// Send message
 		msg.channel.send(easterEggEmbed);
 	}
-	else {
-		message = ""
-		for (x in easterEgg) {
-			if (easterEgg[x]["num"] == 0) {
-				message += "\r\n" + easterEgg[x]["text"]
+	else if (commandArgs[0] == "first") { // Found
+		let message = ""
+		let counter = []
+		// For each easter egg
+		for (egg in easterEgg) {
+			// Check if iser already found one
+			if (easterEgg[egg]["num"] != 0) { // If they did
+				found = false;
+				for (x = 0; x < counter.length; x++) { // Add
+					if (easterEgg[egg]["found"] === counter[x][0]) {
+						counter[x][1] += 1;
+						found = true;
+					}
+				}
+				if (!found) { // Push user onto list
+					counter.push([easterEgg[egg]["found"], 1])
+				}
 			}
 		}
 		// If there's none
-		if (message == "") {
+		if (counter == {}) {
 			message += "\r\n" + "None at this time!"
+		}
+		else {
+			// Sort all items
+			counter.sort(function (a, b){return b[1]-a[1]});
+			let rank = 0
+			let lastSeen = -1
+			
+			// And then rank them.
+			for (x = 0; x < counter.length; x++) {
+				if (lastSeen != counter[x][1]) {
+					rank += 1;
+					lastSeen = counter[x][1]
+				}
+				message += "R" + rank + " - " + counter[x][0] + ": " + counter[x][1] + "\r\n";
+			}
 		}
 		
 		// Create text
 		let easterEggEmbed = new Discord.RichEmbed()
-			.setColor("#567890")
-			.setTitle("Unfound Easter Egg Quotes")
+			.setColor("#24e857")
+			.setTitle("Easter Egg Finders")
 			.setAuthor('Wenyunibot')
 			.setDescription(message)
 			.setFooter(textWenyuniFooter());
 		
 		// Send message
 		msg.channel.send(easterEggEmbed);
+	}
+	else {
+		if (commandArgs[0] in easterEgg) {
+			easterEggFound(commandArgs[0], msg)
+		}
+		else {
+			msg.channel.send("Invalid easter egg! All easter eggs are written without spaces and use PascalCase");
+		}
 	}
 }
 // For help
@@ -253,15 +331,21 @@ function helpCommand(commandArgs, msg) {
 
 // Chooses between choices
 function chooseCommand(commandArgs, msg) {
-	if (commandArgs.length == 0) {
+	let chooseText = "";
+	for (i = 0; i < commandArgs.length; i++) {
+			chooseText += commandArgs[i] + " ";
+	}
+	let chooseArgs = chooseText.split(', ');
+	
+	if (chooseArgs.length == 0) {
 		msg.channel.send("I choose the empty set!")
 	}
-	else if (commandArgs.length == 1) {
-		msg.channel.send("It appears I have no choice. I choose " + commandArgs[0]);
+	else if (chooseArgs.length == 1) {
+		msg.channel.send("It appears I have no choice. I choose " + chooseArgs[0]);
 	}
 	else {
-		randomNumber = Math.floor(Math.random() * (commandArgs.length))
-		msg.channel.send("I choose " + commandArgs[randomNumber])
+		randomNumber = Math.floor(Math.random() * (chooseArgs.length))
+		msg.channel.send("I choose " + chooseArgs[randomNumber])
 	}
 }
 

@@ -1,18 +1,18 @@
 const Discord = require('discord.js');
 const SQLite = require("better-sqlite3");
 const fs = require('fs');
-const newMove = JSON.parse(fs.readFileSync('./movelist.json', 'utf8'));
+const newMove = JSON.parse(fs.readFileSync('./Arena/movelist.json', 'utf8'));
 
 // Creates an attack/basic move
 function createAttackMove(isBasic) {
-	let nameObject = {name: "", power: 0, target: "", effect: "", length: 0, MP: 0, team: "enemy"};
+	let nameObject = {MP: 0, team: "enemy"}
 	
 	// Name
-	nameObject.name = newMove["name"]["adjective"][Math.floor(Math.random() * (newMove["name"]["adjective"].length))] +
+	nameObject["name"] = newMove["name"]["adjective"][Math.floor(Math.random() * (newMove["name"]["adjective"].length))] +
 		" " + newMove["name"]["noun"][Math.floor(Math.random() * (newMove["name"]["noun"].length))];
 	
 	// Base power
-	nameObject.power = newMove["base"];
+	nameObject["power"] = newMove["base"];
 	
 	let moveType = "attack"
 	if (isBasic) {
@@ -21,8 +21,8 @@ function createAttackMove(isBasic) {
 	
 	// Target selection
 	let targetType = newMove[moveType]["target"][Math.floor(Math.random() * newMove[moveType]["target"].length)]
-	nameObject.target = targetType[0];
-	nameObject.power = nameObject.power + targetType[1];
+	nameObject["target"] = targetType[0];
+	nameObject["power"] = nameObject["power"] + targetType[1];
 	
 	// Effect selection
 	if (Math.random() > 0.5) {
@@ -31,26 +31,26 @@ function createAttackMove(isBasic) {
 		let lengthType = newMove[moveType]["length"][Math.floor(Math.random() * newMove[moveType]["length"].length)]
 		
 		// Set effect and length and calculate power difference
-		nameObject.effect = effectType[0];		
-		nameObject.length = lengthType[0];
-		nameObject.power = nameObject.power + lengthType[1] * effectType[1];
+		nameObject["effect"] = effectType[0];		
+		nameObject["length"] = lengthType[0];
+		nameObject["power"] = nameObject["power"] + lengthType[1] * effectType[1];
 	}
 	else { // No effect (50% chance)
-		nameObject.effect = "None";
-		nameObject.length = 0;
+		nameObject["effect"] = "None";
+		nameObject["length"] = 0;
 	}
 	
 	// MP adjust
-	if (nameObject.power < 0) {
-		nameObject.MP = -1 * nameObject.power;
-		nameObject.power = 0;
+	if (nameObject["power"] < 0) {
+		nameObject["MP"] = -1 * nameObject["power"];
+		nameObject["power"] = 0;
 	}
 	
 	// Add more power
 	if (!isBasic) {
 		let powerAdd = Math.floor(Math.random() * 9) + 1
-		nameObject.MP = powerAdd + nameObject.MP;
-		nameObject.power = nameObject.power + powerAdd;
+		nameObject["MP"] = powerAdd + nameObject["MP"];
+		nameObject["power"] = nameObject["power"] + powerAdd;
 	}
 	
 	return nameObject;
@@ -100,11 +100,11 @@ function create(msg, arguments) {
 				.setAuthor('Wenyunibot')
 				.setDescription("Beta Character")
 				.addField("Basic Move", readMove(createAttackMove(true)));
-		for (i = 0; i < arguments[0]; i++) {
+		for (i = 0; i < Math.floor(arguments[0]); i++) {
 			//createEmbed.addField("Magic Move " + i, JSON.stringify(createAttackMove(false), null, 1))
 			createEmbed.addField("Magic Move " + i, readMove(createAttackMove(false)))
 		};
-		for (i = arguments[0]; i < 5; i++) {
+		for (i = Math.floor(arguments[0]); i < 5; i++) {
 			//createEmbed.addField("Magic Move " + i, JSON.stringify(createSupportMove(), null, 1))
 			createEmbed.addField("Magic Move " + i, readMove(createSupportMove()))
 		}
