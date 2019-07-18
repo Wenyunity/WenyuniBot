@@ -1,5 +1,21 @@
 # Version Control
 
+## Version 0.1.0
+- Chess.js connected with Yuni.js
+- Chess: Placed into own folder.
+- Chess: View added.
+- Chess: Pieces move and capture.
+- Chess: FEN available.
+- Chess: Turn counter.
+- Arena: Placed into own folder.
+- Waluigi: Luigi chance upped to 0.5
+- Waluigi: Now gives the WALUIGI role and removes the Luigi role if WALUIGI appears.
+- Waluigi: Now gives the Luigi role and removed the WALUIGI role if Luigi appears.
+- easteregg: Lowercased easteregg
+- easteregg: Added easteregg first command, showing creators who were first
+- easteregg: wy!easteregg Egg is now an alternative.
+- choose: Now separated by ", " instead of " ".
+
 ### Version 0.0.5
 - Arena: create creates a full moveset.
 - Arena: create spits out moves in proper form; no more JSON.
