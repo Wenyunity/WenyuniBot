@@ -14,4 +14,8 @@ Randomly chooses a number between the parameters given
 
 ### easterEgg
 
-Shows help text for unfound easter eggs.
+Shows help text for unfound easter eggs
+
+### Waluigi
+
+Randomly chooses between giving the Luigi and WALUIGI roles.
