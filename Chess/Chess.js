@@ -11,9 +11,14 @@ let castle = ["K", "Q", "k", "q"];
 let enPassant = "";
 let fiftyMoveRule = 0;
 let turnCount = 1;
+let whiteKingPos = [7, 4];
+let blackKingPos = [0, 4];
+let whiteSet = "compact";
+let blackSet = "compact";
 
 const whitePiece = ["P", "R", "N", "B", "Q", "K"]
 const blackPiece = ["p", "r", "n", "b", "q", "k"]
+const boardStyle = ["highlight", "diagonal", "versus", "compact"]
 			
 function newBoard() {
 	board = [["r", "n", "b", "q", "k", "b", "n", "r"], ["p", "p", "p", "p", "p", "p", "p", "p"], 
@@ -27,7 +32,7 @@ function newBoard() {
 	turnCount = 1;
 }
 
-function printBoard(msg, addFEN) {
+function compactBoard() {
 	message = '```. | a b c d e f g h | .\r\n' + '--+-----------------+--'
 	for (i = 0; i < board.length; i++) {
 		message += '\r\n' + (i+1) + ' |'
@@ -42,6 +47,130 @@ function printBoard(msg, addFEN) {
 		message += ' | ' + (i+1)
 	}
 	message += '\r\n--+-----------------+--\r\n. | a b c d e f g h | .```'
+	return message;
+}
+
+function highlightBoard() {
+	message = '```html\r\n. | a  b  c  d  e  f  g  h | .\r\n' + '--+------------------------+--'
+	for (i = 0; i < board.length; i++) {
+		message += '\r\n' + (i+1) + ' |'
+		for (j = 0; j < board[i].length; j++) {
+			if (board[i][j]) {
+				if (playerToMove === "w" && whitePiece.includes(board[i][j])) {
+					message += "<" + board[i][j] + ">"
+				}
+				else if (playerToMove === "b" && blackPiece.includes(board[i][j])) {
+					message += "<" + board[i][j] + ">"
+				}
+				else {
+					message += " " + board[i][j] + " "
+				}
+			}
+			else {
+				message += " . "
+			}
+		}
+		message += '| ' + (i+1)
+	}
+	message += '\r\n--+------------------------+--\r\n. | a  b  c  d  e  f  g  h | .```'
+	return message;
+}
+
+function versusBoard() {
+	message = '```css\r\n. | a  b  c  d  e  f  g  h | .\r\n' + '--+------------------------+--'
+	for (i = 0; i < board.length; i++) {
+		message += '\r\n' + (i+1) + ' |'
+		for (j = 0; j < board[i].length; j++) {
+			if (board[i][j]) {
+				if (whitePiece.includes(board[i][j])) {
+					message += "[" + board[i][j] + "]"
+				}
+				else {
+					message += "{" + board[i][j] + "}"
+				}
+			}
+			else {
+				message += " . "
+			}
+		}
+		message += '| ' + (i+1)
+	}
+	message += '\r\n--+------------------------+--\r\n. | a  b  c  d  e  f  g  h | .```'
+	return message;
+}
+
+function diagonalBoard() {
+	message = '```md\r\n   | a  b  c  d  e  f  g  h |   \r\n' + '---+------------------------+---'
+	for (i = 0; i < board.length; i++) {
+		if (i % 2 == 1) {
+			message += '\r\n' + (i+1) + ' []'
+		}
+		else {
+			message += '\r\n' + (i+1) + ' ||'
+		}
+		for (j = 0; j < board[i].length; j++) {
+			if (board[i][j]) {
+				message += "[" + board[i][j] + "]"
+			}
+			else {
+				message += "[.]"
+			}
+		}
+		if (i % 2 == 1) {
+			message += '[] ' + (i+1)
+		}
+		else {
+			message += '|| ' + (i+1)
+		}
+
+	}
+	message += '\r\n---+------------------------+---\r\n   | a  b  c  d  e  f  g  h |   ```'
+	return message;
+}
+
+function printBoard(msg, addFEN, style) {
+	let message = ""
+	
+	// If style given
+	if (style === "highlight") {
+		message = highlightBoard()
+	}
+	else if (style === "diagonal") {
+		message = diagonalBoard()
+	}
+	else if (style === "versus") {
+		message = versusBoard()
+	}
+	else if (style === "compact") {
+		message = compactBoard()
+	}
+	else { // Style not given, use default
+		let styleDef = "";
+		// Find default
+		if (playerToMove === "w") {
+			styleDef = whiteSet;
+		}
+		else {
+			styleDef = blackSet;
+		}
+		// Use default
+		if (styleDef === "highlight") {
+			message = highlightBoard()
+		}
+		else if (styleDef === "diagonal") {
+			message = diagonalBoard()
+		}
+		else if (styleDef === "versus") {
+			message = versusBoard()
+		}
+		else if (styleDef === "compact") {
+			message = compactBoard()
+		}
+		else {
+			message = "Um error"
+		}
+	}
+	
 	
 	// Border color matches player to move
 	let borderColor = "#FFFFFF";
@@ -233,12 +362,16 @@ function movePiece(msg, args) {
 	}
 	
 	// Have to check for check
+	if (piece === true) {
+		
+	}
 	// And setup enPassant
 	// And promotion
 	// but for now
 	// We'll say the move is legal
 	
 	// Move piece
+	board[to[1]][to[0]] = piece;
 	board[to[1]][to[0]] = piece;
 	board[from[1]][from[0]] = "";
 	
@@ -260,7 +393,12 @@ function movePiece(msg, args) {
 	}
 	
 	// Print board
-	printBoard(msg, true);
+	if (playerToMove === "w") {
+		printBoard(msg, true, whiteSet);		
+	}
+	else {
+		printBoard(msg, true, blackSet);
+	}
 }
 
 function determinePlace(place) {
@@ -460,6 +598,29 @@ function pawnMove (from, to, toa1Form) {
 	}
 }
 
+// Find board style
+function setStyle(msg, args) {
+	// White or black
+	if (args[0] === "w" || args[0] === "b") { 
+		if (boardStyle.includes(args[1])) { // If style exists
+			if (args[0] === "w") { // Set style
+				whiteSet = args[1];
+				msg.channel.send("Set white's style!");
+			}
+			else { // Black
+				blackSet = args[1];
+				msg.channel.send("Set black's style!");
+			}
+		}
+		else {
+			msg.channel.send("Could not find type!");
+		}
+	}
+	else {
+		msg.channel.send("Set the first argument to w or b!");
+	}
+}
+
 module.exports = {
     chessCommand: function(msg) {
 		// Here are the arguments
@@ -473,12 +634,12 @@ module.exports = {
                 // set found equal to true so your index.js file knows
                 //   to not try executing 'other' commands
                 // execute function associated with this command
-                msg.channel.send("Hi" + determinePlace(arguments[0]))
+                msg.channel.send("Unfinished! Ask Wenyunity.")
                 break;
 
             // your second admin command (similar setup as above)
             case 'view':
-                printBoard(msg, true);
+                printBoard(msg, true, arguments[0]);
                 break;
 				
 			case 'move':
@@ -487,6 +648,14 @@ module.exports = {
 				
 			case 'reset':
 				newBoard();
+				break;
+				
+			case 'set':
+				setStyle(msg, arguments);
+				break;
+			
+			default:
+				msg.channel.send("Args: view, move, reset, set")
 				break;
 
             // ... more admin commands

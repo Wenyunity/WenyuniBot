@@ -1,15 +1,43 @@
 {
-	"Basic": 
+	"General": 
 	{
-		"help": "This is the help command. Use **WY!help** to get a list of all commands.",
-		"choose": "Chooses between arguments separated by spaces.\r\nFor example, WY!choose 1 2 3 will choose between 1, 2, and 3.",
-		"random": "Chooses a random number.\r\n\r\n- Given two numbers, it will pick between them.\r\n- Given one number, it will pick between 0 and that number.\r\n- Given no numbers, it picks between 0 and 1.",
-		"easteregg": "Shows all easter egg texts that haven't been found yet.\r\nTo find an easterEgg, type wy!Name into the command list. All easter eggs have their first letter capitalized.\r\nIf the easter egg is multiple words, spaces are removed and each word is capitalized.\r\n\r\n'wy!easterEgg found' -> Shows all found easter eggs."
+		"help": {
+			"desc": "This is the help command. Use **WY!help** to get a list of all commands.",
+			"args": {}
+		}, 
+		"choose": {
+			"desc": "Chooses randomly between the choices given.",
+			"args": {
+				"Choices": "Choices are separated by ', '"
+			}
+		},
+		"random": {
+			"desc": "Chooses a random floating point number.",
+			"args": {
+				"No Arguments": "Chooses between 0 and 1.",
+				"1 Number": "Chooses between 0 and the number given.",
+				"2 Numbers": "Chooses between the two numbers given."
+			}
+		}
 	},
-	"Wah":
+	"Fun":
 	{
-	"waluigi": "Most likely screams WALUIGI at you. Not an easter egg. \r\nYou may get screamed at using Waluigi or WALUIGI or waluigi",
-	"Waluigi": "Most likely screams WALUIGI at you. Not an easter egg. \r\nYou may get screamed at using Waluigi or WALUIGI or waluigi",
-	"WALUIGI": "Most likely screams WALUIGI at you. Not an easter egg. \r\nYou may get screamed at using Waluigi or WALUIGI or waluigi"
+		"waluigi": {
+			"desc": "Gives you either the Luigi or the WALUIGI role if available, at random. Removes the unselected role.",
+			"args": {}
+		},
+		"work": {
+			"desc": "Use this command to gain points. You will have to wait X minutes to work again, where X is the number of points you get.",
+			"args": {}
+		}, 
+		"easteregg": {
+			"desc": "Find easter eggs and view them here!",
+			"args": {
+			"No Arguments": "Shows all flavor text for unfound easter eggs.",
+			"found": "Shows all found easter eggs and how many times they were activated.",
+			"first": "Shows users who found easter eggs first.",
+			"All other arguments": "Tries to find an easter egg. Easter eggs are written in PascalCase with no spaces."
+			}
+		}
 	}
 }

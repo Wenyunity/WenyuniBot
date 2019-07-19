@@ -6,7 +6,8 @@ const easterEgg = JSON.parse(fs.readFileSync('./easterEgg.json', 'utf8'));
 const SQLite = require("better-sqlite3");
 const sql = new SQLite('./scores.sqlite');
 const arena = require('./Arena/Arena.js');
-const chess = require('./Chess/Chess.js')
+const chess = require('./Chess/Chess.js');
+const workDelay = 1000*60*60;
 
 // Initialize Discord client
 const client = new Discord.Client({
@@ -19,7 +20,7 @@ client.on('ready', function (evt) {
     const table = sql.prepare("SELECT count(*) FROM sqlite_master WHERE type='table' AND name = 'scores';").get();
     if (!table['count(*)']) {
 		// If the table isn't there, create it and setup the database correctly.
-		sql.prepare("CREATE TABLE scores (id TEXT PRIMARY KEY, user TEXT, guild TEXT, points INTEGER, level INTEGER);").run();
+		sql.prepare("CREATE TABLE scores (id TEXT PRIMARY KEY, user TEXT, points INTEGER, work INTEGER);").run();
 		// Ensure that the "id" row is always unique and indexed.
 		sql.prepare("CREATE UNIQUE INDEX idx_scores_id ON scores (id);").run();
 		sql.pragma("synchronous = 1");
@@ -28,7 +29,8 @@ client.on('ready', function (evt) {
 
     // And then we have two prepared statements to get and set the score data.
     client.getScore = sql.prepare("SELECT * FROM scores WHERE user = ?");
-    client.setScore = sql.prepare("INSERT OR REPLACE INTO scores (id, user, points, level) VALUES (@id, @user, @points, @level);");
+    client.setScore = sql.prepare("INSERT OR REPLACE INTO scores (id, user, points, work) VALUES (@id, @user, @points, @work);");
+	//client.addColumn = sql.prepare("ALTER TABLE scores ADD name = ? type = ? NOT NULL DEFAULT default = ?")
 });
 
 // Upon getting a message
@@ -37,9 +39,9 @@ client.on('message', msg => {
 	// Except for those that came from the client itself.
     if ((msg.content.substring(0, 3) == 'WY!' || msg.content.substring(0, 3) == 'wy!') && !msg.author.bot) {
 		// Get rid of WY!
-        let args = msg.content.substring(3).split(' ');
+		let args = msg.content.substring(3).split(' ');
 		// Find the main command
-        let mainCommand = args[0];
+		let mainCommand = args[0];
 		// And then the rest of the arguments
 		let commandArgs = args.slice(1);
 		
@@ -96,6 +98,17 @@ client.on('message', msg => {
 				case 'easteregg':
 					easterEggCommand(commandArgs, msg)
 					break;
+				case 'work':
+					workCommand(commandArgs, msg)
+					break;
+				case 'admin':
+					if (msg.author.id === auth.admin) {
+						msg.channel.send("Wenyunity.")
+					}
+					else {
+						msg.channel.send("You are not Wenyunity! Access denied!");
+					}
+					break;
 				// Not found
 				default:
 					// Easter Egg Support
@@ -111,6 +124,54 @@ client.on('message', msg => {
      }
 });
 
+// Gets user data
+function getData(msg) {
+	let data = client.getScore.get(msg.author.id);
+	
+	if (!data) {
+		data = {
+			id: `${msg.guild.id}-${msg.author.id}`,
+			user: msg.author.id,
+			points: 0,
+			work: 0
+		}
+	}
+	
+	return data;
+}
+
+// Work for your money
+function workCommand(args, msg) {
+	data = getData(msg);
+	
+	if ((Date.now() - workDelay) > data.work) {
+		// Gain money
+		pointGain = Math.floor(Math.random() * 1200) + 600;
+		// Gain points
+		data.points += pointGain;
+		// Set date
+		data.work = Date.now() + pointGain * 1000 * 60 * 1;
+		let nextWork = new Date(data.work);
+		
+		// You got money!
+		msg.channel.send("You got " + pointGain + " points! You have a total of " + data.points + " points.\r\nYou can work again on " + nextWork.toString() + "(In " + pointGain + "minutes)");
+		client.setScore.run(data);
+	}
+	else {
+		let workDate = new Date(data.work);
+		let hours = (data.work - Date.now()) / (60 * 60 * 1000) 
+		hours = Math.round(hours * 100)/100;
+		// Singular special message
+		if (hours === 1) {
+			msg.channel.send("You can work again in one hour!");
+		} // Normal message
+		else {
+			msg.channel.send("You need to wait until " + workDate.toString() + " to work again!\r\nThat's about " + hours + " hours, by the way.");
+		}
+	}
+}
+
+// All about easter eggs
 function easterEggFound(mainCommand, msg) {
 	// Create text
 	let easterEggEmbed = new Discord.RichEmbed()
@@ -273,7 +334,7 @@ function easterEggCommand(commandArgs, msg) {
 			easterEggFound(commandArgs[0], msg)
 		}
 		else {
-			msg.channel.send("Invalid easter egg! All easter eggs are written without spaces and use PascalCase");
+			msg.channel.send("Invalid easter egg! All easter eggs are written without spaces and use PascalCase.");
 		}
 	}
 }
@@ -288,8 +349,17 @@ function helpCommand(commandArgs, msg) {
 				.setColor('#559955')
 				.setTitle(commandArgs[0])
 				.setAuthor('Wenyunibot')
-				.setDescription(helpText[x][commandArgs[0]])
+				.setDescription(helpText[x][commandArgs[0]]["desc"])
 				.setFooter(textWenyuniFooter());
+				
+				// Add argument message
+				argsmessage = "";
+				for (key in helpText[x][commandArgs[0]]["args"]) {
+					argsmessage += "**" + key + "** - " + helpText[x][commandArgs[0]]["args"][key] + "\r\n"
+				}
+				if (argsmessage) {
+					helpEmbed.addField("Command Arguments", argsmessage);
+				}
 				
 				// Send
 				msg.channel.send(helpEmbed);

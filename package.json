@@ -1,6 +1,6 @@
 {
   "name": "Wenyunibot",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Wenyunity's Bot, use WY! or wy!",
   "main": "Yuni.js",
   "author": "Wenyunity",
@@ -11,6 +11,3 @@
     "package.json": "^2.0.1"
   }
 }
-
-rnbqkbnr/ppp1p1pp/8/3pPp2/8/8/PPPP1PPP/RNBQKBNR w KQkq f6 0 3
-rnbq1rk1/pppp1ppp/3b1n2/4p3/2B1P3/5N2/PPPP1PPP/RNBQ1RK1 w - - 6 5
