@@ -1,5 +1,18 @@
 # Version Control
 
+## Version 0.2.0
+- Work: Command added.
+- Work: Uses SQL table to save next work date and points.
+- Work: If used when not working, says how many hours until able to use command.
+- Chess: Added highlight board style.
+- Chess: Added versus board style.
+- Chess: Added diagonal board style.
+- Chess: Allow black and white to change board style separately.
+- Help: Revamped. Top description now describes the function.
+- Help: Command arguments for commands now described in fields.
+- Support for bot-creator-only commands added using auth.admin field.
+- Removed FEN notes from package.json
+
 ## Version 0.1.0
 - Chess.js connected with Yuni.js
 - Chess: Placed into own folder.
