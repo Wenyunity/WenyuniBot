@@ -7,12 +7,12 @@ const SQLite = require("better-sqlite3");
 const sql = new SQLite('./scores.sqlite');
 const arena = require('./Arena/Arena.js');
 const chess = require('./Chess/Chess.js');
-const workDelay = 1000*60*60;
 
 // Initialize Discord client
 const client = new Discord.Client({
 });
 
+// Prepare SQL
 client.on('ready', function (evt) {
     console.log(`Logged in as ${client.user.tag}!`);
 
@@ -62,29 +62,7 @@ client.on('message', msg => {
 				case 'waluigi':
 				case 'Waluigi':
 				case 'WALUIGI':
-					const guildMember = msg.member;
-					const waluigiAdd = msg.guild.roles.find(role => role.name === "WALUIGI");
-					const luigiAdd = msg.guild.roles.find(role => role.name === "Luigi");
-					let luigiRoll = Math.random()
-					if (luigiRoll < 0.5) {
-						if (luigiAdd) {
-							guildMember.addRole(luigiAdd);
-						}
-						if (waluigiAdd) {
-							guildMember.removeRole(waluigiAdd);
-						}
-						msg.channel.send('Oh yeah! Luigi time!');
-					}
-					else {
-						if (waluigiAdd) {
-							guildMember.addRole(waluigiAdd);
-						}
-						if (luigiAdd) {
-							guildMember.removeRole(luigiAdd);
-						}
-						msg.channel.send('WALUIGI');
-					};
-					break;
+					waluigiCommand(msg);
 				// Main commands
 				case 'help':
 					helpCommand(commandArgs, msg)
@@ -124,6 +102,38 @@ client.on('message', msg => {
      }
 });
 
+// Waluigi
+function waluigiCommand(msg) {
+	// Look for WALUIGI and Luigi roles
+	const guildMember = msg.member;
+	const waluigiAdd = msg.guild.roles.find(role => role.name === "WALUIGI");
+	const luigiAdd = msg.guild.roles.find(role => role.name === "Luigi");
+	
+	// Pick between Waluigi and Luigi
+	let luigiRoll = Math.random()
+	
+	// Luigi
+	if (luigiRoll < 0.5) {
+		if (luigiAdd) {
+			guildMember.addRole(luigiAdd);
+		}
+		if (waluigiAdd) {
+			guildMember.removeRole(waluigiAdd);
+		}
+		msg.channel.send('Oh yeah! Luigi time!');
+	} // Waluigi
+	else {
+		if (waluigiAdd) {
+			guildMember.addRole(waluigiAdd);
+		}
+		if (luigiAdd) {
+			guildMember.removeRole(luigiAdd);
+		}
+		msg.channel.send('WALUIGI');
+	};
+	break;
+}
+
 // Gets user data
 function getData(msg) {
 	let data = client.getScore.get(msg.author.id);
@@ -144,7 +154,7 @@ function getData(msg) {
 function workCommand(args, msg) {
 	data = getData(msg);
 	
-	if ((Date.now() - workDelay) > data.work) {
+	if (Date.now() > data.work) {
 		// Gain money
 		pointGain = Math.floor(Math.random() * 1200) + 600;
 		// Gain points
@@ -154,7 +164,8 @@ function workCommand(args, msg) {
 		let nextWork = new Date(data.work);
 		
 		// You got money!
-		msg.channel.send("You got " + pointGain + " points! You have a total of " + data.points + " points.\r\nYou can work again on " + nextWork.toString() + "(In " + pointGain + "minutes)");
+		msg.channel.send("You got " + pointGain + " points! You have a total of " + data.points + " points.\r\nYou can work again on " + nextWork.toString() + 
+				"\r\nThat's in " + pointGain + " minutes, about " + Math.floor((pointGain/60)*100)/100 + " hours.");
 		client.setScore.run(data);
 	}
 	else {
@@ -212,7 +223,6 @@ function textWenyuniFooter() {
 	return 'Wenyunibot thinks today is ' + currentDate.getFullYear() + '/' + (currentDate.getMonth()+1)
 		+ '/' + currentDate.getDate()
 }
-
 
 // Lists all unfound easter egg text
 function easterEggCommand(commandArgs, msg) {
@@ -338,6 +348,7 @@ function easterEggCommand(commandArgs, msg) {
 		}
 	}
 }
+
 // For help
 function helpCommand(commandArgs, msg) {
 	// Replaced by a dictionary
@@ -447,4 +458,5 @@ function randomCommand(commandArgs, msg) {
 	}
 }
 
+// Log in
 client.login(auth.token);
