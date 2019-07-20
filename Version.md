@@ -1,5 +1,10 @@
 # Version Control
 
+### Version 0.2.1
+- Waluigi: Moved to own function.
+- Work: Added hour approximation when collecting.
+- Work: Fixed collecting after the first time.
+
 ## Version 0.2.0
 - Work: Command added.
 - Work: Uses SQL table to save next work date and points.
