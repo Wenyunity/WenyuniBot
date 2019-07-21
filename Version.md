@@ -1,5 +1,26 @@
 # Version Control
 
+## Version 0.3.0
+- Chess: White now starts on rows 1-2 and Black now starts on rows 7-8.
+- Chess: Board styles are now defined in a JSON.
+- Chess: Board automatically flips so that the player to move is on the bottom.
+- Chess: Castling implemented.
+- Chess: Check implemented.
+- Chess: Moves now check if they would put the King in check.
+- Chess: Promotion implemented.
+- Chess: En Passant implemented.
+- Chess: Castling disabling implemented.
+- SQLite: Primary key is now user.
+- SQLite: Best added to SQL table.
+- Yuni: Command removed.
+- Leaderboard: Command added.
+- Work: Results now shown in embed.
+- Work: Exact time is now displayed in US format, UTC.
+- Work: Best work period is now kept track of.
+- Work: If unable to work, `wy!work` will only give the approximation.
+- Work: If unable to work, `wy!work detail` will give the exact time.
+- Help: Work, chess, and leaderboard added under the help section.
+
 ### Version 0.2.1
 - Waluigi: Moved to own function.
 - Work: Added hour approximation when collecting.
