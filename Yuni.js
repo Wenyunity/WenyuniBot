@@ -7,6 +7,7 @@ const SQLite = require("better-sqlite3");
 const sql = new SQLite('./scores.sqlite');
 const arena = require('./Arena/Arena.js');
 const chess = require('./Chess/Chess.js');
+const sortRows = ["points", "best"];
 
 // Initialize Discord client
 const client = new Discord.Client({
@@ -20,16 +21,16 @@ client.on('ready', function (evt) {
     const table = sql.prepare("SELECT count(*) FROM sqlite_master WHERE type='table' AND name = 'scores';").get();
     if (!table['count(*)']) {
 		// If the table isn't there, create it and setup the database correctly.
-		sql.prepare("CREATE TABLE scores (id TEXT PRIMARY KEY, user TEXT, points INTEGER, work INTEGER);").run();
+		sql.prepare("CREATE TABLE scores (user TEXT PRIMARY KEY, points INTEGER, work INTEGER, best INTEGER);").run();
 		// Ensure that the "id" row is always unique and indexed.
-		sql.prepare("CREATE UNIQUE INDEX idx_scores_id ON scores (id);").run();
+		sql.prepare("CREATE UNIQUE INDEX idx_scores_id ON scores (user);").run();
 		sql.pragma("synchronous = 1");
 		sql.pragma("journal_mode = wal");
 	}
 
     // And then we have two prepared statements to get and set the score data.
     client.getScore = sql.prepare("SELECT * FROM scores WHERE user = ?");
-    client.setScore = sql.prepare("INSERT OR REPLACE INTO scores (id, user, points, work) VALUES (@id, @user, @points, @work);");
+    client.setScore = sql.prepare("INSERT OR REPLACE INTO scores (user, points, work, best) VALUES (@user, @points, @work, @best);");
 	//client.addColumn = sql.prepare("ALTER TABLE scores ADD name = ? type = ? NOT NULL DEFAULT default = ?")
 });
 
@@ -54,10 +55,6 @@ client.on('message', msg => {
 				case 'chess':
 					chess.chessCommand(msg);
 					break;
-				// Default Test Message.
-				case 'Yuni':
-					msg.channel.send('Wen-Yuni-Ty. Uh...');
-					break;
 				// Waluigi is not an easter egg.
 				case 'waluigi':
 				case 'Waluigi':
@@ -78,6 +75,9 @@ client.on('message', msg => {
 					break;
 				case 'work':
 					workCommand(commandArgs, msg)
+					break;
+				case 'leaderboard':
+					leaderBoardCommand(commandArgs, msg)
 					break;
 				case 'admin':
 					if (msg.author.id === auth.admin) {
@@ -140,10 +140,10 @@ function getData(msg) {
 	
 	if (!data) {
 		data = {
-			id: `${msg.guild.id}-${msg.author.id}`,
 			user: msg.author.id,
 			points: 0,
-			work: 0
+			work: 0,
+			best: 0
 		}
 	}
 	
@@ -154,7 +154,7 @@ function getData(msg) {
 function workCommand(args, msg) {
 	data = getData(msg);
 	
-	if (Date.now() > data.work) {
+	if (Date.now() > data.work) { // Get points
 		// Gain money
 		pointGain = Math.floor(Math.random() * 1200) + 600;
 		// Gain points
@@ -163,21 +163,45 @@ function workCommand(args, msg) {
 		data.work = Date.now() + pointGain * 1000 * 60 * 1;
 		let nextWork = new Date(data.work);
 		
+
+		
+		let workEmbed = new Discord.RichEmbed()
+			.setColor("#982489")
+			.setTitle("Work Results for " + msg.author.tag)
+			.setAuthor('Wenyunibot')
+			.setDescription("You got " + pointGain + " points!")
+			.setFooter(textWenyuniFooter())
+			.addField("Total Points", data.points)
+			.addField("Work Cooldown Time", "About " + Math.floor((pointGain/60)*100)/100 + " hours.")
+			.addField("Exact Cooldown", nextWork.toLocaleString("default", {timeZone: "UTC", timeZoneName: "short"}));
+		
+		if (pointGain > data.best) {
+			workEmbed.addField("New best point gain!", `Previous best was ${data.best}.`);
+			data.best = pointGain;
+		}
+		
 		// You got money!
-		msg.channel.send("You got " + pointGain + " points! You have a total of " + data.points + " points.\r\nYou can work again on " + nextWork.toString() + 
-				"\r\nThat's in " + pointGain + " minutes, about " + Math.floor((pointGain/60)*100)/100 + " hours.");
+		msg.channel.send(workEmbed);
+		
+		// Save
 		client.setScore.run(data);
 	}
 	else {
 		let workDate = new Date(data.work);
-		let hours = (data.work - Date.now()) / (60 * 60 * 1000) 
-		hours = Math.round(hours * 100)/100;
-		// Singular special message
-		if (hours === 1) {
-			msg.channel.send("You can work again in one hour!");
-		} // Normal message
-		else {
-			msg.channel.send("You need to wait until " + workDate.toString() + " to work again!\r\nThat's about " + hours + " hours, by the way.");
+		// Give detailed time
+		if (args[0] === "detail") {
+			msg.channel.send("You need to wait until **" + workDate.toLocaleString("default", {timeZone: "UTC", timeZoneName: "short"}) + "** to work for more points.");
+		}
+		else { // Give approximation
+			let hours = (data.work - Date.now()) / (60 * 60 * 1000) 
+			hours = Math.round(hours * 100)/100;
+			// Singular special message
+			if (hours === 1) {
+				msg.channel.send("You can work again in one hour!");
+			} // Normal message
+			else {
+				msg.channel.send("You need to wait about **" + hours + " hours** to work for more points.");
+			}
 		}
 	}
 }
@@ -457,6 +481,40 @@ function randomCommand(commandArgs, msg) {
 		msg.channel.send("Here's a number between 0 and 1: " + Math.random())
 	}
 }
+
+// Leaderboard
+function leaderBoardCommand(commandArgs, msg) {
+	if (!sortRows.includes(commandArgs[0])) {
+		msg.channel.send("Could not find the row you wanted to sort by!");
+		return;
+	}
+	
+	const top10 = sql.prepare(`SELECT * FROM scores ORDER BY ${commandArgs[0]} DESC LIMIT 10;`).all();
+
+	let messageDesc = "";
+	let rank = 1;
+	for(const data of top10) {
+		messageDesc += `R${rank}: **${client.users.get(data.user).tag}** --> ${data[commandArgs[0]]} \r\n`;
+		rank++;
+	}
+	
+	var x = sql.prepare("SELECT count(*) AS userCount FROM scores");
+	
+	messageDesc += `Total users: ${x.all()[0].userCount}`;
+	
+    // Now shake it and show it! (as a nice embed, too!)
+	const leaderboardEmbed = new Discord.RichEmbed()
+		.setTitle(`Top 10 ${commandArgs[0]}`)
+		.setAuthor("Wenyunibot")
+		.setDescription(messageDesc)
+		.setColor("#101010")
+		.setFooter(textWenyuniFooter());
+
+
+	
+	return msg.channel.send(leaderboardEmbed);
+}
+
 
 // Log in
 client.login(auth.token);

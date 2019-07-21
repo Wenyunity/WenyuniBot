@@ -1,0 +1,91 @@
+{
+	"compact": {
+		"color": "",
+		"header": {
+			"white": "  | a b c d e f g h |  ",
+			"black": "  | h g f e d c b a |  "
+		},
+		"piece": {
+			"whiteOnTurn": [" ", ""],
+			"whiteOffTurn": [" ", ""],
+			"blackOnTurn": [" ", ""],
+			"blackOffTurn": [" ", ""],
+			"noPiece": [" ", ""]
+		},
+		"border": {
+			"top": "--+-----------------+--",
+			"bottom": "--+-----------------+--",
+			"leftOdd": " |",
+			"leftEven": " |",
+			"rightOdd": " | ",
+			"rightEven": " | "
+		}
+	},
+	"highlight": {
+		"color": "html",
+		"header": {
+			"white": "  | a  b  c  d  e  f  g  h |  ",
+			"black": "  | h  g  f  e  d  c  b  a |  "
+		},
+		"piece": {
+			"whiteOnTurn": ["<", ">"],
+			"whiteOffTurn": [" ", " "],
+			"blackOnTurn": ["<", ">"],
+			"blackOffTurn": [" ", " "],
+			"noPiece": [" ", " "]
+		},
+		"border": {
+			"top": "--+------------------------+--",
+			"bottom": "--+------------------------+--",
+			"leftOdd": " |",
+			"leftEven": " |",
+			"rightOdd": "| ",
+			"rightEven": "| "
+		}
+	},
+	"versus": {
+		"color": "css",
+		"header": {
+			"white": "  | a  b  c  d  e  f  g  h |  ",
+			"black": "  | h  g  f  e  d  c  b  a |  "
+		},
+		"piece": {
+			"whiteOnTurn": ["[", "]"],
+			"whiteOffTurn": ["[", "]"],
+			"blackOnTurn": ["{", "}"],
+			"blackOffTurn": ["{", "}"],
+			"noPiece": [" ", " "]
+		},
+		"border": {
+			"top": "--+------------------------+--",
+			"bottom": "--+------------------------+--",
+			"leftOdd": " |",
+			"leftEven": " |",
+			"rightOdd": "| ",
+			"rightEven": "| "
+		}
+	},
+	"diagonal": {
+		"color": "md",
+		"header": {
+			"white": "   | a  b  c  d  e  f  g  h |  ",
+			"black": "   | h  g  f  e  d  c  b  a |  "
+		},
+		"piece": {
+			"whiteOnTurn": ["[", "]"],
+			"whiteOffTurn": ["[", "]"],
+			"blackOnTurn": ["[", "]"],
+			"blackOffTurn": ["[", "]"],
+			"noPiece": ["[", "]"]
+		},
+		"border": {
+			"top": "---+------------------------+---",
+			"bottom": "---+------------------------+---",
+			"leftOdd": " []",
+			"leftEven": " ||",
+			"rightOdd": "|| ",
+			"rightEven": "[] "
+		}
+	}
+}
+	

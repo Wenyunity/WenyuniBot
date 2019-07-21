@@ -28,15 +28,33 @@
 		},
 		"work": {
 			"desc": "Use this command to gain points. You will have to wait X minutes to work again, where X is the number of points you get.",
-			"args": {}
+			"args": {
+				"detail": "If you are unable to work, shows exact time in UTC when you can work again."
+			}
 		}, 
 		"easteregg": {
 			"desc": "Find easter eggs and view them here!",
 			"args": {
-			"No Arguments": "Shows all flavor text for unfound easter eggs.",
-			"found": "Shows all found easter eggs and how many times they were activated.",
-			"first": "Shows users who found easter eggs first.",
-			"All other arguments": "Tries to find an easter egg. Easter eggs are written in PascalCase with no spaces."
+				"No Arguments": "Shows all flavor text for unfound easter eggs.",
+				"found": "Shows all found easter eggs and how many times they were activated.",
+				"first": "Shows users who found easter eggs first.",
+				"All other arguments": "Tries to find an easter egg. Easter eggs are written in PascalCase with no spaces."
+			}
+		},
+		"leaderboard": {
+			"desc": "Shows the top 10 in a specific category.",
+			"args": {
+				"points": "Shows the people who have the most points.",
+				"best": "Shows the people who got the most in one work session."
+			}
+		},
+		"chess": {
+			"desc": "Play a game of chess!",
+			"args": {
+				"move": "Moves a piece. Use a1 style coordinates. Castle with O-O and O-O-O.\r\nExample move: `wy!work g1 f3`",
+				"set": "Sets the style of chessboard. Use `wy!chess set help` to get style names.",
+				"reset": "Resets the chessboard.",
+				"view": "Views the chessboard. Optional arguments can be included for orientation and style."
 			}
 		}
 	}
