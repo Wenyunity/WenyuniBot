@@ -24,6 +24,14 @@ Randomly chooses between giving the Luigi and WALUIGI roles.
 
 Gives between 600 and 1800 points. Waiting time between two work periods is equal to the amount of points you get in minutes.
 
+### Chess
+
+Plays a game of chess.
+
+### Leaderboard
+
+Shows the top 10 users in a certain category. Current categories are `points` and `best`.
+
 ## Necessary Setup
 
 auth.json will need a token field (to store your tokens) and an admin field (to store your discord user ID {*Not the bot's ID*}.)
