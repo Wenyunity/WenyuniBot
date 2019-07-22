@@ -1,5 +1,9 @@
 # Version Control
 
+## Version 0.3.1
+- Waluigi: Removed illegal break statement, placed back where it's supposed to belong.
+- SQL: Added columns for eggplant.
+
 ## Version 0.3.0
 - Chess: White now starts on rows 1-2 and Black now starts on rows 7-8.
 - Chess: Board styles are now defined in a JSON.
