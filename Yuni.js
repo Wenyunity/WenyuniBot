@@ -9,6 +9,7 @@ const arena = require('./Arena/Arena.js');
 const chess = require('./Chess/Chess.js');
 const eggplant = require('./Eggplant/Eggplant.js');
 const sortRows = ["points", "bestWork"];
+const topTenEmoji = [":trophy:", ":two:", ":three:", ":four:", ":five:", ":six:", ":seven:", ":eight:", ":nine:", ":keycap_ten:"]
 
 // Initialize Discord client
 const client = new Discord.Client({
@@ -33,7 +34,24 @@ client.on('ready', function (evt) {
     client.getScore = sql.prepare("SELECT * FROM scores WHERE user = ?");
     client.setScore = sql.prepare("INSERT OR REPLACE INTO scores (user, points, work, bestWork, eggplant, eggplantExpire, eggplantRandom, eggplantSellPrice, eggplantReroll, bestEggplant) VALUES (@user, @points, @work, @bestWork, @eggplant, @eggplantExpire, @eggplantRandom, @eggplantSellPrice, @eggplantReroll, @bestEggplant);");
 	//client.addColumn = sql.prepare("ALTER TABLE scores ADD name = ? type = ? NOT NULL DEFAULT default = ?")
+	
+	// Send basic embed
+	client.basicEmbed = baseEmbed;
+	client.footer = textWenyuniFooter;
 });
+
+function baseEmbed(title, description, msg, color) {
+	let embedColor = color || "#888888";
+	
+	let basicEmbed = new Discord.RichEmbed()
+		.setColor(embedColor)
+		.setTitle(title)
+		.setAuthor('Wenyunibot')
+		.setDescription(description)
+		.setFooter(textWenyuniFooter())
+		
+	msg.channel.send(basicEmbed);
+}
 
 // Upon getting a message
 client.on('message', msg => {
@@ -499,9 +517,9 @@ function leaderBoardCommand(commandArgs, msg) {
 	const top10 = sql.prepare(`SELECT * FROM scores ORDER BY ${commandArgs[0]} DESC LIMIT 10;`).all();
 
 	let messageDesc = "";
-	let rank = 1;
+	let rank = 0;
 	for(const data of top10) {
-		messageDesc += `R${rank}: **${client.users.get(data.user).tag}** --> ${data[commandArgs[0]]} \r\n`;
+		messageDesc += `${topTenEmoji[rank]} - **${client.users.get(data.user).tag}** --> ${data[commandArgs[0]]} \r\n`;
 		rank++;
 	}
 	

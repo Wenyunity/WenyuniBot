@@ -26,12 +26,6 @@
 			"desc": "Gives you either the Luigi or the WALUIGI role if available, at random. Removes the unselected role.",
 			"args": {}
 		},
-		"work": {
-			"desc": "Use this command to gain points. You will have to wait X minutes to work again, where X is the number of points you get.",
-			"args": {
-				"detail": "If you are unable to work, shows exact time in UTC when you can work again."
-			}
-		}, 
 		"easteregg": {
 			"desc": "Find easter eggs and view them here!",
 			"args": {
@@ -41,6 +35,23 @@
 				"All other arguments": "Tries to find an easter egg. Easter eggs are written in PascalCase with no spaces."
 			}
 		},
+		"chess": {
+			"desc": "Play a game of chess!",
+			"args": {
+				"move": "Moves a piece. Use a1 style coordinates. Castle with O-O and O-O-O.\r\nExample move: `wy!chess move g1 f3`",
+				"set": "Sets the style of chessboard. Use `wy!chess set help` to get style names.",
+				"reset": "Resets the chessboard.",
+				"view": "Views the chessboard. Optional arguments can be included for orientation and style."
+			}
+		}
+	},
+	"Economy": {
+		"work": {
+			"desc": "Use this command to gain points. You will have to wait X minutes to work again, where X is the number of points you get.",
+			"args": {
+				"detail": "If you are unable to work, shows exact time in UTC when you can work again."
+			}
+		},
 		"leaderboard": {
 			"desc": "Shows the top 10 in a specific category.",
 			"args": {
@@ -48,13 +59,14 @@
 				"best": "Shows the people who got the most in one work session."
 			}
 		},
-		"chess": {
-			"desc": "Play a game of chess!",
+		"eggplant": {
+			"desc": "Buy and sell eggplants in a variable market. Just be careful - eggplants only are good for a week.",
 			"args": {
-				"move": "Moves a piece. Use a1 style coordinates. Castle with O-O and O-O-O.\r\nExample move: `wy!work g1 f3`",
-				"set": "Sets the style of chessboard. Use `wy!chess set help` to get style names.",
-				"reset": "Resets the chessboard.",
-				"view": "Views the chessboard. Optional arguments can be included for orientation and style."
+				"buy": "Buys eggplants for 100 points each.",
+				"view": "Views your current eggplant status.",
+				"reroll": "If you have no eggplants, rerolls the market. If you have eggplants, rerolls the sell price. Available every 6 hours.",
+				"sell": "Sells eggplants at the listed price.",
+				"throw": "Throws away expired eggplants."
 			}
 		}
 	}

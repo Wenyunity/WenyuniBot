@@ -86,7 +86,7 @@ function createSupportMove() {
 }
 
 // Creates a character
-function create(msg, arguments) {
+/*function create(msg, arguments) {
 	if(arguments.length == 0) {
 		msg.channel.send("Please select the number of magic attack moves! (Between 0 and 5)")
 	}
@@ -109,6 +109,42 @@ function create(msg, arguments) {
 			createEmbed.addField("Magic Move " + i, readMove(createSupportMove()))
 		}
 		msg.channel.send(createEmbed);
+	}
+}*/
+
+function create(msg, arguments) {
+	if(arguments.length < 2) {
+		msg.channel.send("Please send two numbers indicating the number of magic attack moves! (Between 0 and 5)")
+		return;
+	}
+	
+	if (isNaN(parseInt(arguments[0])) || isNaN(parseInt(arguments[0]))) {
+		msg.channel.send("These are not numbers!")
+		return;
+	}
+	
+	if(arguments[0] > 5 || arguments[1] > 5) {
+		msg.channel.send("Only up to five magic moves allowed!")
+		return;
+	}
+	else {
+		for (m = 0; m < 2; m++) {
+			const createEmbed = new Discord.RichEmbed()
+					.setColor('#ED9105')
+					.setTitle('Create a Character')
+					.setAuthor('Wenyunibot')
+					.setDescription("Beta Character")
+					.addField("Basic Move", readMove(createAttackMove(true)));
+			for (i = 0; i < Math.floor(arguments[m]); i++) {
+				//createEmbed.addField("Magic Move " + i, JSON.stringify(createAttackMove(false), null, 1))
+				createEmbed.addField("Magic Move " + i, readMove(createAttackMove(false)))
+			};
+			for (i = Math.floor(arguments[m]); i < 5; i++) {
+				//createEmbed.addField("Magic Move " + i, JSON.stringify(createSupportMove(), null, 1))
+				createEmbed.addField("Magic Move " + i, readMove(createSupportMove()))
+			}
+			msg.channel.send(createEmbed);
+		}
 	}
 }
 

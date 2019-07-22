@@ -337,6 +337,12 @@ function castling(msg, arguments) {
 
 // Moves piece if legal
 function movePiece(msg, args) {
+	
+	if (args.length < 1) {
+		msg.channel.send("Please put coordinates in the form a1, where a-h, 1-8 are allowed. Castling: O-O for kingside, O-O-O for queenside.");
+		return;
+	}
+	
 	// Castling
 	if (["0", "O"].includes(args[0].substring(0, 1))) {
 		castling(msg, args[0]);
@@ -858,6 +864,9 @@ function setStyle(msg, args) {
 			msg.channel.send("Could not find style!");
 		}
 	}
+	else if (args[0] === "help") {
+		msg.channel.send("Current styles: " + boardStyleSet + "/r/nExample: `wy!chess set w compact`");
+	}
 	else {
 		msg.channel.send("Set the first argument to w or b!");
 	}
@@ -937,13 +946,9 @@ module.exports = {
 		
         switch(mainCommand) {
             case 'help':
-                // set found equal to true so your index.js file knows
-                //   to not try executing 'other' commands
-                // execute function associated with this command
                 msg.channel.send("Unfinished! Ask Wenyunity.")
                 break;
 
-            // your second admin command (similar setup as above)
             case 'view':
                 printBoard(msg, true, arguments[0], arguments[1]);
                 break;
