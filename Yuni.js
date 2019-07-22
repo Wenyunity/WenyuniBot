@@ -7,7 +7,8 @@ const SQLite = require("better-sqlite3");
 const sql = new SQLite('./scores.sqlite');
 const arena = require('./Arena/Arena.js');
 const chess = require('./Chess/Chess.js');
-const sortRows = ["points", "best"];
+const eggplant = require('./Eggplant/Eggplant.js');
+const sortRows = ["points", "bestWork"];
 
 // Initialize Discord client
 const client = new Discord.Client({
@@ -21,7 +22,7 @@ client.on('ready', function (evt) {
     const table = sql.prepare("SELECT count(*) FROM sqlite_master WHERE type='table' AND name = 'scores';").get();
     if (!table['count(*)']) {
 		// If the table isn't there, create it and setup the database correctly.
-		sql.prepare("CREATE TABLE scores (user TEXT PRIMARY KEY, points INTEGER, work INTEGER, best INTEGER);").run();
+		sql.prepare("CREATE TABLE scores (user TEXT PRIMARY KEY, points INTEGER, work INTEGER, bestWork INTEGER);").run();
 		// Ensure that the "id" row is always unique and indexed.
 		sql.prepare("CREATE UNIQUE INDEX idx_scores_id ON scores (user);").run();
 		sql.pragma("synchronous = 1");
@@ -30,7 +31,7 @@ client.on('ready', function (evt) {
 
     // And then we have two prepared statements to get and set the score data.
     client.getScore = sql.prepare("SELECT * FROM scores WHERE user = ?");
-    client.setScore = sql.prepare("INSERT OR REPLACE INTO scores (user, points, work, best) VALUES (@user, @points, @work, @best);");
+    client.setScore = sql.prepare("INSERT OR REPLACE INTO scores (user, points, work, bestWork, eggplant, eggplantExpire, eggplantRandom, eggplantSellPrice, eggplantReroll, bestEggplant) VALUES (@user, @points, @work, @bestWork, @eggplant, @eggplantExpire, @eggplantRandom, @eggplantSellPrice, @eggplantReroll, @bestEggplant);");
 	//client.addColumn = sql.prepare("ALTER TABLE scores ADD name = ? type = ? NOT NULL DEFAULT default = ?")
 });
 
@@ -49,10 +50,13 @@ client.on('message', msg => {
 		// These messages will only work if it's a guild
 		if (msg.guild) {
 			switch(mainCommand) {
-				case 'arena':
+				case 'arena': // Arena module
 					arena.arenaCommand(sql, msg);
 					break;
-				case 'chess':
+				case 'eggplant': // Eggplant module
+					eggplant.eggplantCommand(sql, client, msg);
+					break;
+				case 'chess': // Chess module
 					chess.chessCommand(msg);
 					break;
 				// Waluigi is not an easter egg.
@@ -60,6 +64,7 @@ client.on('message', msg => {
 				case 'Waluigi':
 				case 'WALUIGI':
 					waluigiCommand(msg);
+					break;
 				// Main commands
 				case 'help':
 					helpCommand(commandArgs, msg)
@@ -131,7 +136,6 @@ function waluigiCommand(msg) {
 		}
 		msg.channel.send('WALUIGI');
 	};
-	break;
 }
 
 // Gets user data
@@ -143,10 +147,15 @@ function getData(msg) {
 			user: msg.author.id,
 			points: 0,
 			work: 0,
-			best: 0
+			bestWork: 0//,
+			/*eggplant: 0,
+			eggplantExpire: 0,
+			eggplantRandom: 0,
+			eggplantSellPrice: 0,
+			eggplantReroll: 0,
+			bestEggplant: 0*/
 		}
 	}
-	
 	return data;
 }
 
@@ -163,8 +172,6 @@ function workCommand(args, msg) {
 		data.work = Date.now() + pointGain * 1000 * 60 * 1;
 		let nextWork = new Date(data.work);
 		
-
-		
 		let workEmbed = new Discord.RichEmbed()
 			.setColor("#982489")
 			.setTitle("Work Results for " + msg.author.tag)
@@ -175,9 +182,9 @@ function workCommand(args, msg) {
 			.addField("Work Cooldown Time", "About " + Math.floor((pointGain/60)*100)/100 + " hours.")
 			.addField("Exact Cooldown", nextWork.toLocaleString("default", {timeZone: "UTC", timeZoneName: "short"}));
 		
-		if (pointGain > data.best) {
-			workEmbed.addField("New best point gain!", `Previous best was ${data.best}.`);
-			data.best = pointGain;
+		if (pointGain > data.bestWork) {
+			workEmbed.addField("New best point gain!", `Previous best was ${data.bestWork}.`);
+			data.bestWork = pointGain;
 		}
 		
 		// You got money!
@@ -514,7 +521,6 @@ function leaderBoardCommand(commandArgs, msg) {
 	
 	return msg.channel.send(leaderboardEmbed);
 }
-
 
 // Log in
 client.login(auth.token);
