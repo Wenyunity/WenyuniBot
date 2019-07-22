@@ -1,6 +1,6 @@
 # Version Control
 
-## Version 0.3.1
+### Version 0.3.1
 - Waluigi: Removed illegal break statement, placed back where it's supposed to belong.
 - SQL: Added columns for eggplant.
 
