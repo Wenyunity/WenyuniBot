@@ -20,17 +20,21 @@ Find the easter eggs! Easter eggs are found by typing wy!easteregg EggTitle.
 
 Randomly chooses between giving the Luigi and WALUIGI roles.
 
-### Work
-
-Gives between 600 and 1800 points. Waiting time between two work periods is equal to the amount of points you get in minutes.
-
 ### Chess
 
 Plays a game of chess.
 
+### Work
+
+Gives between 600 and 1800 points. Waiting time between two work periods is equal to the amount of points you get in minutes.
+
 ### Leaderboard
 
 Shows the top 10 users in a certain category. Current categories are `points` and `best`.
+
+### Eggplant
+
+Buy eggplants for 100 points, and try to make a profit. The selling market can be very variable; keep rerolling the selling price, and then sell high. But be warned - Eggplants only last for seven days.
 
 ## Necessary Setup
 
