@@ -1,5 +1,25 @@
 # Version Control
 
+## Version 0.4.0
+- Arena: Create now displays two units.
+- Chess: Fixed crash that would occur when passing no arguments.
+- Chess: Set help will give a list of all current chessboard styles.
+- Chess: Removed errant comments.
+- Eggplant: Module added.
+- Eggplant: Buy function buys eggplants for 100 points.
+- Eggplant: Sell function sells eggplants.
+- Eggplant: View function views current eggplant market.
+- Eggplant: Reroll time set to 6 hours.
+- Eggplant: Expire time set to 7 days.
+- Eggplant: Throw function throws away expired eggplants.
+- Eggplant: Reroll function rerolls market price or market randomness.
+- Leaderboard: Now uses emoji to count the top 10.
+- Client: Added function basicEmbed.
+- Client: Added function footer.
+- Help: Added chess to help under fun.
+- Help: Added eggplant to help under economy.
+- Help: Moved work, leaderboard to economy section.
+
 ### Version 0.3.1
 - Waluigi: Removed illegal break statement, placed back where it's supposed to belong.
 - SQL: Added columns for eggplant.
