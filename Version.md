@@ -1,5 +1,29 @@
 # Version Control
 
+## Version 0.5.0
+- Chess: Minor edit to wy!chess set help
+- Yuni/Eggplant: getData now a client function.
+- Eggplant: NaN protection for buy/sell.
+- Eggplant: Initial sell price max upped to 95 from 90.
+- Eggplant: Various functions now have important parts bolded.
+- Eggplant: View, when having no eggplants, now shows current market.
+- Eggplant: Buy/View embed with eggplants now is a little bit more stacked.
+- Eggplant: Market demand added.
+- Eggplant: Market demand and stability no longer show raw numbers, only descriptions.
+- Eggplant: Descriptions for demand and stability in a JSON.
+- Eggplant: Sell price updated to factor in demand.
+- Eggplant: Expiration text no longer comes up if you have no eggplants.
+- Eggplant: Selling and rerolling market now have a user tag in the message.
+- Eggplant: Help embed added.
+- Leaderboard: Can now sort by eggplants and bestEggplant.
+- Client/SQL: Updated to reflect eggplant rows.
+- Client: getData updated for eggplant rows.
+- Work: Bold on how many points gained.
+- Work: Best text changed.
+- EasterEgg: Lowercase on found and first.
+- Leaderboard: Redirects to easteregg on found and first.
+- Help: Added "help" to easteregg arguments.
+
 ## Version 0.4.0
 - Arena: Create now displays two units.
 - Chess: Fixed crash that would occur when passing no arguments.
