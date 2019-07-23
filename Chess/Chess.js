@@ -865,7 +865,7 @@ function setStyle(msg, args) {
 		}
 	}
 	else if (args[0] === "help") {
-		msg.channel.send("Current styles: " + boardStyleSet + "/r/nExample: `wy!chess set w compact`");
+		msg.channel.send("Current styles: " + boardStyleSet + "\r\nExample: `wy!chess set w compact`");
 	}
 	else {
 		msg.channel.send("Set the first argument to w or b!");

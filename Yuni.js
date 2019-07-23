@@ -8,7 +8,7 @@ const sql = new SQLite('./scores.sqlite');
 const arena = require('./Arena/Arena.js');
 const chess = require('./Chess/Chess.js');
 const eggplant = require('./Eggplant/Eggplant.js');
-const sortRows = ["points", "bestWork"];
+const sortRows = ["points", "bestWork", "eggplant", "bestEggplant"];
 const topTenEmoji = [":trophy:", ":two:", ":three:", ":four:", ":five:", ":six:", ":seven:", ":eight:", ":nine:", ":keycap_ten:"]
 
 // Initialize Discord client
@@ -23,7 +23,7 @@ client.on('ready', function (evt) {
     const table = sql.prepare("SELECT count(*) FROM sqlite_master WHERE type='table' AND name = 'scores';").get();
     if (!table['count(*)']) {
 		// If the table isn't there, create it and setup the database correctly.
-		sql.prepare("CREATE TABLE scores (user TEXT PRIMARY KEY, points INTEGER, work INTEGER, bestWork INTEGER);").run();
+		sql.prepare("CREATE TABLE scores (user TEXT PRIMARY KEY, points INTEGER, work INTEGER, bestWork INTEGER, eggplant INTEGER, eggplantExpire INTEGER, eggplantRandom INTEGER, eggplantSellPrice INTEGER, eggplantMaxSellPrice INTEGER, eggplantReroll INTEGER, bestEggplant INTEGER);").run();
 		// Ensure that the "id" row is always unique and indexed.
 		sql.prepare("CREATE UNIQUE INDEX idx_scores_id ON scores (user);").run();
 		sql.pragma("synchronous = 1");
@@ -32,12 +32,13 @@ client.on('ready', function (evt) {
 
     // And then we have two prepared statements to get and set the score data.
     client.getScore = sql.prepare("SELECT * FROM scores WHERE user = ?");
-    client.setScore = sql.prepare("INSERT OR REPLACE INTO scores (user, points, work, bestWork, eggplant, eggplantExpire, eggplantRandom, eggplantSellPrice, eggplantReroll, bestEggplant) VALUES (@user, @points, @work, @bestWork, @eggplant, @eggplantExpire, @eggplantRandom, @eggplantSellPrice, @eggplantReroll, @bestEggplant);");
+    client.setScore = sql.prepare("INSERT OR REPLACE INTO scores (user, points, work, bestWork, eggplant, eggplantExpire, eggplantRandom, eggplantSellPrice, eggplantMaxSellPrice, eggplantReroll, bestEggplant) VALUES (@user, @points, @work, @bestWork, @eggplant, @eggplantExpire, @eggplantRandom, @eggplantSellPrice, @eggplantMaxSellPrice, @eggplantReroll, @bestEggplant);");
 	//client.addColumn = sql.prepare("ALTER TABLE scores ADD name = ? type = ? NOT NULL DEFAULT default = ?")
 	
 	// Send basic embed
 	client.basicEmbed = baseEmbed;
 	client.footer = textWenyuniFooter;
+	client.loadData = getData;
 });
 
 function baseEmbed(title, description, msg, color) {
@@ -165,13 +166,14 @@ function getData(msg) {
 			user: msg.author.id,
 			points: 0,
 			work: 0,
-			bestWork: 0//,
-			/*eggplant: 0,
+			bestWork: 0,
+			eggplant: 0,
 			eggplantExpire: 0,
-			eggplantRandom: 0,
+			eggplantRandom: 50,
 			eggplantSellPrice: 0,
+			eggplantMaxSellPrice: 250,
 			eggplantReroll: 0,
-			bestEggplant: 0*/
+			bestEggplant: 0
 		}
 	}
 	return data;
@@ -194,14 +196,14 @@ function workCommand(args, msg) {
 			.setColor("#982489")
 			.setTitle("Work Results for " + msg.author.tag)
 			.setAuthor('Wenyunibot')
-			.setDescription("You got " + pointGain + " points!")
+			.setDescription("You got **" + pointGain + "** points!")
 			.setFooter(textWenyuniFooter())
 			.addField("Total Points", data.points)
 			.addField("Work Cooldown Time", "About " + Math.floor((pointGain/60)*100)/100 + " hours.")
 			.addField("Exact Cooldown", nextWork.toLocaleString("default", {timeZone: "UTC", timeZoneName: "short"}));
 		
 		if (pointGain > data.bestWork) {
-			workEmbed.addField("New best point gain!", `Previous best was ${data.bestWork}.`);
+			workEmbed.addField("New best work session!", `Previous best was ${data.bestWork} points.`);
 			data.bestWork = pointGain;
 		}
 		
@@ -299,7 +301,7 @@ function easterEggCommand(commandArgs, msg) {
 		// Send message
 		msg.channel.send(easterEggEmbed);
 	}	
-	else if (commandArgs[0] == "found") { // Found
+	else if (commandArgs[0].toLowerCase() == "found") { // Found
 		let message = ""
 		let count = []
 		for (x in easterEgg) {
@@ -338,7 +340,7 @@ function easterEggCommand(commandArgs, msg) {
 		// Send message
 		msg.channel.send(easterEggEmbed);
 	}
-	else if (commandArgs[0] == "first") { // Found
+	else if (commandArgs[0].toLowerCase() == "first") { // Found
 		let message = ""
 		let counter = []
 		// For each easter egg
@@ -509,6 +511,13 @@ function randomCommand(commandArgs, msg) {
 
 // Leaderboard
 function leaderBoardCommand(commandArgs, msg) {
+	
+	// Easter egg leaderboard commands
+	if (["first", "found"].includes(commandArgs[0].toLowerCase())) {
+		easterEggCommand(commandArgs, msg);
+		return;
+	}
+	// Otherwise
 	if (!sortRows.includes(commandArgs[0])) {
 		msg.channel.send("Could not find the row you wanted to sort by!");
 		return;

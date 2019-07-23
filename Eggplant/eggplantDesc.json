@@ -1,0 +1,18 @@
+{
+	"Stability": {
+		"Stagnant": 85,
+		"Stable": 60,
+		"Average": 40,
+		"Unstable": 20,
+		"Chaotic": 0
+	},
+	"Price": {
+		"Perfect": 600,
+		"Amazing": 500,
+		"Great": 400,
+		"Good": 300,
+		"Average": 200,
+		"Mediocre": 150,
+		"Bad": 0
+	}
+}

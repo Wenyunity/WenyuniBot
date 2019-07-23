@@ -66,7 +66,8 @@
 				"view": "Views your current eggplant status.",
 				"reroll": "If you have no eggplants, rerolls the market. If you have eggplants, rerolls the sell price. Available every 6 hours.",
 				"sell": "Sells eggplants at the listed price.",
-				"throw": "Throws away expired eggplants."
+				"throw": "Throws away expired eggplants.",
+				"help": "Gives a more detailed explanation of eggplant."
 			}
 		}
 	}

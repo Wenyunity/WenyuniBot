@@ -6,33 +6,20 @@ const rerollTime = 1000 * 60 * 60 * 6; // 6 hours
 const day = 1000 * 60 * 60 * 24
 const hour = 1000 * 60 * 60
 const moduleColor = "#AA10AA"
-
-// Gets user data
-// Hopefully I can figure out soon how to export this straight from Yuni.js
-function getData(client, msg) {
-	let data = client.getScore.get(msg.author.id);
-	
-	if (!data) {
-		data = {
-			user: msg.author.id,
-			points: 0,
-			work: 0,
-			bestWork: 0,
-			eggplant: 0,
-			eggplantExpire: 0,
-			eggplantRandom: 0,
-			eggplantSellPrice: 0,
-			eggplantReroll: 0,
-			bestEggplant: 0
-		}
-	}
-	return data;
-}
+const maxRandom = 23 // Max price is 100 + maxRandom squared
+const fs = require('fs');
+const descEggplant = JSON.parse(fs.readFileSync('./Eggplant/eggplantDesc.json', 'utf8'));
 
 // Buy eggplants
 function buy(client, msg, amount) {
 	// Get client data
-	data = getData(client, msg);
+	let data = client.loadData(msg);
+	
+	// isNaN
+	if (isNaN(parseInt(amount))) {
+		client.basicEmbed("Buy Error", `You cannot buy ${emoji} if you don't use a number.`, msg);
+		return;
+	}
 	
 	// If you have eggplants, cannot buy more
 	if (data.eggplant) {
@@ -65,27 +52,28 @@ function buy(client, msg, amount) {
 	data.eggplant = Math.floor(amount);
 	// Lower points
 	data.points = data.points - price;
-	// Starting sell price is random between 75 and 90
-	data.eggplantSellPrice = 75 + Math.floor(Math.random() * 15);
+	// Starting sell price is random between 75 and 95
+	data.eggplantSellPrice = 75 + Math.floor(Math.random() * 20);
 	// Expire time
 	data.eggplantExpire = Date.now() + expireTime;
 	// Reroll time
 	data.eggplantReroll = Date.now() + rerollTime;
 	
-	sendEmbed(`You bought ${Math.floor(amount)} ${emoji} for ${price} points!`, msg, data);
+	sendEmbed(`You bought ${Math.floor(amount)} ${emoji} for **${price} points**!`, msg, data);
 	
 	// Save
 	client.setScore.run(data);
 }
 
-// View the amount of eggplants
+// View the current market.
 function view(client, msg) {
 	// Get client data
-	data = getData(client, msg);
+	let data = client.loadData(msg);
 	
-	// No eggplants, just give the forecast.
+	// No eggplants, show forecast.
 	if (!data.eggplant) {
-		client.basicEmbed("View Denied", `You do not have any ${emoji} right now.`, msg);
+		// Write Text
+		viewForecast(client, msg, data.eggplantRandom, data.eggplantMaxSellPrice);
 		return;
 	}
 	
@@ -111,21 +99,48 @@ function sendEmbed(description, msg, data) {
 		.setTitle("Eggplant Status for " + msg.author.tag)
 		.setAuthor('Wenyunibot')
 		.setDescription(description)
-		.addField("Stability", data.eggplantRandom, true)
 		.addField("Sell Price", data.eggplantSellPrice, true)
-		.addField("Reroll Time", `${(Math.floor(((data.eggplantReroll - Date.now())/hour)*100)/100)} hours`)
-		.addField("Reroll Exact", rerollDateTime.toLocaleString("default", {timeZone: "UTC", timeZoneName: "short"}))
-		.addField("Expire Time", `${(Math.floor(((data.eggplantExpire - Date.now())/day)*100)/100)} days // ${(Math.floor(((data.eggplantExpire - Date.now())/hour)*100)/100)} hours`)
-		.addField("Expire Exact Time", expireDateTime.toLocaleString("default", {timeZone: "UTC", timeZoneName: "short"}));
+		.addField("Stability", getStabilityDescription(data.eggplantRandom), true)
+		.addField("Demand", getMaxDescription(data.eggplantMaxSellPrice), true)
+		.addField("Reroll Time", `${(Math.floor(((data.eggplantReroll - Date.now())/hour)*100)/100)} hours`, true)
+		.addField("Reroll Exact Time", rerollDateTime.toLocaleString("default", {timeZone: "UTC", timeZoneName: "short"}), true)
+		.addBlankField(true)
+		.addField("Expire Time", `${(Math.floor(((data.eggplantExpire - Date.now())/day)*100)/100)} days // ${(Math.floor(((data.eggplantExpire - Date.now())/hour)*100)/100)} hours`, true)
+		.addField("Expire Exact Time", expireDateTime.toLocaleString("default", {timeZone: "UTC", timeZoneName: "short"}), true)
+		.setFooter(client.footer());
 		
 	msg.channel.send(eggplantEmbed);
 }
 
+// Gets description for stability
+function getStabilityDescription(stability) {
+	for (const [key, number] of Object.entries(descEggplant.Stability)) {
+		if (stability > number) {
+			return key;
+		}
+	}
+}
+
+// Gets description for maximum price
+function getMaxDescription(price) {
+	for (const [key, number] of Object.entries(descEggplant.Price)) {
+		if (price > number) {
+			return key;
+		}
+	}
+}
+
+// Displays text for current stability and demand.
+function viewForecast(client, msg, stability, maxPrice) {
+	client.basicEmbed("Market Forecast for "  + msg.author.tag, `The market is **${getStabilityDescription(stability)}** and the demand is **${getMaxDescription(maxPrice)}**.`, msg, moduleColor);
+}
+
+// Throws away expired eggplants.
 function eggplantThrow(client, msg) {
 	// Get client data
-	data = getData(client, msg);
+	let data = client.loadData(msg);
 	
-	// No eggplants, just give the forecast.
+	// No eggplants.
 	if (!data.eggplant) {
 		client.basicEmbed("Throw Denied", `You do not have any ${emoji} to throw away.`, msg);
 		return;
@@ -138,7 +153,7 @@ function eggplantThrow(client, msg) {
 	}
 	
 	// Throw away eggplants
-	client.basicEmbed("Throw Accepted", `You threw away ${data.eggplant} ${emoji}.`, msg, moduleColor);
+	client.basicEmbed("Throw Accepted", `${msg.author.tag} threw away ${data.eggplant} ${emoji}.`, msg, moduleColor);
 	
 	data.eggplant = 0;
 	
@@ -149,28 +164,39 @@ function eggplantThrow(client, msg) {
 	randomizeRandom(client, msg);
 }
 
+// Randomizes stability and max price.
 function randomizeRandom(client, msg) {
-	data = getData(client, msg);
+	let data = client.loadData(msg);
 	
-	data.eggplantRandom = Math.floor(Math.random()*90 + 10)
+	// New random factor
+	data.eggplantRandom = Math.floor(Math.random()*90 + 5)
+	// New max price
+	data.eggplantMaxSellPrice = Math.ceil((Math.random()*maxRandom)**2 + 100)
+	// New reroll time
 	data.eggplantReroll = Date.now() + rerollTime;
 	
 	// Save
 	client.setScore.run(data);
 	
 	// Write Text
-	client.basicEmbed("Eggplant Random Factor", `Your new random factor is ${data.eggplantRandom}`, msg, moduleColor);
+	viewForecast(client, msg, data.eggplantRandom, data.eggplantMaxSellPrice);
 }
 
+// Randomizes sell price.
 function randomizePrice(client, msg) {
-	data = getData(client, msg);
+	let data = client.loadData(msg);
 	
-	// Write Data
-	data.eggplantSellPrice = Math.ceil(data.eggplantSellPrice * (data.eggplantRandom/100) + Math.random() * 200 * (((100-data.eggplantRandom)/100)));
+	// New price
+	let newPrice = Math.ceil(data.eggplantSellPrice * (data.eggplantRandom/100) + Math.random() * data.eggplantMaxSellPrice * (((100-data.eggplantRandom)/100)));
+	
+	// New reroll time
 	data.eggplantReroll = Date.now() + rerollTime;
 	
 	// Write Text
-	client.basicEmbed("Eggplant Random Factor", `Your new sell price is ${data.eggplantSellPrice}`, msg, moduleColor);
+	client.basicEmbed("Eggplant Random Factor", `The new ${emoji} sell price is **${newPrice} points.** The old price was ${data.eggplantSellPrice} points.`, msg, moduleColor);
+	
+	// Write new price
+	data.eggplantSellPrice = newPrice;
 	
 	// Save
 	client.setScore.run(data);
@@ -178,7 +204,19 @@ function randomizePrice(client, msg) {
 
 // Sell eggplants
 function sell(client, msg, amount) {
-	data = getData(client, msg);
+	let data = client.loadData(msg);	
+	
+	// isNaN
+	if (isNaN(parseInt(amount))) {
+		client.basicEmbed("Sell Error", `You cannot sell ${emoji} if you don't use a number.`, msg);
+		return;
+	}
+	
+	// Eggplants are expired
+	if (Date.now() > data.eggplantExpire && data.eggplant) {
+		client.basicEmbed("Sell Error", `Your ${emoji} have expired! Please throw them out!`, msg);
+		return;
+	}
 	
 	if (!amount) {
 		client.basicEmbed("Sell Error", `You must determine how much ${emoji} to sell!`, msg);
@@ -188,12 +226,6 @@ function sell(client, msg, amount) {
 	// No eggplants, just give the forecast.
 	if (!data.eggplant) {
 		client.basicEmbed("Sell Error", `You do not have any ${emoji} right now.`, msg);
-		return;
-	}
-	
-	// Eggplants are expired
-	if (Date.now() > data.eggplantExpire) {
-		client.basicEmbed("Sell Error", `Your ${emoji} have expired! Please throw them out!`, msg);
 		return;
 	}
 	
@@ -212,7 +244,12 @@ function sell(client, msg, amount) {
 	// Sold.
 	let pointGain = Math.floor(amount) * data.eggplantSellPrice;
 	
-	client.basicEmbed("Sale Complete!", `You sold ${Math.floor(amount)} ${emoji} for ${pointGain} points.`, msg, moduleColor);
+	client.basicEmbed("Sale Complete!", `${msg.author.tag} sold ${Math.floor(amount)} ${emoji} for **${pointGain} points.**`, msg, moduleColor);
+	
+	// Check if best sale
+	if (pointGain > data.bestEggplant) {
+		data.bestEggplant = pointGain;
+	}
 	
 	// Update
 	data.eggplant -= Math.floor(amount);
@@ -221,33 +258,54 @@ function sell(client, msg, amount) {
 	// Save
 	client.setScore.run(data);
 	
-	// Reroll if no more eggplants
+	// Reroll if no more eggplants and time is far enough
 	if (!data.eggplant) {
-		randomizeRandom(client, msg);
+		if (data.eggplantExpire - Date.now() < expireTime - rerollTime) {
+			randomizeRandom(client, msg);
+		}
 	}
 }
 
+// Reroll.
 function reroll(client, msg) {
-	data = getData(client, msg);
+	let data = client.loadData(msg);
 	
-	if (Date.now() < data.eggplantReroll) {
-		client.basicEmbed("Reroll Denied", `You must wait ${(Math.floor(((data.eggplantReroll - Date.now())/hour)*100)/100)} hours to reroll!`, msg);
+	// Eggplants are expired
+	if (Date.now() > data.eggplantExpire && data.eggplant) {
+		client.basicEmbed("Reroll Denied", `Your ${emoji} have expired! Please throw them out!`, msg);
 		return;
 	}
 	
+	// Reroll too long
+	if (Date.now() < data.eggplantReroll) {
+		client.basicEmbed("Reroll Denied", `You must wait **${(Math.floor(((data.eggplantReroll - Date.now())/hour)*100)/100)} hours** to reroll!`, msg);
+		return;
+	}
+	
+	// Find which reroll to do.
 	if (!data.eggplant) {
 		randomizeRandom(client, msg)
 	}
 	else {
 		randomizePrice(client, msg)
 	}
-	
-	data = getData(client, msg);
-	data.eggplantReroll = Date.now() + rerollTime;	
-	
-	// Save
-	client.setScore.run(data);
-	
+}
+
+// Help.
+function helpCommand(client, msg) {
+	let eggplantEmbed = new Discord.RichEmbed()
+		.setColor(moduleColor)
+		.setTitle("Eggplant Help")
+		.setAuthor('Wenyunibot')
+		.setDescription("Eggplants are used to get a lot of points. The eggplant market can be very variable. Buy eggplants for 100 points, and then sell them later for a profit!\r\n Be careful, as eggplants only last a week!")
+		.addField("Stability", "Stability determines how much the price of eggplants can change in one roll. The more unstable, the more the price can change.")
+		.addField("Demand", "Demand determines the maximum possible price of eggplants. The higher the demand, the more points they can sell for.")
+		.addField("Reroll", "Rerolling is an important part of maximizing return. If you hold eggplants, rerolling will change the price. If you don't hold eggplants, rerolling will change the market.")
+		.addField("Expiration", "If your eggplants expire, you will have to throw them out (for 0 points). They last for exactly 7 days from purchase.")
+		.addField("Commands", "**buy** - Buys eggplants if you don't have any.\r\n**sell** - Sells eggplants.\r\n**view** - Views your current market.\r\n**reroll** - Rerolls price or market.\r\n**throw** - Throws away eggplants.")
+		.setFooter(client.footer());
+		
+		msg.channel.send(eggplantEmbed);
 }
 
 module.exports = {
@@ -260,7 +318,7 @@ module.exports = {
 		
         switch(mainCommand) {
             case 'help':
-                msg.channel.send("Unfinished! Ask Wenyunity.")
+                helpCommand(client, msg);
                 break;
 
             case 'sell':
