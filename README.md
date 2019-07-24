@@ -1,6 +1,10 @@
 # WenyuniBot
 
-Wenyunity's Discord Bot written in JS.
+Wenyunity's Discord Bot.
+
+## Server
+
+Wenyunibot's Testing Server: https://discord.gg/Y2fTCHM
 
 ## Current Functionality
 
