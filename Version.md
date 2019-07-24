@@ -1,5 +1,19 @@
 # Version Control
 
+### Version 0.5.1
+- Arena: Changes made to character creation
+- Arena: Character creation now supports character names
+- Eggplant: Max Price is now a cubic function.
+- Yuni/Eggplant: getData now asks for a user instead of a message.
+- Eggplant: Fixed error where sendEmbed was not given a client.
+- Eggplant: Reroll time now does not display negative.
+- Yuni: Invite function added.
+- Yuni: Profile function added.
+- Yuni/Admin: Sync function added.
+- SQL: Tag field added.
+- Yuni: Bot activity added ("Watching for wy!help")
+- Help: Added profile function.
+
 ## Version 0.5.0
 - Chess: Minor edit to wy!chess set help
 - Yuni/Eggplant: getData now a client function.
