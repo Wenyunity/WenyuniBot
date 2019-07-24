@@ -69,6 +69,12 @@
 				"throw": "Throws away expired eggplants.",
 				"help": "Gives a more detailed explanation of eggplant."
 			}
+		},
+		"profile": {
+			"desc": "Returns some summary statistics about a person.",
+			"args" : {
+				"user": "If given, tries to find a user. If not, displays the profile of the message sender."
+			}
 		}
 	}
 }

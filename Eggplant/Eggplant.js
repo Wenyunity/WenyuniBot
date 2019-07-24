@@ -6,14 +6,14 @@ const rerollTime = 1000 * 60 * 60 * 6; // 6 hours
 const day = 1000 * 60 * 60 * 24
 const hour = 1000 * 60 * 60
 const moduleColor = "#AA10AA"
-const maxRandom = 23 // Max price is 100 + maxRandom squared
+const maxRandom = 8 // Max price is 100 + maxRandom cubed
 const fs = require('fs');
 const descEggplant = JSON.parse(fs.readFileSync('./Eggplant/eggplantDesc.json', 'utf8'));
 
 // Buy eggplants
 function buy(client, msg, amount) {
 	// Get client data
-	let data = client.loadData(msg);
+	let data = client.loadData(msg.author);
 	
 	// isNaN
 	if (isNaN(parseInt(amount))) {
@@ -59,7 +59,7 @@ function buy(client, msg, amount) {
 	// Reroll time
 	data.eggplantReroll = Date.now() + rerollTime;
 	
-	sendEmbed(`You bought ${Math.floor(amount)} ${emoji} for **${price} points**!`, msg, data);
+	sendEmbed(`You bought ${Math.floor(amount)} ${emoji} for **${price} points**!`, msg, data, client);
 	
 	// Save
 	client.setScore.run(data);
@@ -68,7 +68,7 @@ function buy(client, msg, amount) {
 // View the current market.
 function view(client, msg) {
 	// Get client data
-	let data = client.loadData(msg);
+	let data = client.loadData(msg.author);
 	
 	// No eggplants, show forecast.
 	if (!data.eggplant) {
@@ -84,14 +84,22 @@ function view(client, msg) {
 	}
 	
 	// Send the embed
-	sendEmbed(`You have ${data.eggplant} ${emoji}!`, msg, data);
+	sendEmbed(`You have ${data.eggplant} ${emoji}!`, msg, data, client);
 }
 
 // Sends embed with given description and data
-function sendEmbed(description, msg, data) {
+function sendEmbed(description, msg, data, client) {
 	// Gets date objects for exact times
 	let rerollDateTime = new Date(data.eggplantReroll);
 	let expireDateTime = new Date(data.eggplantExpire);
+	
+	rerollText = "";
+	if (Date.now() > data.eggplantReroll) {
+		rerollText = "Now!"
+	}
+	else {
+		rerollText = `${(Math.floor(((data.eggplantReroll - Date.now())/hour)*100)/100)} hours`
+	}
 	
 	// Embed
 	let eggplantEmbed = new Discord.RichEmbed()
@@ -102,7 +110,7 @@ function sendEmbed(description, msg, data) {
 		.addField("Sell Price", data.eggplantSellPrice, true)
 		.addField("Stability", getStabilityDescription(data.eggplantRandom), true)
 		.addField("Demand", getMaxDescription(data.eggplantMaxSellPrice), true)
-		.addField("Reroll Time", `${(Math.floor(((data.eggplantReroll - Date.now())/hour)*100)/100)} hours`, true)
+		.addField("Reroll Time", rerollText, true)
 		.addField("Reroll Exact Time", rerollDateTime.toLocaleString("default", {timeZone: "UTC", timeZoneName: "short"}), true)
 		.addBlankField(true)
 		.addField("Expire Time", `${(Math.floor(((data.eggplantExpire - Date.now())/day)*100)/100)} days // ${(Math.floor(((data.eggplantExpire - Date.now())/hour)*100)/100)} hours`, true)
@@ -138,7 +146,7 @@ function viewForecast(client, msg, stability, maxPrice) {
 // Throws away expired eggplants.
 function eggplantThrow(client, msg) {
 	// Get client data
-	let data = client.loadData(msg);
+	let data = client.loadData(msg.author);
 	
 	// No eggplants.
 	if (!data.eggplant) {
@@ -166,12 +174,12 @@ function eggplantThrow(client, msg) {
 
 // Randomizes stability and max price.
 function randomizeRandom(client, msg) {
-	let data = client.loadData(msg);
+	let data = client.loadData(msg.author);
 	
 	// New random factor
 	data.eggplantRandom = Math.floor(Math.random()*90 + 5)
 	// New max price
-	data.eggplantMaxSellPrice = Math.ceil((Math.random()*maxRandom)**2 + 100)
+	data.eggplantMaxSellPrice = Math.ceil((Math.random()*(maxRandom-1)+1)**3 + 100)
 	// New reroll time
 	data.eggplantReroll = Date.now() + rerollTime;
 	
@@ -184,7 +192,7 @@ function randomizeRandom(client, msg) {
 
 // Randomizes sell price.
 function randomizePrice(client, msg) {
-	let data = client.loadData(msg);
+	let data = client.loadData(msg.author);
 	
 	// New price
 	let newPrice = Math.ceil(data.eggplantSellPrice * (data.eggplantRandom/100) + Math.random() * data.eggplantMaxSellPrice * (((100-data.eggplantRandom)/100)));
@@ -204,7 +212,7 @@ function randomizePrice(client, msg) {
 
 // Sell eggplants
 function sell(client, msg, amount) {
-	let data = client.loadData(msg);	
+	let data = client.loadData(msg.author);	
 	
 	// isNaN
 	if (isNaN(parseInt(amount))) {
@@ -268,7 +276,7 @@ function sell(client, msg, amount) {
 
 // Reroll.
 function reroll(client, msg) {
-	let data = client.loadData(msg);
+	let data = client.loadData(msg.author);
 	
 	// Eggplants are expired
 	if (Date.now() > data.eggplantExpire && data.eggplant) {

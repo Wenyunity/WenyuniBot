@@ -86,33 +86,32 @@ function createSupportMove() {
 }
 
 // Creates a character
-/*function create(msg, arguments) {
-	if(arguments.length == 0) {
-		msg.channel.send("Please select the number of magic attack moves! (Between 0 and 5)")
+function displayPlayerTeam(msg, team) {
+	const teamEmbed = new Discord.RichEmbed()
+			.setColor('#ED9105')
+			.setTitle('A Team')
+			.setAuthor('Wenyunibot')
+			.setDescription("Beta Character");
+	
+	for (z = 0; z < 2; z++) {
+		teamEmbed.addField(team.character[z].name, displayMoves(team.character[z].move));
 	}
-	else if(arguments[0] > 5) {
-		msg.channel.send("Only up to five magic moves allowed!")
+	msg.channel.send(teamEmbed);
+}
+
+function displayMoves(moveset) {
+	// Basic move
+	message = "";
+	message += readMove(moveset.B)
+	for (i = 0; i < 5; i++) {
+		message += "\r\n" + readMove(moveset[i]);
 	}
-	else {
-		const createEmbed = new Discord.RichEmbed()
-				.setColor('#ED9105')
-				.setTitle('Create a Character')
-				.setAuthor('Wenyunibot')
-				.setDescription("Beta Character")
-				.addField("Basic Move", readMove(createAttackMove(true)));
-		for (i = 0; i < Math.floor(arguments[0]); i++) {
-			//createEmbed.addField("Magic Move " + i, JSON.stringify(createAttackMove(false), null, 1))
-			createEmbed.addField("Magic Move " + i, readMove(createAttackMove(false)))
-		};
-		for (i = Math.floor(arguments[0]); i < 5; i++) {
-			//createEmbed.addField("Magic Move " + i, JSON.stringify(createSupportMove(), null, 1))
-			createEmbed.addField("Magic Move " + i, readMove(createSupportMove()))
-		}
-		msg.channel.send(createEmbed);
-	}
-}*/
+	return message;
+}
 
 function create(msg, arguments) {
+	let team = {};
+	team.character = {};
 	if(arguments.length < 2) {
 		msg.channel.send("Please send two numbers indicating the number of magic attack moves! (Between 0 and 5)")
 		return;
@@ -129,23 +128,22 @@ function create(msg, arguments) {
 	}
 	else {
 		for (m = 0; m < 2; m++) {
-			const createEmbed = new Discord.RichEmbed()
-					.setColor('#ED9105')
-					.setTitle('Create a Character')
-					.setAuthor('Wenyunibot')
-					.setDescription("Beta Character")
-					.addField("Basic Move", readMove(createAttackMove(true)));
+			// Create character
+			team.character[m] = {};
+			// Name
+			team.character[m].name = arguments[m+2] || "Placeholder " + m;
+			// Create thing to hold moves
+			team.character[m].move = {};
+			team.character[m].move.B = createAttackMove(true);
 			for (i = 0; i < Math.floor(arguments[m]); i++) {
-				//createEmbed.addField("Magic Move " + i, JSON.stringify(createAttackMove(false), null, 1))
-				createEmbed.addField("Magic Move " + i, readMove(createAttackMove(false)))
+				team.character[m].move[i] = createAttackMove(false)
 			};
 			for (i = Math.floor(arguments[m]); i < 5; i++) {
-				//createEmbed.addField("Magic Move " + i, JSON.stringify(createSupportMove(), null, 1))
-				createEmbed.addField("Magic Move " + i, readMove(createSupportMove()))
-			}
-			msg.channel.send(createEmbed);
+				team.character[m].move[i] = createSupportMove()
+			}	
 		}
 	}
+	displayPlayerTeam(msg, team);
 }
 
 // Turns object move into readable text

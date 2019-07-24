@@ -10,6 +10,7 @@ const chess = require('./Chess/Chess.js');
 const eggplant = require('./Eggplant/Eggplant.js');
 const sortRows = ["points", "bestWork", "eggplant", "bestEggplant"];
 const topTenEmoji = [":trophy:", ":two:", ":three:", ":four:", ":five:", ":six:", ":seven:", ":eight:", ":nine:", ":keycap_ten:"]
+const inviteLink = "https://discordapp.com/api/oauth2/authorize?client_id=599476939194892298&permissions=0&scope=bot"
 
 // Initialize Discord client
 const client = new Discord.Client({
@@ -23,7 +24,7 @@ client.on('ready', function (evt) {
     const table = sql.prepare("SELECT count(*) FROM sqlite_master WHERE type='table' AND name = 'scores';").get();
     if (!table['count(*)']) {
 		// If the table isn't there, create it and setup the database correctly.
-		sql.prepare("CREATE TABLE scores (user TEXT PRIMARY KEY, points INTEGER, work INTEGER, bestWork INTEGER, eggplant INTEGER, eggplantExpire INTEGER, eggplantRandom INTEGER, eggplantSellPrice INTEGER, eggplantMaxSellPrice INTEGER, eggplantReroll INTEGER, bestEggplant INTEGER);").run();
+		sql.prepare("CREATE TABLE scores (user TEXT PRIMARY KEY, tag TEXT, points INTEGER, work INTEGER, bestWork INTEGER, eggplant INTEGER, eggplantExpire INTEGER, eggplantRandom INTEGER, eggplantSellPrice INTEGER, eggplantMaxSellPrice INTEGER, eggplantReroll INTEGER, bestEggplant INTEGER);").run();
 		// Ensure that the "id" row is always unique and indexed.
 		sql.prepare("CREATE UNIQUE INDEX idx_scores_id ON scores (user);").run();
 		sql.pragma("synchronous = 1");
@@ -32,14 +33,30 @@ client.on('ready', function (evt) {
 
     // And then we have two prepared statements to get and set the score data.
     client.getScore = sql.prepare("SELECT * FROM scores WHERE user = ?");
-    client.setScore = sql.prepare("INSERT OR REPLACE INTO scores (user, points, work, bestWork, eggplant, eggplantExpire, eggplantRandom, eggplantSellPrice, eggplantMaxSellPrice, eggplantReroll, bestEggplant) VALUES (@user, @points, @work, @bestWork, @eggplant, @eggplantExpire, @eggplantRandom, @eggplantSellPrice, @eggplantMaxSellPrice, @eggplantReroll, @bestEggplant);");
+    client.setScore = sql.prepare("INSERT OR REPLACE INTO scores (user, tag, points, work, bestWork, eggplant, eggplantExpire, eggplantRandom, eggplantSellPrice, eggplantMaxSellPrice, eggplantReroll, bestEggplant) VALUES (@user, @tag, @points, @work, @bestWork, @eggplant, @eggplantExpire, @eggplantRandom, @eggplantSellPrice, @eggplantMaxSellPrice, @eggplantReroll, @bestEggplant);");
 	//client.addColumn = sql.prepare("ALTER TABLE scores ADD name = ? type = ? NOT NULL DEFAULT default = ?")
 	
 	// Send basic embed
 	client.basicEmbed = baseEmbed;
 	client.footer = textWenyuniFooter;
 	client.loadData = getData;
+	
+	// Tag
+	client.user.setActivity('for wy!help', {type: 'WATCHING'})
 });
+
+// ADMIN command
+// Syncs all user ids to current tag
+function sync(msg) {
+	const sync = sql.prepare(`SELECT user, tag FROM scores`).all();
+		
+		for(const data of sync) {
+			let save = sql.prepare(`UPDATE scores SET tag = '${client.users.get(data.user).tag}' WHERE user = ${data.user};`);
+			save.run(data);
+		}
+		msg.channel.send("Complete!")
+}
+
 
 function baseEmbed(title, description, msg, color) {
 	let embedColor = color || "#888888";
@@ -91,6 +108,9 @@ client.on('message', msg => {
 				case 'choose':
 					chooseCommand(commandArgs, msg)
 					break;
+				case 'invite':
+					inviteCommand(msg)
+					break;
 				case 'random':
 					randomCommand(commandArgs, msg)
 					break;
@@ -103,9 +123,20 @@ client.on('message', msg => {
 				case 'leaderboard':
 					leaderBoardCommand(commandArgs, msg)
 					break;
+				case 'profile':
+					profileCommand(msg, commandArgs[0])
+					break;
 				case 'admin':
 					if (msg.author.id === auth.admin) {
-						msg.channel.send("Wenyunity.")
+						let adminCommand = commandArgs[0];
+						switch(adminCommand) {
+							case 'sync':
+								sync(msg);
+								break;
+							default:
+								msg.channel.send("No admin command found!");
+								break;
+						}
 					}
 					else {
 						msg.channel.send("You are not Wenyunity! Access denied!");
@@ -125,6 +156,57 @@ client.on('message', msg => {
 		}
      }
 });
+
+// Profile
+function profileCommand(msg, args) {
+	if (!args) {
+		data = getData(msg.author);
+		data.tag = msg.author.tag;
+		
+		// Add embed
+		let profileEmbed = new Discord.RichEmbed()
+			.setColor("#00AAFF")
+			.setTitle("Profile of " + msg.author.tag)
+			.setAuthor('Wenyunibot')
+			.setDescription("Profile")
+			.setFooter(textWenyuniFooter())
+			.addField("Total Points", data.points)
+			.addField("Best Work", data.bestWork)
+			.addField("Eggplants", data.eggplant);
+		
+		// Print
+		msg.channel.send(profileEmbed);
+		
+		// Save for now
+		client.setScore.run(data)
+	}
+	else {
+		const user = sql.prepare(`SELECT * FROM scores WHERE tag LIKE '${args}%' LIMIT 1;`).all();
+		let found = false;
+		for(const data of user) {
+			// Add embed
+			let profileEmbed = new Discord.RichEmbed()
+				.setColor("#00AAFF")
+				.setTitle("Profile of " + data.tag)
+				.setAuthor('Wenyunibot')
+				.setDescription("Profile")
+				.setFooter(textWenyuniFooter())
+				.addField("Total Points", data.points)
+				.addField("Best Work", data.bestWork)
+				.addField("Eggplants", data.eggplant);
+				
+			// Print
+			msg.channel.send(profileEmbed);
+			
+			found = true;
+		}
+		
+		// Not found
+		if (!found) {
+			baseEmbed("Profile Error", `Could not find ${args} in user database.`, msg);
+		}
+	}
+}
 
 // Waluigi
 function waluigiCommand(msg) {
@@ -158,12 +240,13 @@ function waluigiCommand(msg) {
 }
 
 // Gets user data
-function getData(msg) {
-	let data = client.getScore.get(msg.author.id);
+function getData(user) {
+	let data = client.getScore.get(user.id);
 	
 	if (!data) {
 		data = {
-			user: msg.author.id,
+			user: user.id,
+			tag: user.tag,
 			points: 0,
 			work: 0,
 			bestWork: 0,
@@ -181,7 +264,7 @@ function getData(msg) {
 
 // Work for your money
 function workCommand(args, msg) {
-	data = getData(msg);
+	data = getData(msg.author);
 	
 	if (Date.now() > data.work) { // Get points
 		// Gain money
@@ -231,6 +314,11 @@ function workCommand(args, msg) {
 			}
 		}
 	}
+}
+
+// Invite Wenyunibot
+function inviteCommand(msg) {
+	baseEmbed("Invite Wenyunibot to your server!", inviteLink, msg, "#FACADE");
 }
 
 // All about easter eggs
@@ -437,9 +525,9 @@ function helpCommand(commandArgs, msg) {
 		// Create list of all commands
 		const helpEmbed = new Discord.RichEmbed()
 			.setColor('#DECADE')
-			.setTitle('Wenyunity Help')
+			.setTitle('Wenyunibot Help')
 			.setAuthor('Wenyunibot')
-			.setDescription("Wenyunibot is here to list all of the commands!")
+			.setDescription("If you want to learn more about a command, try `wy!help command` to learn more about it.")
 			.setFooter(textWenyuniFooter())
 			for (x in helpText) {
 				desc = ""
@@ -512,6 +600,11 @@ function randomCommand(commandArgs, msg) {
 // Leaderboard
 function leaderBoardCommand(commandArgs, msg) {
 	
+	if (commandArgs.length === 0) {
+		baseEmbed("Leaderboard Error", "Did not pass an argument for leaderboard!", msg);
+		return;
+	}
+	
 	// Easter egg leaderboard commands
 	if (["first", "found"].includes(commandArgs[0].toLowerCase())) {
 		easterEggCommand(commandArgs, msg);
@@ -519,7 +612,7 @@ function leaderBoardCommand(commandArgs, msg) {
 	}
 	// Otherwise
 	if (!sortRows.includes(commandArgs[0])) {
-		msg.channel.send("Could not find the row you wanted to sort by!");
+		baseEmbed("Leaderboard Error", "Could not find the row you wanted to sort by!", msg);
 		return;
 	}
 	
@@ -528,7 +621,7 @@ function leaderBoardCommand(commandArgs, msg) {
 	let messageDesc = "";
 	let rank = 0;
 	for(const data of top10) {
-		messageDesc += `${topTenEmoji[rank]} - **${client.users.get(data.user).tag}** --> ${data[commandArgs[0]]} \r\n`;
+		messageDesc += `${topTenEmoji[rank]} - **${client.users.get(data.user).tag}** - ${data[commandArgs[0]]} \r\n`;
 		rank++;
 	}
 	
