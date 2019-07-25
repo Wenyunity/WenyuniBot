@@ -1,5 +1,20 @@
 # Version Control
 
+### Version 0.5.2
+- Arena: Changed order of attack/support move for consistency.
+- Arena: Saves team to JSON (incomplete).
+- Chess: Save, load functions added.
+- Chess: Load/Reset can only be used if game has been saved or 2 hours pass.
+- Chess: Autosaves after every move.
+- Chess: Embeds for all chess move fails.
+- Chess: Setup for next turn (from Castling/not Castling) in a different function.
+- Chess: Move is not a necessary argument.
+- Chess: Style alternate for set, clear alternate for reset.
+- Client: baseEmbed/basicEmbed now asks for a channel instead of a message.
+- Eggplant: Updated baseEmbed to match client change.
+- Yuni: Various functions updated to use basicEmbed.
+- Help: Updated chess, leaderboard to display current argument functions.
+
 ### Version 0.5.1
 - Arena: Changes made to character creation
 - Arena: Character creation now supports character names
