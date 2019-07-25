@@ -54,11 +54,11 @@ function sync(msg) {
 			let save = sql.prepare(`UPDATE scores SET tag = '${client.users.get(data.user).tag}' WHERE user = ${data.user};`);
 			save.run(data);
 		}
-		msg.channel.send("Complete!")
+		baseEmbed("Sync", "Complete!", msg.channel)
 }
 
 
-function baseEmbed(title, description, msg, color) {
+function baseEmbed(title, description, channel, color) {
 	let embedColor = color || "#888888";
 	
 	let basicEmbed = new Discord.RichEmbed()
@@ -68,7 +68,7 @@ function baseEmbed(title, description, msg, color) {
 		.setDescription(description)
 		.setFooter(textWenyuniFooter())
 		
-	msg.channel.send(basicEmbed);
+	channel.send(basicEmbed);
 }
 
 // Upon getting a message
@@ -87,13 +87,13 @@ client.on('message', msg => {
 		if (msg.guild) {
 			switch(mainCommand) {
 				case 'arena': // Arena module
-					arena.arenaCommand(sql, msg);
+					arena.arenaCommand(sql, msg, client);
 					break;
 				case 'eggplant': // Eggplant module
-					eggplant.eggplantCommand(sql, client, msg);
+					eggplant.eggplantCommand(sql, msg, client);
 					break;
 				case 'chess': // Chess module
-					chess.chessCommand(msg);
+					chess.chessCommand(msg, client);
 					break;
 				// Waluigi is not an easter egg.
 				case 'waluigi':
@@ -134,12 +134,12 @@ client.on('message', msg => {
 								sync(msg);
 								break;
 							default:
-								msg.channel.send("No admin command found!");
+								baseEmbed("Admin Command Failed", "Wenyunity, what are you doing?", msg.channel);
 								break;
 						}
 					}
 					else {
-						msg.channel.send("You are not Wenyunity! Access denied!");
+						baseEmbed("Access Denied", "You are not Wenyunity! Access denied!", msg.channel);
 					}
 					break;
 				// Not found
@@ -149,7 +149,7 @@ client.on('message', msg => {
 						easterEggFound(mainCommand, msg)
 					}
 					else {
-						msg.channel.send("Sorry!\r\nCommand not found. Try WY!help for a list of commands.");
+						baseEmbed("Input Failed", "Sorry!\r\nCommand not found. Try WY!help for a list of commands.", msg.channel);
 					}
 					break;
 			}
@@ -203,7 +203,7 @@ function profileCommand(msg, args) {
 		
 		// Not found
 		if (!found) {
-			baseEmbed("Profile Error", `Could not find ${args} in user database.`, msg);
+			baseEmbed("Profile Error", `Could not find ${args} in user database.`, msg.channel);
 		}
 	}
 }
@@ -226,7 +226,7 @@ function waluigiCommand(msg) {
 		if (waluigiAdd) {
 			guildMember.removeRole(waluigiAdd);
 		}
-		msg.channel.send('Oh yeah! Luigi time!');
+		baseEmbed("WALUIGI Failure", 'Oh yeah! Luigi time!', msg.channel, "#23e844");
 	} // Waluigi
 	else {
 		if (waluigiAdd) {
@@ -235,7 +235,7 @@ function waluigiCommand(msg) {
 		if (luigiAdd) {
 			guildMember.removeRole(luigiAdd);
 		}
-		msg.channel.send('WALUIGI');
+		baseEmbed("WALUIGI", "WALUIGI", msg.channel, "#A100D0");
 	};
 }
 
@@ -300,17 +300,17 @@ function workCommand(args, msg) {
 		let workDate = new Date(data.work);
 		// Give detailed time
 		if (args[0] === "detail") {
-			msg.channel.send("You need to wait until **" + workDate.toLocaleString("default", {timeZone: "UTC", timeZoneName: "short"}) + "** to work for more points.");
+			baseEmbed("Work Timer", "You need to wait until **" + workDate.toLocaleString("default", {timeZone: "UTC", timeZoneName: "short"}) + "** to work for more points.", msg.channel);
 		}
 		else { // Give approximation
 			let hours = (data.work - Date.now()) / (60 * 60 * 1000) 
 			hours = Math.round(hours * 100)/100;
 			// Singular special message
 			if (hours === 1) {
-				msg.channel.send("You can work again in one hour!");
+				baseEmbed("Work Timer", "You can work again in one hour!", msg.channel);
 			} // Normal message
 			else {
-				msg.channel.send("You need to wait about **" + hours + " hours** to work for more points.");
+				baseEmbed("Work Timer", "You need to wait about **" + hours + " hours** to work for more points.", msg.channel);
 			}
 		}
 	}
@@ -318,7 +318,7 @@ function workCommand(args, msg) {
 
 // Invite Wenyunibot
 function inviteCommand(msg) {
-	baseEmbed("Invite Wenyunibot to your server!", inviteLink, msg, "#FACADE");
+	baseEmbed("Invite Wenyunibot to your server!", inviteLink, msg.channel, "#FACADE");
 }
 
 // All about easter eggs
@@ -483,7 +483,7 @@ function easterEggCommand(commandArgs, msg) {
 			easterEggFound(commandArgs[0], msg)
 		}
 		else {
-			msg.channel.send("Invalid easter egg! All easter eggs are written without spaces and use PascalCase.");
+			baseEmbed("Easter Egg Failure", "Invalid easter egg! All easter eggs are written without spaces and use PascalCase.", msg.channel);
 		}
 	}
 }
@@ -517,7 +517,7 @@ function helpCommand(commandArgs, msg) {
 			}
 		}
 		if (!foundCommand) { // Failed to find
-		msg.channel.send("Command not found!");
+		baseEmbed("Help Error", "Could not find the command. Try wy!help for a list of commands.", msg.channel)
 		}
 	}
 	// Generic command if no arguments given
@@ -558,14 +558,14 @@ function chooseCommand(commandArgs, msg) {
 	let chooseArgs = chooseText.split(', ');
 	
 	if (chooseArgs.length == 0) {
-		msg.channel.send("I choose the empty set!")
+		baseEmbed("Wenyubibot (doesn't) choose", "What is there for me to choose?", msg.channel, "#992299")
 	}
 	else if (chooseArgs.length == 1) {
-		msg.channel.send("It appears I have no choice. I choose " + chooseArgs[0]);
+		baseEmbed("Wenyunibot (doesn't) choose", "It appears I have no choice. I choose " + chooseArgs[0], msg.channel, "#992299")
 	}
 	else {
 		randomNumber = Math.floor(Math.random() * (chooseArgs.length))
-		msg.channel.send("I choose " + chooseArgs[randomNumber])
+		baseEmbed("Wenyunibot Chooses", "I choose " + chooseArgs[randomNumber], msg.channel, "#992299")
 	}
 }
 
@@ -575,25 +575,25 @@ function randomCommand(commandArgs, msg) {
 	if (commandArgs.length == 2) {
 		let randomNum = Math.random() * (Number(commandArgs[1]) - Number(commandArgs[0])) + Number(commandArgs[0])
 		if (isNaN(randomNum)) {
-			msg.channel.send("Those don't look like numbers to me...")
+			baseEmbed("Input Error", "At least one of your inputs wasn't a number...", msg.channel)
 		}
 		else {
-			msg.channel.send("Here's a number between " + commandArgs[0] + " and " + commandArgs[1] + ": " + randomNum)
+			baseEmbed("Random Number", "Here's a number between " + commandArgs[0] + " and " + commandArgs[1] + ": " + randomNum, msg.channel, "#DECADE")
 		}
 	}
 	// One number: Assumed the other is 0
 	else if (commandArgs.length == 1) {
 		let randomNum = Math.random() * Number(commandArgs[0])
 		if (isNaN(randomNum)) {
-			msg.channel.send("That doesn't look like a number to me...")
+			baseEmbed("Input Error", "That doesn't look like a number to me...", msg.channel)
 		}
 		else {
-			msg.channel.send("Here's a number between 0 and " + commandArgs[0] + ": " + randomNum)
+			baseEmbed("Random Number", "Here's a number between 0 and " + commandArgs[0] + ": " + randomNum, msg.channel, "#DECADE")
 		}
 	}
 	// No arguments: Between 0 and 1
 	else {
-		msg.channel.send("Here's a number between 0 and 1: " + Math.random())
+		baseEmbed("Random Number", "Here's a number between 0 and 1: " + Math.random(), msg.channel, "#DECADE")
 	}
 }
 
@@ -601,7 +601,7 @@ function randomCommand(commandArgs, msg) {
 function leaderBoardCommand(commandArgs, msg) {
 	
 	if (commandArgs.length === 0) {
-		baseEmbed("Leaderboard Error", "Did not pass an argument for leaderboard!", msg);
+		baseEmbed("Leaderboard Error", "Did not pass an argument for leaderboard!", msg.channel);
 		return;
 	}
 	
@@ -612,7 +612,7 @@ function leaderBoardCommand(commandArgs, msg) {
 	}
 	// Otherwise
 	if (!sortRows.includes(commandArgs[0])) {
-		baseEmbed("Leaderboard Error", "Could not find the row you wanted to sort by!", msg);
+		baseEmbed("Leaderboard Error", "Could not find the row you wanted to sort by!", msg.channel);
 		return;
 	}
 	

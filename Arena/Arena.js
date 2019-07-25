@@ -5,7 +5,7 @@ const newMove = JSON.parse(fs.readFileSync('./Arena/movelist.json', 'utf8'));
 
 // Creates an attack/basic move
 function createAttackMove(isBasic) {
-	let nameObject = {MP: 0, team: "enemy"}
+	let nameObject = {name: "", MP: 0, team: "enemy"}
 	
 	// Name
 	nameObject["name"] = newMove["name"]["adjective"][Math.floor(Math.random() * (newMove["name"]["adjective"].length))] +
@@ -58,7 +58,7 @@ function createAttackMove(isBasic) {
 
 // Creates a support move
 function createSupportMove() {
-	let nameObject = {name: "", target: "", effect: "", length: 0, MP: 0, team: "ally"};
+	let nameObject = {name: "", MP: 0, team: "ally", target: "", effect: "", length: 0};
 	
 	// Name
 	nameObject.name = newMove["name"]["adjective"][Math.floor(Math.random() * (newMove["name"]["adjective"].length))] +
@@ -143,6 +143,12 @@ function create(msg, arguments) {
 			}	
 		}
 	}
+	
+	fs.writeFile(`./Arena/Fighter/${msg.author.id}.json`, JSON.stringify(team, null, 4), function(err) {
+		if (err) throw err;
+		console.log('completed writing to easterEgg.json');
+	})
+	
 	displayPlayerTeam(msg, team);
 }
 
@@ -206,7 +212,7 @@ function fight() {
 }
 
 module.exports = {
-    arenaCommand: function(sql, msg) {
+    arenaCommand: function(sql, msg, client) {
 		// Here are the arguments
 		let args = msg.content.substring(3).split(' ');
 		// We have the form WY!arena mainCommand [arguments]
@@ -215,18 +221,14 @@ module.exports = {
 		
         switch(mainCommand) {
             case 'help':
-                // set found equal to true so your index.js file knows
-                //   to not try executing 'other' commands
-                // execute function associated with this command
                 msg.channel.send("WALUIGI")
                 break;
 
-            // your second admin command (similar setup as above)
             case 'create':
                 create(msg, arguments);
                 break;
-
-            // ... more admin commands
+				
+			
         }
 	}
 }

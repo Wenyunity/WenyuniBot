@@ -38,10 +38,12 @@
 		"chess": {
 			"desc": "Play a game of chess!",
 			"args": {
-				"move": "Moves a piece. Use a1 style coordinates. Castle with O-O and O-O-O.\r\nExample move: `wy!chess move g1 f3`",
-				"set": "Sets the style of chessboard. Use `wy!chess set help` to get style names.",
-				"reset": "Resets the chessboard.",
-				"view": "Views the chessboard. Optional arguments can be included for orientation and style."
+				"move/(none)": "Use a1 style coordinates. Castle with O-O and O-O-O.\r\nExample move: `wy!chess move g1 f3`",
+				"set/style": "Sets the style of chessboard. Use `wy!chess set help` to get style names.",
+				"reset/clear": "Resets the chessboard.",
+				"view": "Views the chessboard. Optional arguments can be included for orientation and style.",
+				"load": "Loads the chessboard from a previous state. Pass auto as an argument to load the previous state.",
+				"save": "Saves the chessboard to your save data."
 			}
 		}
 	},
@@ -56,7 +58,10 @@
 			"desc": "Shows the top 10 in a specific category.",
 			"args": {
 				"points": "Shows the people who have the most points.",
-				"best": "Shows the people who got the most in one work session."
+				"bestWork": "Shows the people who got the most in one work session.",
+				"bestEggplant": "Shows the best eggplant sales.",
+				"first": "Goes to easteregg's first command, showing all easteregg finders.",
+				"found": "Goes to easteregg's found command, showing all found easter eggs."
 			}
 		},
 		"eggplant": {
@@ -73,7 +78,7 @@
 		"profile": {
 			"desc": "Returns some summary statistics about a person.",
 			"args" : {
-				"user": "If given, tries to find a user. If not, displays the profile of the message sender."
+				"user": "If given, tries to find a user. If not given, displays the profile of the message sender."
 			}
 		}
 	}

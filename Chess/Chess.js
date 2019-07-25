@@ -18,6 +18,10 @@ let whiteStyle = "compact";
 let blackStyle = "compact";
 let inCheck = false;
 let columnName = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
+let lastMoveTime = 0;
+const hour = 1000 * 60 * 60;
+const timeOut = 1000 * 60 * 60 * 2; // 2 hours
+const moduleColor = "#FFFFFF"
 
 const whitePiece = ["P", "R", "N", "B", "Q", "K"]
 const blackPiece = ["p", "r", "n", "b", "q", "k"]
@@ -36,6 +40,75 @@ function newBoard() {
 	blackKingPos = [4, 7];
 	whiteKingPos = [4, 0];
 	inCheck = false;
+}
+
+// Saves board state
+// To prevent spam, saves to usertag.json
+function saveBoard(msg, client, auto) {
+	let x = {};
+	x.board = board;
+	x.playerToMove = playerToMove;
+	x.castle = castle;
+	x.enPassant = enPassant;
+	x.fiftyMoveRule = fiftyMoveRule;
+	x.turnCount = turnCount;
+	x.whiteKingPos = whiteKingPos;
+	x.blackKingPos = blackKingPos;
+	x.whiteStyle = whiteStyle;
+	x.blackStyle = blackStyle;
+	x.inCheck = inCheck;
+	
+	if (auto) {
+		fs.writeFile(`./Chess/Data/Auto.json`, JSON.stringify(x, null, 4), function(err) {
+			if (err) throw err;
+		})
+	}
+	else {
+		fs.writeFile(`./Chess/Data/${msg.author.id}.json`, JSON.stringify(x, null, 4), function(err) {
+			if (err) throw err;
+			console.log('completed writing to json');
+		})
+		client.basicEmbed("Save Complete", `Saved file to ${msg.author.tag}'s file.`, msg.channel, moduleColor);
+	}
+}
+
+// Loads board from storage
+// To prevent spam, loads from usertag.json
+function loadBoard(msg, client, auto) {
+	x = {}
+	if (auto) {
+		try {
+			x = JSON.parse(fs.readFileSync(`./Chess/Data/Auto.json`, 'utf8'));
+		}
+		catch (err) {
+			client.basicEmbed("Load Error", "Could not find your save file", msg.channel);
+			return;
+		}
+	}
+	else {
+		try {
+			x = JSON.parse(fs.readFileSync(`./Chess/Data/${msg.author.id}.json`, 'utf8'));
+		}
+		catch (err) {
+			client.basicEmbed("Load Error", "Could not find your save file", msg.channel);
+			return;
+		}
+	}
+	board = x.board;
+	playerToMove = x.playerToMove;
+	castle = x.castle;
+	enPassant = x.enPassant;
+	fiftyMoveRule = x.fiftyMoveRule;
+	turnCount = x.turnCount;
+	whiteKingPos = x.whiteKingPos;
+	blackKingPos = x.blackKingPos;
+	whiteStyle = x.whiteStyle;
+	blackStyle = x.blackStyle;
+	inCheck = x.inCheck;
+	lastMove = Date.now();
+	
+	client.basicEmbed("Load Complete", "Done loading file!", msg.channel, moduleColor);
+	printBoard(msg, true);
 }
 
 // View the board with a given style
@@ -221,12 +294,12 @@ function getFEN() {
 }
 
 // Castling
-function castling(msg, arguments) {
+function castling(msg, arguments, client) {
 	let sideCount = arguments.split('-')
 	
 	// If in check, no castle
 	if (inCheck) {
-		msg.channel.send("You are in check and cannot castle!");
+		client.basicEmbed("Castling Fail", "You are in check and cannot castle!", msg.channel);
 		return;
 	}
 	
@@ -254,14 +327,14 @@ function castling(msg, arguments) {
 		
 		// Extra check for queenside
 		if (board[row][1]) {
-			msg.channel.send("There is a piece in the way!");
+			client.basicEmbed("Castling Fail", "There is a piece in the way!", msg.channel);
 			return;
 		}
 	}
 
 	// Check if castling available
 	if (!castle[castleCheck]) {
-		msg.channel.send("You lost your ability to castle in that direction!");
+		client.basicEmbed("Castling Fail", "You lost your ability to castle in that direction!", msg.channel);
 		return;
 	}
 	
@@ -269,11 +342,11 @@ function castling(msg, arguments) {
 	for (i = 0; i < castleMoves.length; i++) {
 		// Check if piece in the way
 		if (board[castleMoves[i][1]][castleMoves[i][0]]) {
-			msg.channel.send("There is a piece in the way!");
+			client.basicEmbed("Castling Fail", "There is a piece in the way!", msg.channel);
 			return;
 		}
 		if (fullCheck(castleMoves[i], playerToMove, [4, row], [false, false])) {
-			msg.channel.send("You cannot move through or into check!");
+			client.basicEmbed("Castling Fail", "You cannot move through or into check!", msg.channel);
 			return;
 		}
 	}
@@ -307,6 +380,10 @@ function castling(msg, arguments) {
 	// En Passant update
 	enPassant = "";
 	
+	setupNext(msg, client);
+}
+
+function setupNext(msg, client) {
 	// Turn and player swap
 	if (playerToMove === 'w') {
 		playerToMove = 'b';
@@ -324,6 +401,11 @@ function castling(msg, arguments) {
 		inCheck = fullCheck(blackKingPos, playerToMove, [false, false], [false, false]);
 	}
 	
+	// Check message
+	if (inCheck) {
+		msg.channel.send("Check!");
+	}
+	
 	// Print board
 	if (playerToMove === "w") {
 		printBoard(msg, true, whiteStyle, playerToMove);		
@@ -332,25 +414,28 @@ function castling(msg, arguments) {
 		printBoard(msg, true, blackStyle, playerToMove);
 	}
 	
-	return;
+	// Timeout
+	lastMoveTime = Date.now();
+	// Save board
+	saveBoard(msg, client, true);
 }
 
 // Moves piece if legal
-function movePiece(msg, args) {
+function movePiece(msg, args, client) {
 	
 	if (args.length < 1) {
-		msg.channel.send("Please put coordinates in the form a1, where a-h, 1-8 are allowed. Castling: O-O for kingside, O-O-O for queenside.");
+		client.basicEmbed("Input Error", "Please put coordinates in the form a1, where a-h, 1-8 are allowed. Castling: O-O for kingside, O-O-O for queenside.", msg.channel);
 		return;
 	}
 	
 	// Castling
 	if (["0", "O"].includes(args[0].substring(0, 1))) {
-		castling(msg, args[0]);
+		castling(msg, args[0], client);
 		return;
 	}
 	// Turn into arrays
 	if (args.length < 2) {
-		msg.channel.send("I need two coordinates - one for the place, and the other for the destination.");
+		client.basicEmbed("Input Error", "Two coordinates necessary; the position of the piece to be moved, and the destination.", msg.channel);
 		return;
 	}
 	
@@ -358,13 +443,13 @@ function movePiece(msg, args) {
 	let to = determinePlace(args[1]);
 	
 	// Make sure these are valid coordinates
-	if (from == "Error" || to == "Error") {
-		msg.channel.send("One of your coordinates was not set correctly! Please put them in the form a1, where a-h, 1-8 are allowed. Castling: O-O for kingside, O-O-O for queenside.");
+	if (from === "Error" || to === "Error") {
+		client.basicEmbed("Input Error", "One of your coordinates was not set correctly! Please put them in the form a1, where a-h, 1-8 are allowed.", msg.channel);
 		return;
 	}
 	// Don't stay still
 	if (args[0] === args[1]) {
-		msg.channel.send("You cannot stay still!")
+		client.basicEmbed("Move Error", "You cannot stay still!", msg.channel);
 		return;
 	}
 	
@@ -380,12 +465,12 @@ function movePiece(msg, args) {
 				pieceFound = true;
 			}
 			if (whitePiece[x] === endPiece) { // Destination is blocked
-				msg.channel.send("There is a white piece at " + args[1] + " so your piece can't go there.");
+				client.basicEmbed("Move Error", "There is a white piece at " + args[1] + " so your piece can't go there.", msg.channel);
 				return;
 			}
 		}
 		if (!pieceFound) { // No piece
-			msg.channel.send("There is no white piece at " + args[0] + " to move.");
+			client.basicEmbed("Move Error", "There is no white piece at " + args[0] + " to move.", msg.channel);
 			return;
 		}
 
@@ -397,12 +482,12 @@ function movePiece(msg, args) {
 				pieceFound = true;
 			}
 			if (blackPiece[x] === endPiece) { // Destination is blocked
-				msg.channel.send("There is a black piece at " + args[1] + " so your piece can't go there.");
+				client.basicEmbed("Move Error", "There is a black piece at " + args[1] + " so your piece can't go there.", msg.channel);
 				return;
 			}
 		}
 		if (!pieceFound) { // No piece
-			msg.channel.send("There is no black piece at " + args[0] + " to move.");
+			client.basicEmbed("Move Error", "There is no black piece at " + args[0] + " to move.", msg.channel);
 			return;
 		}
 	}
@@ -411,47 +496,47 @@ function movePiece(msg, args) {
 	if (piece === "k" || piece ===  "K") {
 		moveLegal = kingMove(from, to)
 		if (moveLegal) {
-			msg.channel.send(moveLegal);
+			client.basicEmbed("Illegal Move", moveLegal, msg.channel);
 			return;
 		}
 	}
 	else if (piece === "Q" || piece ===  "q") {
 		moveLegal = queenMove(from, to, [false, false], false)
 		if (moveLegal) {
-			msg.channel.send(moveLegal);
+			client.basicEmbed("Illegal Move", moveLegal, msg.channel);
 			return;
 		}
 	}
 	else if (piece === "N" || piece ===  "n") {
 		moveLegal = knightMove(from, to)
 		if (moveLegal) {
-			msg.channel.send(moveLegal);
+			client.basicEmbed("Illegal Move", moveLegal, msg.channel);
 			return;
 		}
 	}
 	else if (piece === "B" || piece ===  "b") {
 		moveLegal = bishopMove(from, to, [false, false], false)
 		if (moveLegal) {
-			msg.channel.send(moveLegal);
+			client.basicEmbed("Illegal Move", moveLegal, msg.channel);
 			return;
 		}
 	}
 	else if (piece === "R" || piece ===  "r") {
 		moveLegal = rookMove(from, to, [false, false], false)
 		if (moveLegal) {
-			msg.channel.send(moveLegal);
+			client.basicEmbed("Illegal Move", moveLegal, msg.channel);
 			return;
 		}
 	}
 	else if (piece === "P" || piece ===  "p") {
 		moveLegal = pawnMove(from, to, args[1])
 		if (moveLegal) {
-			msg.channel.send(moveLegal);
+			client.basicEmbed("Illegal Move", moveLegal, msg.channel);
 			return;
 		}
 	}
-	else {
-		msg.channel.send("How did you get here?");
+	else { // We really shouldn't end up here
+		client.basicEmbed("Illegal Move", "What?", msg.channel);
 		return;
 	}
 	
@@ -459,7 +544,7 @@ function movePiece(msg, args) {
 	if (piece === "k" || piece === "K") {
 		let full = fullCheck(to, playerToMove, from, [false, false]);
 		if (full) {
-			msg.channel.send("This move puts you into check!");
+			client.basicEmbed("Illegal Move", "This move puts you into check!", msg.channel);
 			return;
 		}
 	}
@@ -473,7 +558,7 @@ function movePiece(msg, args) {
 		}
 		let full = fullCheck(king, playerToMove, from, to);
 		if (full) {
-			msg.channel.send("This move puts you into check!");
+			client.basicEmbed("Illegal Move", "This move puts you into check!", msg.channel);
 			return;
 		}
 	}
@@ -487,7 +572,7 @@ function movePiece(msg, args) {
 		}
 		let full = fullCheck(king, playerToMove, from, to);
 		if (full) {
-			msg.channel.send("This move does not get you out of check!");
+			client.basicEmbed("Illegal Move", "This move does not get you out of check!", msg.channel);
 			return;
 		}
 	}
@@ -504,12 +589,12 @@ function movePiece(msg, args) {
 				}
 			}
 			else {
-				msg.channel.send("Please indicate your promotion piece, using [Q, B, R, N].\r\nEx: wy!chess move a7 a8 Q" );
+				client.basicEmbed("Input Error", "Please indicate your promotion piece, using [Q, B, R, N].\r\nEx: wy!chess move a7 a8 Q", msg.channel);
 				return;
 			}
 		}
 		else {
-			msg.channel.send("Please indicate your promotion piece, using [Q, B, R, N].\r\nEx: wy!chess move a7 a8 Q");
+			client.basicEmbed("Input Error", "Please indicate your promotion piece, using [Q, B, R, N].\r\nEx: wy!chess move a7 a8 Q", msg.channel);
 			return;
 		}
 	}
@@ -539,15 +624,6 @@ function movePiece(msg, args) {
 	}
 	else {
 		enPassant = "";
-	}
-	
-	// Turn and player swap
-	if (playerToMove === 'w') {
-		playerToMove = 'b';
-	}
-	else {
-		playerToMove = 'w';
-		turnCount = turnCount + 1;
 	}
 	
 	// Castling disabling
@@ -590,26 +666,7 @@ function movePiece(msg, args) {
 		whiteKingPos = to;
 	}
 	
-	// Check for check
-	if (playerToMove === "w") {
-		inCheck = fullCheck(whiteKingPos, playerToMove, [false, false], [false, false]);
-	}
-	else {
-		inCheck = fullCheck(blackKingPos, playerToMove, [false, false], [false, false]);
-	}
-	
-	// Check message
-	if (inCheck) {
-		msg.channel.send("Check!");
-	}
-	
-	// Print board
-	if (playerToMove === "w") {
-		printBoard(msg, true, whiteStyle, playerToMove);		
-	}
-	else {
-		printBoard(msg, true, blackStyle, playerToMove);
-	}
+	setupNext(msg, client);
 }
 
 // Converts a1 to [x, y] format
@@ -847,28 +904,28 @@ function pawnCheck (pawn, king, player) {
 }
 
 // Find board style
-function setStyle(msg, args) {
+function setStyle(msg, args, client) {
 	// White or black
 	if (args[0] === "w" || args[0] === "b") { 
 		if (boardStyleSet.includes(args[1])) { // If style exists
 			if (args[0] === "w") { // Set style
 				whiteStyle = args[1];
-				msg.channel.send("Set white's style!");
+				client.basicEmbed("Style Changed", "Set white's style!", msg.channel, moduleColor);
 			}
 			else { // Black
 				blackStyle = args[1];
-				msg.channel.send("Set black's style!");
+				client.basicEmbed("Style Changed", "Set black's style!", msg.channel, moduleColor);
 			}
 		}
 		else {
-			msg.channel.send("Could not find style!");
+			client.basicEmbed("Style Error", "Could not find style!", msg.channel);
 		}
 	}
 	else if (args[0] === "help") {
-		msg.channel.send("Current styles: " + boardStyleSet + "\r\nExample: `wy!chess set w compact`");
+		client.basicEmbed("Style Help", "Current styles: " + boardStyleSet + "\r\nExample: `wy!chess set w compact`", msg.channel);
 	}
 	else {
-		msg.channel.send("Set the first argument to w or b!");
+		client.basicEmbed("Style Error", "Set the first argument to w or b!", msg.channel);
 	}
 }
 
@@ -936,8 +993,12 @@ function fullCheck (kingPos, player, from, to) {
 	return false;
 }
 
+function noTimeOut(msg) {
+	msg.channel.send(`You need to wait at least ${(Math.floor(((timeOut + lastMoveTime - Date.now())/hour)*100)/100)} hours to reset/load.`)
+}
+
 module.exports = {
-    chessCommand: function(msg) {
+    chessCommand: function(msg, client) {
 		// Here are the arguments
 		let args = msg.content.substring(3).split(' ');
 		// We have the form WY!chess mainCommand [arguments]
@@ -954,20 +1015,61 @@ module.exports = {
                 break;
 				
 			case 'move':
-				movePiece(msg, arguments);
+				movePiece(msg, arguments, client);
 				break;
-				
+			
+			case 'clear':
 			case 'reset':
-				msg.channel.send("Board reset!");
-				newBoard();
+				if (Date.now() > lastMoveTime + timeOut) {
+					msg.channel.send("Board reset!");
+					newBoard();
+				}
+				else {
+					noTimeOut(msg);
+				}
 				break;
 				
 			case 'set':
-				setStyle(msg, arguments);
+			case 'style':
+				setStyle(msg, arguments, client);
+				break;
+				
+			case 'save':
+				saveBoard(msg, client);
+				lastMoveTime = 0;
+				break;
+				
+			case 'load':
+				if (Date.now() > lastMoveTime + timeOut) {
+					if (arguments[0]) {
+						if (arguments[0].toLowerCase() === "auto") {
+							loadBoard(msg, client, true);
+						}
+						else {
+							loadBoard(msg, client, false);
+						}
+					}
+					else {
+						loadBoard(msg, client, false);
+					}
+				}
+				else {
+					noTimeOut(msg, client);
+				}
 				break;
 			
 			default:
-				msg.channel.send("Args: view, move, reset, set")
+				if (!(determinePlace(mainCommand) === "Error")) {
+					let newArgs = args.slice(1);
+					movePiece(msg, newArgs, client);
+				}
+				else if (["O-O", "0-0", "O-O-O", "0-0-0"].includes(mainCommand)) {
+					let newArgs = args.slice(1);
+					movePiece(msg, newArgs, client);
+				}
+				else {
+					msg.channel.send("Still not finished yet");
+				}
 				break;
 
             // ... more admin commands

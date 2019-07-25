@@ -17,25 +17,25 @@ function buy(client, msg, amount) {
 	
 	// isNaN
 	if (isNaN(parseInt(amount))) {
-		client.basicEmbed("Buy Error", `You cannot buy ${emoji} if you don't use a number.`, msg);
+		client.basicEmbed("Buy Error", `You cannot buy ${emoji} if you don't use a number.`, msg.channel);
 		return;
 	}
 	
 	// If you have eggplants, cannot buy more
 	if (data.eggplant) {
-		client.basicEmbed("Buy Error", `You cannot buy ${emoji} if you already have some!`, msg);
+		client.basicEmbed("Buy Error", `You cannot buy ${emoji} if you already have some!`, msg.channel);
 		return;
 	}
 	
 	// Yeah...
 	if (!amount) {
-		client.basicEmbed("Buy Error", `You must determine how much ${emoji} to buy!`, msg);
+		client.basicEmbed("Buy Error", `You must determine how much ${emoji} to buy!`, msg.channel);
 		return;
 	}
 	
 	// Cannot buy 0 or negative eggplants
 	if (Math.floor(amount) < 1) {
-		client.basicEmbed("Buy Error", `You must buy a positive amount of ${emoji}!`, msg);
+		client.basicEmbed("Buy Error", `You must buy a positive amount of ${emoji}!`, msg.channel);
 		return;
 	}
 	
@@ -44,7 +44,7 @@ function buy(client, msg, amount) {
 	
 	// If you don't have enough points, cannot buy
 	if (data.points < price) {
-		client.basicEmbed("Buy Error", `You do not have enough points to buy this many ${emoji}!`, msg)
+		client.basicEmbed("Buy Error", `You do not have enough points to buy this many ${emoji}!`, msg.channel);
 		return;
 	}
 	
@@ -79,7 +79,7 @@ function view(client, msg) {
 	
 	// Eggplants are expired
 	if (Date.now() > data.eggplantExpire) {
-		client.basicEmbed("View Denied", `Your ${emoji} have expired! Please throw them out!`, msg);
+		client.basicEmbed("View Denied", `Your ${emoji} have expired! Please throw them out!`, msg.channel);
 		return;
 	}
 	
@@ -140,7 +140,7 @@ function getMaxDescription(price) {
 
 // Displays text for current stability and demand.
 function viewForecast(client, msg, stability, maxPrice) {
-	client.basicEmbed("Market Forecast for "  + msg.author.tag, `The market is **${getStabilityDescription(stability)}** and the demand is **${getMaxDescription(maxPrice)}**.`, msg, moduleColor);
+	client.basicEmbed("Market Forecast for "  + msg.author.tag, `The market is **${getStabilityDescription(stability)}** and the demand is **${getMaxDescription(maxPrice)}**.`, msg.channel, moduleColor);
 }
 
 // Throws away expired eggplants.
@@ -150,18 +150,18 @@ function eggplantThrow(client, msg) {
 	
 	// No eggplants.
 	if (!data.eggplant) {
-		client.basicEmbed("Throw Denied", `You do not have any ${emoji} to throw away.`, msg);
+		client.basicEmbed("Throw Denied", `You do not have any ${emoji} to throw away.`, msg.channel);
 		return;
 	}
 	
 	// Eggplants are not expired
 	if (Date.now() < data.eggplantExpire) {
-		client.basicEmbed("Throw Denied", `Your ${emoji} are not expired! Don't throw them out!`, msg);
+		client.basicEmbed("Throw Denied", `Your ${emoji} are not expired! Don't throw them out!`, msg.channel);
 		return;
 	}
 	
 	// Throw away eggplants
-	client.basicEmbed("Throw Accepted", `${msg.author.tag} threw away ${data.eggplant} ${emoji}.`, msg, moduleColor);
+	client.basicEmbed("Throw Accepted", `${msg.author.tag} threw away ${data.eggplant} ${emoji}.`, msg.channel, moduleColor);
 	
 	data.eggplant = 0;
 	
@@ -201,7 +201,7 @@ function randomizePrice(client, msg) {
 	data.eggplantReroll = Date.now() + rerollTime;
 	
 	// Write Text
-	client.basicEmbed("Eggplant Random Factor", `The new ${emoji} sell price is **${newPrice} points.** The old price was ${data.eggplantSellPrice} points.`, msg, moduleColor);
+	client.basicEmbed("Eggplant Random Factor", `The new ${emoji} sell price is **${newPrice} points.** The old price was ${data.eggplantSellPrice} points.`, msg.channel, moduleColor);
 	
 	// Write new price
 	data.eggplantSellPrice = newPrice;
@@ -216,43 +216,43 @@ function sell(client, msg, amount) {
 	
 	// isNaN
 	if (isNaN(parseInt(amount))) {
-		client.basicEmbed("Sell Error", `You cannot sell ${emoji} if you don't use a number.`, msg);
+		client.basicEmbed("Sell Error", `You cannot sell ${emoji} if you don't use a number.`, msg.channel);
 		return;
 	}
 	
 	// Eggplants are expired
 	if (Date.now() > data.eggplantExpire && data.eggplant) {
-		client.basicEmbed("Sell Error", `Your ${emoji} have expired! Please throw them out!`, msg);
+		client.basicEmbed("Sell Error", `Your ${emoji} have expired! Please throw them out!`, msg.channel);
 		return;
 	}
 	
 	if (!amount) {
-		client.basicEmbed("Sell Error", `You must determine how much ${emoji} to sell!`, msg);
+		client.basicEmbed("Sell Error", `You must determine how much ${emoji} to sell!`, msg.channel);
 		return;
 	}
 	
 	// No eggplants, just give the forecast.
 	if (!data.eggplant) {
-		client.basicEmbed("Sell Error", `You do not have any ${emoji} right now.`, msg);
+		client.basicEmbed("Sell Error", `You do not have any ${emoji} right now.`, msg.channel);
 		return;
 	}
 	
 	// Must sell a positive amount
 	if (Math.floor(amount) < 1) {
-		client.basicEmbed("Sell Error", `You must sell a positive amount of ${emoji}!`, msg);
+		client.basicEmbed("Sell Error", `You must sell a positive amount of ${emoji}!`, msg.channel);
 		return;
 	}
 	
 	// Sell protection
 	if (Math.floor(amount) > data.eggplant) {
-		client.basicEmbed("Sell Error", `You cannot sell more ${emoji} than you have!`, msg);
+		client.basicEmbed("Sell Error", `You cannot sell more ${emoji} than you have!`, msg.channel);
 		return;
 	}
 	
 	// Sold.
 	let pointGain = Math.floor(amount) * data.eggplantSellPrice;
 	
-	client.basicEmbed("Sale Complete!", `${msg.author.tag} sold ${Math.floor(amount)} ${emoji} for **${pointGain} points.**`, msg, moduleColor);
+	client.basicEmbed("Sale Complete!", `${msg.author.tag} sold ${Math.floor(amount)} ${emoji} for **${pointGain} points.**`, msg.channel, moduleColor);
 	
 	// Check if best sale
 	if (pointGain > data.bestEggplant) {
@@ -280,13 +280,13 @@ function reroll(client, msg) {
 	
 	// Eggplants are expired
 	if (Date.now() > data.eggplantExpire && data.eggplant) {
-		client.basicEmbed("Reroll Denied", `Your ${emoji} have expired! Please throw them out!`, msg);
+		client.basicEmbed("Reroll Denied", `Your ${emoji} have expired! Please throw them out!`, msg.channel);
 		return;
 	}
 	
 	// Reroll too long
 	if (Date.now() < data.eggplantReroll) {
-		client.basicEmbed("Reroll Denied", `You must wait **${(Math.floor(((data.eggplantReroll - Date.now())/hour)*100)/100)} hours** to reroll!`, msg);
+		client.basicEmbed("Reroll Denied", `You must wait **${(Math.floor(((data.eggplantReroll - Date.now())/hour)*100)/100)} hours** to reroll!`, msg.channel);
 		return;
 	}
 	
@@ -317,7 +317,7 @@ function helpCommand(client, msg) {
 }
 
 module.exports = {
-    eggplantCommand: function(sql, client, msg) {
+    eggplantCommand: function(sql, msg, client) {
 		// Here are the arguments
 		let args = msg.content.substring(3).split(' ');
 		// We have the form WY!eggplant mainCommand [arguments]
