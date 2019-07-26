@@ -1,5 +1,31 @@
 # Version Control
 
+## Version 0.6.0
+- Chess, Yuni, Eggplant: Reorganizing of functions.
+- Yuni: Reorganizing of imports.
+- Arena: Create now takes in defense parameter.
+- Arena: Create now stores and shows HP growth, MP growth, HP, MP, Defense.
+- Arena: Now gets passed client.
+- Yuni: Added find function.
+- Yuni: Added vote function.
+- Yuni: Added count function.
+- Yuni: Added invite function.
+- Yuni: Added botinfo function.
+- Yuni: Added bothomeserver function.
+- Yuni: Now requires package.json
+- Easter Egg: Moved to Data folder.
+- CountBasic: Added to Data folder.
+- Help: General section renamed to Basic.
+- Help: Added Auxiliary section.
+- Help: Help moved to Auxiliary section.
+- Help: Vote added to Basic section.
+- Help: Find added to Basic section.
+- Help: Switched order of functions in Economy section.
+- Help: Count added to Economy section.
+- Help: Invite added to Auxiliary section.
+- Help: Botinfo added to Auxiliary section.
+- Help: Bothomeserver added to Auxiliary section.
+
 ### Version 0.5.2
 - Arena: Changed order of attack/support move for consistency.
 - Arena: Saves team to JSON (incomplete).
