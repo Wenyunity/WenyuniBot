@@ -89,16 +89,39 @@ function createSupportMove() {
 function displayPlayerTeam(msg, team) {
 	const teamEmbed = new Discord.RichEmbed()
 			.setColor('#ED9105')
-			.setTitle('A Team')
+			.setTitle('Team Name')
 			.setAuthor('Wenyunibot')
-			.setDescription("Beta Character");
-	
+			.setDescription(`Team Owner: Someone`)
+			.addField("Summary Statistics", displayTeamStats(team.character));
 	for (z = 0; z < 2; z++) {
-		teamEmbed.addField(team.character[z].name, displayMoves(team.character[z].move));
+		teamEmbed.addField(team.character[z].name +"'s Moves", displayMoves(team.character[z].move));
 	}
+	teamEmbed.addField("Growth Statistics", displayGrowthStats(team.character));
+	
 	msg.channel.send(teamEmbed);
 }
 
+// Displays stats for team
+function displayTeamStats(character) {
+	
+	message = "";
+	for (c = 0; c < 2; c++) {
+		message += `\r\n**${character[c].name}** -|- ${character[c].HP}/${character[c].HP} HP, ${character[c].MP}/${character[c].MP} MP, ${character[c].DEF} DEF`;
+	}
+	
+	return message;
+}
+
+function displayGrowthStats(character) {
+	message = "";
+	for (c = 0; c < 2; c++) {
+		message += `\r\n**${character[c].name}** -|- +${character[c].HPGain} HP/level, +${character[c].MPGain} MP/level`;
+	}
+	
+	return message;
+}
+
+// Displays character moves
 function displayMoves(moveset) {
 	// Basic move
 	message = "";
@@ -109,21 +132,22 @@ function displayMoves(moveset) {
 	return message;
 }
 
-function create(msg, arguments) {
+// Creates a team
+function create(msg, arguments, client) {
 	let team = {};
 	team.character = {};
 	if(arguments.length < 2) {
-		msg.channel.send("Please send two numbers indicating the number of magic attack moves! (Between 0 and 5)")
+		client.basicEmbed("Create Error", "Please send two numbers indicating the number of magic attack moves! (Between 0 and 5)", msg.channel);
 		return;
 	}
 	
 	if (isNaN(parseInt(arguments[0])) || isNaN(parseInt(arguments[0]))) {
-		msg.channel.send("These are not numbers!")
+		client.basicEmbed("Create Error", "These are not numbers!", msg.channel);
 		return;
 	}
 	
 	if(arguments[0] > 5 || arguments[1] > 5) {
-		msg.channel.send("Only up to five magic moves allowed!")
+		client.basicEmbed("Create Error", "Only up to five magic moves allowed!", msg.channel);
 		return;
 	}
 	else {
@@ -131,7 +155,25 @@ function create(msg, arguments) {
 			// Create character
 			team.character[m] = {};
 			// Name
-			team.character[m].name = arguments[m+2] || "Placeholder " + m;
+			team.character[m].name = arguments[m+4] || "Char" + m;
+			// Defense
+			if (arguments[m+2]) {
+				if (["0", "1", "2", "3"].includes(arguments[m+2])) {
+					team.character[m].DEF = arguments[m+2]
+				}
+				else {
+					client.basicEmbed("Create Error", "Defense must be between 0 and 3.", msg.channel);
+					return;
+				}
+			}
+			else {
+				team.character[m].DEF = Math.floor(Math.random() * 4)
+			}
+			team.character[m].HP = 40 - 5 * team.character[m].DEF;
+			team.character[m].HPGain = 6 - team.character[m].DEF;
+			team.character[m].MP = 20;
+			team.character[m].MPGain = 4;
+			team.character[m].slots = 2;
 			// Create thing to hold moves
 			team.character[m].move = {};
 			team.character[m].move.B = createAttackMove(true);
@@ -146,7 +188,7 @@ function create(msg, arguments) {
 	
 	fs.writeFile(`./Arena/Fighter/${msg.author.id}.json`, JSON.stringify(team, null, 4), function(err) {
 		if (err) throw err;
-		console.log('completed writing to easterEgg.json');
+		console.log('completed writing to arena');
 	})
 	
 	displayPlayerTeam(msg, team);
@@ -225,7 +267,7 @@ module.exports = {
                 break;
 
             case 'create':
-                create(msg, arguments);
+                create(msg, arguments, client);
                 break;
 				
 			

@@ -10,6 +10,8 @@ const maxRandom = 8 // Max price is 100 + maxRandom cubed
 const fs = require('fs');
 const descEggplant = JSON.parse(fs.readFileSync('./Eggplant/eggplantDesc.json', 'utf8'));
 
+// -- BUY, SELL, AND THROW -- 
+
 // Buy eggplants
 function buy(client, msg, amount) {
 	// Get client data
@@ -60,151 +62,6 @@ function buy(client, msg, amount) {
 	data.eggplantReroll = Date.now() + rerollTime;
 	
 	sendEmbed(`You bought ${Math.floor(amount)} ${emoji} for **${price} points**!`, msg, data, client);
-	
-	// Save
-	client.setScore.run(data);
-}
-
-// View the current market.
-function view(client, msg) {
-	// Get client data
-	let data = client.loadData(msg.author);
-	
-	// No eggplants, show forecast.
-	if (!data.eggplant) {
-		// Write Text
-		viewForecast(client, msg, data.eggplantRandom, data.eggplantMaxSellPrice);
-		return;
-	}
-	
-	// Eggplants are expired
-	if (Date.now() > data.eggplantExpire) {
-		client.basicEmbed("View Denied", `Your ${emoji} have expired! Please throw them out!`, msg.channel);
-		return;
-	}
-	
-	// Send the embed
-	sendEmbed(`You have ${data.eggplant} ${emoji}!`, msg, data, client);
-}
-
-// Sends embed with given description and data
-function sendEmbed(description, msg, data, client) {
-	// Gets date objects for exact times
-	let rerollDateTime = new Date(data.eggplantReroll);
-	let expireDateTime = new Date(data.eggplantExpire);
-	
-	rerollText = "";
-	if (Date.now() > data.eggplantReroll) {
-		rerollText = "Now!"
-	}
-	else {
-		rerollText = `${(Math.floor(((data.eggplantReroll - Date.now())/hour)*100)/100)} hours`
-	}
-	
-	// Embed
-	let eggplantEmbed = new Discord.RichEmbed()
-		.setColor(moduleColor)
-		.setTitle("Eggplant Status for " + msg.author.tag)
-		.setAuthor('Wenyunibot')
-		.setDescription(description)
-		.addField("Sell Price", data.eggplantSellPrice, true)
-		.addField("Stability", getStabilityDescription(data.eggplantRandom), true)
-		.addField("Demand", getMaxDescription(data.eggplantMaxSellPrice), true)
-		.addField("Reroll Time", rerollText, true)
-		.addField("Reroll Exact Time", rerollDateTime.toLocaleString("default", {timeZone: "UTC", timeZoneName: "short"}), true)
-		.addBlankField(true)
-		.addField("Expire Time", `${(Math.floor(((data.eggplantExpire - Date.now())/day)*100)/100)} days // ${(Math.floor(((data.eggplantExpire - Date.now())/hour)*100)/100)} hours`, true)
-		.addField("Expire Exact Time", expireDateTime.toLocaleString("default", {timeZone: "UTC", timeZoneName: "short"}), true)
-		.setFooter(client.footer());
-		
-	msg.channel.send(eggplantEmbed);
-}
-
-// Gets description for stability
-function getStabilityDescription(stability) {
-	for (const [key, number] of Object.entries(descEggplant.Stability)) {
-		if (stability > number) {
-			return key;
-		}
-	}
-}
-
-// Gets description for maximum price
-function getMaxDescription(price) {
-	for (const [key, number] of Object.entries(descEggplant.Price)) {
-		if (price > number) {
-			return key;
-		}
-	}
-}
-
-// Displays text for current stability and demand.
-function viewForecast(client, msg, stability, maxPrice) {
-	client.basicEmbed("Market Forecast for "  + msg.author.tag, `The market is **${getStabilityDescription(stability)}** and the demand is **${getMaxDescription(maxPrice)}**.`, msg.channel, moduleColor);
-}
-
-// Throws away expired eggplants.
-function eggplantThrow(client, msg) {
-	// Get client data
-	let data = client.loadData(msg.author);
-	
-	// No eggplants.
-	if (!data.eggplant) {
-		client.basicEmbed("Throw Denied", `You do not have any ${emoji} to throw away.`, msg.channel);
-		return;
-	}
-	
-	// Eggplants are not expired
-	if (Date.now() < data.eggplantExpire) {
-		client.basicEmbed("Throw Denied", `Your ${emoji} are not expired! Don't throw them out!`, msg.channel);
-		return;
-	}
-	
-	// Throw away eggplants
-	client.basicEmbed("Throw Accepted", `${msg.author.tag} threw away ${data.eggplant} ${emoji}.`, msg.channel, moduleColor);
-	
-	data.eggplant = 0;
-	
-	// Save
-	client.setScore.run(data);
-	
-	// Randomize 
-	randomizeRandom(client, msg);
-}
-
-// Randomizes stability and max price.
-function randomizeRandom(client, msg) {
-	let data = client.loadData(msg.author);
-	
-	// New random factor
-	data.eggplantRandom = Math.floor(Math.random()*90 + 5)
-	// New max price
-	data.eggplantMaxSellPrice = Math.ceil((Math.random()*(maxRandom-1)+1)**3 + 100)
-	// New reroll time
-	data.eggplantReroll = Date.now() + rerollTime;
-	
-	// Save
-	client.setScore.run(data);
-	
-	// Write Text
-	viewForecast(client, msg, data.eggplantRandom, data.eggplantMaxSellPrice);
-}
-
-// Randomizes sell price.
-function randomizePrice(client, msg) {
-	let data = client.loadData(msg.author);
-	
-	// New price
-	let newPrice = Math.ceil(data.eggplantSellPrice * (data.eggplantRandom/100) + Math.random() * data.eggplantMaxSellPrice * (((100-data.eggplantRandom)/100)));
-	
-	// New reroll time
-	data.eggplantReroll = Date.now() + rerollTime;
-	
-	// Write Text
-	client.basicEmbed("Eggplant Random Factor", `The new ${emoji} sell price is **${newPrice} points.** The old price was ${data.eggplantSellPrice} points.`, msg.channel, moduleColor);
-	
-	// Write new price
-	data.eggplantSellPrice = newPrice;
 	
 	// Save
 	client.setScore.run(data);
@@ -274,6 +131,117 @@ function sell(client, msg, amount) {
 	}
 }
 
+// Throws away expired eggplants.
+function eggplantThrow(client, msg) {
+	// Get client data
+	let data = client.loadData(msg.author);
+	
+	// No eggplants.
+	if (!data.eggplant) {
+		client.basicEmbed("Throw Denied", `You do not have any ${emoji} to throw away.`, msg.channel);
+		return;
+	}
+	
+	// Eggplants are not expired
+	if (Date.now() < data.eggplantExpire) {
+		client.basicEmbed("Throw Denied", `Your ${emoji} are not expired! Don't throw them out!`, msg.channel);
+		return;
+	}
+	
+	// Throw away eggplants
+	client.basicEmbed("Throw Accepted", `${msg.author.tag} threw away ${data.eggplant} ${emoji}.`, msg.channel, moduleColor);
+	
+	data.eggplant = 0;
+	
+	// Save
+	client.setScore.run(data);
+	
+	// Randomize 
+	randomizeRandom(client, msg);
+}
+
+// -- VIEW MARKET --
+
+// View the current market.
+function view(client, msg) {
+	// Get client data
+	let data = client.loadData(msg.author);
+	
+	// No eggplants, show forecast.
+	if (!data.eggplant) {
+		// Write Text
+		viewForecast(client, msg, data.eggplantRandom, data.eggplantMaxSellPrice);
+		return;
+	}
+	
+	// Eggplants are expired
+	if (Date.now() > data.eggplantExpire) {
+		client.basicEmbed("View Denied", `Your ${emoji} have expired! Please throw them out!`, msg.channel);
+		return;
+	}
+	
+	// Send the embed
+	sendEmbed(`You have ${data.eggplant} ${emoji}!`, msg, data, client);
+}
+
+// Sends embed with given description and data
+function sendEmbed(description, msg, data, client) {
+	// Gets date objects for exact times
+	let rerollDateTime = new Date(data.eggplantReroll);
+	let expireDateTime = new Date(data.eggplantExpire);
+	
+	rerollText = "";
+	if (Date.now() > data.eggplantReroll) {
+		rerollText = "Now!"
+	}
+	else {
+		rerollText = `${(Math.floor(((data.eggplantReroll - Date.now())/hour)*100)/100)} hours`
+	}
+	
+	// Embed
+	let eggplantEmbed = new Discord.RichEmbed()
+		.setColor(moduleColor)
+		.setTitle("Eggplant Status for " + msg.author.tag)
+		.setAuthor('Wenyunibot')
+		.setDescription(description)
+		.addField("Sell Price", data.eggplantSellPrice, true)
+		.addField("Stability", getStabilityDescription(data.eggplantRandom), true)
+		.addField("Demand", getMaxDescription(data.eggplantMaxSellPrice), true)
+		.addField("Reroll Time", rerollText, true)
+		.addField("Reroll Exact Time", rerollDateTime.toLocaleString("default", {timeZone: "UTC", timeZoneName: "short"}), true)
+		.addBlankField(true)
+		.addField("Expire Time", `${(Math.floor(((data.eggplantExpire - Date.now())/day)*100)/100)} days // ${(Math.floor(((data.eggplantExpire - Date.now())/hour)*100)/100)} hours`, true)
+		.addField("Expire Exact Time", expireDateTime.toLocaleString("default", {timeZone: "UTC", timeZoneName: "short"}), true)
+		.setFooter(client.footer());
+		
+	msg.channel.send(eggplantEmbed);
+}
+
+// Displays text for current stability and demand.
+function viewForecast(client, msg, stability, maxPrice) {
+	client.basicEmbed("Market Forecast for "  + msg.author.tag, `The market is **${getStabilityDescription(stability)}** and the demand is **${getMaxDescription(maxPrice)}**.`, msg.channel, moduleColor);
+}
+
+// Gets description for stability
+function getStabilityDescription(stability) {
+	for (const [key, number] of Object.entries(descEggplant.Stability)) {
+		if (stability > number) {
+			return key;
+		}
+	}
+}
+
+// Gets description for maximum price
+function getMaxDescription(price) {
+	for (const [key, number] of Object.entries(descEggplant.Price)) {
+		if (price > number) {
+			return key;
+		}
+	}
+}
+
+// -- RANDOMIZE --
+
 // Reroll.
 function reroll(client, msg) {
 	let data = client.loadData(msg.author);
@@ -298,6 +266,46 @@ function reroll(client, msg) {
 		randomizePrice(client, msg)
 	}
 }
+
+// Randomizes stability and max price.
+function randomizeRandom(client, msg) {
+	let data = client.loadData(msg.author);
+	
+	// New random factor
+	data.eggplantRandom = Math.floor(Math.random()*90 + 5)
+	// New max price
+	data.eggplantMaxSellPrice = Math.ceil((Math.random()*(maxRandom-1)+1)**3 + 100)
+	// New reroll time
+	data.eggplantReroll = Date.now() + rerollTime;
+	
+	// Save
+	client.setScore.run(data);
+	
+	// Write Text
+	viewForecast(client, msg, data.eggplantRandom, data.eggplantMaxSellPrice);
+}
+
+// Randomizes sell price.
+function randomizePrice(client, msg) {
+	let data = client.loadData(msg.author);
+	
+	// New price
+	let newPrice = Math.ceil(data.eggplantSellPrice * (data.eggplantRandom/100) + Math.random() * data.eggplantMaxSellPrice * (((100-data.eggplantRandom)/100)));
+	
+	// New reroll time
+	data.eggplantReroll = Date.now() + rerollTime;
+	
+	// Write Text
+	client.basicEmbed("Eggplant Random Factor", `The new ${emoji} sell price is **${newPrice} points.** The old price was ${data.eggplantSellPrice} points.`, msg.channel, moduleColor);
+	
+	// Write new price
+	data.eggplantSellPrice = newPrice;
+	
+	// Save
+	client.setScore.run(data);
+}
+
+// -- HELP --
 
 // Help.
 function helpCommand(client, msg) {

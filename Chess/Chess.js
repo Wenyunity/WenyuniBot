@@ -27,89 +27,7 @@ const whitePiece = ["P", "R", "N", "B", "Q", "K"]
 const blackPiece = ["p", "r", "n", "b", "q", "k"]
 const boardStyleSet = ["highlight", "diagonal", "versus", "compact"]
 			
-function newBoard() {
-	board = [["R", "N", "B", "Q", "K", "B", "N", "R"], ["P", "P", "P", "P", "P", "P", "P", "P"], 
-			["", "", "", "", "", "", "", ""], ["", "", "", "", "", "", "", ""],
-			["", "", "", "", "", "", "", ""], ["", "", "", "", "", "", "", ""],
-			["p", "p", "p", "p", "p", "p", "p", "p"], ["r", "n", "b", "q", "k", "b", "n", "r"]];
-	playerToMove = "w";
-	castle = ["K", "Q", "k", "q"];
-	enPassant = "";
-	fiftyMoveRule = 0;
-	turnCount = 1;
-	blackKingPos = [4, 7];
-	whiteKingPos = [4, 0];
-	inCheck = false;
-}
-
-// Saves board state
-// To prevent spam, saves to usertag.json
-function saveBoard(msg, client, auto) {
-	let x = {};
-	x.board = board;
-	x.playerToMove = playerToMove;
-	x.castle = castle;
-	x.enPassant = enPassant;
-	x.fiftyMoveRule = fiftyMoveRule;
-	x.turnCount = turnCount;
-	x.whiteKingPos = whiteKingPos;
-	x.blackKingPos = blackKingPos;
-	x.whiteStyle = whiteStyle;
-	x.blackStyle = blackStyle;
-	x.inCheck = inCheck;
-	
-	if (auto) {
-		fs.writeFile(`./Chess/Data/Auto.json`, JSON.stringify(x, null, 4), function(err) {
-			if (err) throw err;
-		})
-	}
-	else {
-		fs.writeFile(`./Chess/Data/${msg.author.id}.json`, JSON.stringify(x, null, 4), function(err) {
-			if (err) throw err;
-			console.log('completed writing to json');
-		})
-		client.basicEmbed("Save Complete", `Saved file to ${msg.author.tag}'s file.`, msg.channel, moduleColor);
-	}
-}
-
-// Loads board from storage
-// To prevent spam, loads from usertag.json
-function loadBoard(msg, client, auto) {
-	x = {}
-	if (auto) {
-		try {
-			x = JSON.parse(fs.readFileSync(`./Chess/Data/Auto.json`, 'utf8'));
-		}
-		catch (err) {
-			client.basicEmbed("Load Error", "Could not find your save file", msg.channel);
-			return;
-		}
-	}
-	else {
-		try {
-			x = JSON.parse(fs.readFileSync(`./Chess/Data/${msg.author.id}.json`, 'utf8'));
-		}
-		catch (err) {
-			client.basicEmbed("Load Error", "Could not find your save file", msg.channel);
-			return;
-		}
-	}
-	board = x.board;
-	playerToMove = x.playerToMove;
-	castle = x.castle;
-	enPassant = x.enPassant;
-	fiftyMoveRule = x.fiftyMoveRule;
-	turnCount = x.turnCount;
-	whiteKingPos = x.whiteKingPos;
-	blackKingPos = x.blackKingPos;
-	whiteStyle = x.whiteStyle;
-	blackStyle = x.blackStyle;
-	inCheck = x.inCheck;
-	lastMove = Date.now();
-	
-	client.basicEmbed("Load Complete", "Done loading file!", msg.channel, moduleColor);
-	printBoard(msg, true);
-}
+// -- VIEW BOARD --
 
 // View the board with a given style
 // This function assumes the given style exists
@@ -293,132 +211,7 @@ function getFEN() {
 	return base;
 }
 
-// Castling
-function castling(msg, arguments, client) {
-	let sideCount = arguments.split('-')
-	
-	// If in check, no castle
-	if (inCheck) {
-		client.basicEmbed("Castling Fail", "You are in check and cannot castle!", msg.channel);
-		return;
-	}
-	
-	let row = 0;
-	let castleCheck = 0;
-	if (playerToMove === "w") { // White
-		row = 0;
-	}
-	else { // Black
-		row = 7;
-		castleCheck = 2;
-	}
-
-	// Get which squares to check
-	let castleMoves = []
-	
-	// Kingside Castling
-	if (sideCount.length === 2) {
-		castleMoves = [[5, row], [6, row]]
-		
-	}
-	else { // Queenside Castling
-		castleMoves = [[3, row], [2, row]]
-		castleCheck++;
-		
-		// Extra check for queenside
-		if (board[row][1]) {
-			client.basicEmbed("Castling Fail", "There is a piece in the way!", msg.channel);
-			return;
-		}
-	}
-
-	// Check if castling available
-	if (!castle[castleCheck]) {
-		client.basicEmbed("Castling Fail", "You lost your ability to castle in that direction!", msg.channel);
-		return;
-	}
-	
-	// Check squares
-	for (i = 0; i < castleMoves.length; i++) {
-		// Check if piece in the way
-		if (board[castleMoves[i][1]][castleMoves[i][0]]) {
-			client.basicEmbed("Castling Fail", "There is a piece in the way!", msg.channel);
-			return;
-		}
-		if (fullCheck(castleMoves[i], playerToMove, [4, row], [false, false])) {
-			client.basicEmbed("Castling Fail", "You cannot move through or into check!", msg.channel);
-			return;
-		}
-	}
-	console.log("Alive post-row4")
-	// Legal move, move pieces
-	if (sideCount.length === 2) {
-		board[row][6] = board[row][4];
-		board[row][5] = board[row][7];
-		board[row][7] = "";
-		board[row][4] = "";
-	}
-	else { // Queenside Castling
-		board[row][2] = board[row][4];
-		board[row][3] = board[row][0];
-		board[row][0] = "";
-		board[row][4] = "";
-	}
-	console.log("Alive post-row5")
-	// White castling removal
-	if (playerToMove === "w") {
-		castle[0] = "";
-		castle[1] = "";
-	}
-	else { // Black castling removal
-		castle[2] = "";
-		castle[3] = "";
-	}
-	
-	// Fifty move rule increment
-	fiftyMoveRule++;
-	// En Passant update
-	enPassant = "";
-	
-	setupNext(msg, client);
-}
-
-function setupNext(msg, client) {
-	// Turn and player swap
-	if (playerToMove === 'w') {
-		playerToMove = 'b';
-	}
-	else {
-		playerToMove = 'w';
-		turnCount = turnCount + 1;
-	}
-	
-	// Check for check
-	if (playerToMove === "w") {
-		inCheck = fullCheck(whiteKingPos, playerToMove, [false, false], [false, false]);
-	}
-	else {
-		inCheck = fullCheck(blackKingPos, playerToMove, [false, false], [false, false]);
-	}
-	
-	// Check message
-	if (inCheck) {
-		msg.channel.send("Check!");
-	}
-	
-	// Print board
-	if (playerToMove === "w") {
-		printBoard(msg, true, whiteStyle, playerToMove);		
-	}
-	else {
-		printBoard(msg, true, blackStyle, playerToMove);
-	}
-	
-	// Timeout
-	lastMoveTime = Date.now();
-	// Save board
-	saveBoard(msg, client, true);
-}
+// -- PIECE MOVEMENT --
 
 // Moves piece if legal
 function movePiece(msg, args, client) {
@@ -669,6 +462,134 @@ function movePiece(msg, args, client) {
 	setupNext(msg, client);
 }
 
+// Castling
+function castling(msg, arguments, client) {
+	let sideCount = arguments.split('-')
+	
+	// If in check, no castle
+	if (inCheck) {
+		client.basicEmbed("Castling Fail", "You are in check and cannot castle!", msg.channel);
+		return;
+	}
+	
+	let row = 0;
+	let castleCheck = 0;
+	if (playerToMove === "w") { // White
+		row = 0;
+	}
+	else { // Black
+		row = 7;
+		castleCheck = 2;
+	}
+
+	// Get which squares to check
+	let castleMoves = []
+	
+	// Kingside Castling
+	if (sideCount.length === 2) {
+		castleMoves = [[5, row], [6, row]]
+		
+	}
+	else { // Queenside Castling
+		castleMoves = [[3, row], [2, row]]
+		castleCheck++;
+		
+		// Extra check for queenside
+		if (board[row][1]) {
+			client.basicEmbed("Castling Fail", "There is a piece in the way!", msg.channel);
+			return;
+		}
+	}
+
+	// Check if castling available
+	if (!castle[castleCheck]) {
+		client.basicEmbed("Castling Fail", "You lost your ability to castle in that direction!", msg.channel);
+		return;
+	}
+	
+	// Check squares
+	for (i = 0; i < castleMoves.length; i++) {
+		// Check if piece in the way
+		if (board[castleMoves[i][1]][castleMoves[i][0]]) {
+			client.basicEmbed("Castling Fail", "There is a piece in the way!", msg.channel);
+			return;
+		}
+		if (fullCheck(castleMoves[i], playerToMove, [4, row], [false, false])) {
+			client.basicEmbed("Castling Fail", "You cannot move through or into check!", msg.channel);
+			return;
+		}
+	}
+	console.log("Alive post-row4")
+	// Legal move, move pieces
+	if (sideCount.length === 2) {
+		board[row][6] = board[row][4];
+		board[row][5] = board[row][7];
+		board[row][7] = "";
+		board[row][4] = "";
+	}
+	else { // Queenside Castling
+		board[row][2] = board[row][4];
+		board[row][3] = board[row][0];
+		board[row][0] = "";
+		board[row][4] = "";
+	}
+	console.log("Alive post-row5")
+	// White castling removal
+	if (playerToMove === "w") {
+		castle[0] = "";
+		castle[1] = "";
+	}
+	else { // Black castling removal
+		castle[2] = "";
+		castle[3] = "";
+	}
+	
+	// Fifty move rule increment
+	fiftyMoveRule++;
+	// En Passant update
+	enPassant = "";
+	
+	setupNext(msg, client);
+}
+
+// Sets up next move
+function setupNext(msg, client) {
+	// Turn and player swap
+	if (playerToMove === 'w') {
+		playerToMove = 'b';
+	}
+	else {
+		playerToMove = 'w';
+		turnCount = turnCount + 1;
+	}
+	
+	// Check for check
+	if (playerToMove === "w") {
+		inCheck = fullCheck(whiteKingPos, playerToMove, [false, false], [false, false]);
+	}
+	else {
+		inCheck = fullCheck(blackKingPos, playerToMove, [false, false], [false, false]);
+	}
+	
+	// Check message
+	if (inCheck) {
+		msg.channel.send("Check!");
+	}
+	
+	// Print board
+	if (playerToMove === "w") {
+		printBoard(msg, true, whiteStyle, playerToMove);		
+	}
+	else {
+		printBoard(msg, true, blackStyle, playerToMove);
+	}
+	
+	// Timeout
+	lastMoveTime = Date.now();
+	// Save board
+	saveBoard(msg, client, true);
+}
+
 // Converts a1 to [x, y] format
 function determinePlace(place) {
 		let x = {"a": 0, "b": 1, "c": 2, "d": 3, "e": 4, "f": 5, "g": 6, "h": 7}
@@ -888,6 +809,8 @@ function pawnMove (from, to, toa1Form) {
 	}
 }
 
+// -- CHECK --
+
 // Checks if pawn puts king in check
 function pawnCheck (pawn, king, player) {
 	if (Math.abs(pawn[0] - king[0]) === 1) {
@@ -900,32 +823,6 @@ function pawnCheck (pawn, king, player) {
 	}
 	else {
 		return false;
-	}
-}
-
-// Find board style
-function setStyle(msg, args, client) {
-	// White or black
-	if (args[0] === "w" || args[0] === "b") { 
-		if (boardStyleSet.includes(args[1])) { // If style exists
-			if (args[0] === "w") { // Set style
-				whiteStyle = args[1];
-				client.basicEmbed("Style Changed", "Set white's style!", msg.channel, moduleColor);
-			}
-			else { // Black
-				blackStyle = args[1];
-				client.basicEmbed("Style Changed", "Set black's style!", msg.channel, moduleColor);
-			}
-		}
-		else {
-			client.basicEmbed("Style Error", "Could not find style!", msg.channel);
-		}
-	}
-	else if (args[0] === "help") {
-		client.basicEmbed("Style Help", "Current styles: " + boardStyleSet + "\r\nExample: `wy!chess set w compact`", msg.channel);
-	}
-	else {
-		client.basicEmbed("Style Error", "Set the first argument to w or b!", msg.channel);
 	}
 }
 
@@ -993,8 +890,124 @@ function fullCheck (kingPos, player, from, to) {
 	return false;
 }
 
+// -- STYLE --
+
+// Find board style
+function setStyle(msg, args, client) {
+	// White or black
+	if (args[0] === "w" || args[0] === "b") { 
+		if (boardStyleSet.includes(args[1])) { // If style exists
+			if (args[0] === "w") { // Set style
+				whiteStyle = args[1];
+				client.basicEmbed("Style Changed", "Set white's style!", msg.channel, moduleColor);
+			}
+			else { // Black
+				blackStyle = args[1];
+				client.basicEmbed("Style Changed", "Set black's style!", msg.channel, moduleColor);
+			}
+		}
+		else {
+			client.basicEmbed("Style Error", "Could not find style!", msg.channel);
+		}
+	}
+	else if (args[0] === "help") {
+		client.basicEmbed("Style Help", "Current styles: " + boardStyleSet + "\r\nExample: `wy!chess set w compact`", msg.channel);
+	}
+	else {
+		client.basicEmbed("Style Error", "Set the first argument to w or b!", msg.channel);
+	}
+}
+
+// -- LOAD, SAVE, AND RESET --
+
+// Timeout is not there yet
 function noTimeOut(msg) {
 	msg.channel.send(`You need to wait at least ${(Math.floor(((timeOut + lastMoveTime - Date.now())/hour)*100)/100)} hours to reset/load.`)
+}
+
+// Loads board from storage
+// To prevent spam, loads from usertag.json
+function loadBoard(msg, client, auto) {
+	x = {}
+	if (auto) {
+		try {
+			x = JSON.parse(fs.readFileSync(`./Chess/Data/Auto.json`, 'utf8'));
+		}
+		catch (err) {
+			client.basicEmbed("Load Error", "Could not find your save file", msg.channel);
+			return;
+		}
+	}
+	else {
+		try {
+			x = JSON.parse(fs.readFileSync(`./Chess/Data/${msg.author.id}.json`, 'utf8'));
+		}
+		catch (err) {
+			client.basicEmbed("Load Error", "Could not find your save file", msg.channel);
+			return;
+		}
+	}
+	board = x.board;
+	playerToMove = x.playerToMove;
+	castle = x.castle;
+	enPassant = x.enPassant;
+	fiftyMoveRule = x.fiftyMoveRule;
+	turnCount = x.turnCount;
+	whiteKingPos = x.whiteKingPos;
+	blackKingPos = x.blackKingPos;
+	whiteStyle = x.whiteStyle;
+	blackStyle = x.blackStyle;
+	inCheck = x.inCheck;
+	lastMove = Date.now();
+	
+	client.basicEmbed("Load Complete", "Done loading file!", msg.channel, moduleColor);
+	printBoard(msg, true);
+}
+
+// Saves board state
+// To prevent spam, saves to usertag.json
+function saveBoard(msg, client, auto) {
+	let x = {};
+	x.board = board;
+	x.playerToMove = playerToMove;
+	x.castle = castle;
+	x.enPassant = enPassant;
+	x.fiftyMoveRule = fiftyMoveRule;
+	x.turnCount = turnCount;
+	x.whiteKingPos = whiteKingPos;
+	x.blackKingPos = blackKingPos;
+	x.whiteStyle = whiteStyle;
+	x.blackStyle = blackStyle;
+	x.inCheck = inCheck;
+	
+	if (auto) {
+		fs.writeFile(`./Chess/Data/Auto.json`, JSON.stringify(x, null, 4), function(err) {
+			if (err) throw err;
+		})
+	}
+	else {
+		fs.writeFile(`./Chess/Data/${msg.author.id}.json`, JSON.stringify(x, null, 4), function(err) {
+			if (err) throw err;
+			console.log('completed writing to chess json');
+		})
+		client.basicEmbed("Save Complete", `Saved file to ${msg.author.tag}'s file.`, msg.channel, moduleColor);
+	}
+}
+
+// Resets board to default
+function newBoard() {
+	board = [["R", "N", "B", "Q", "K", "B", "N", "R"], ["P", "P", "P", "P", "P", "P", "P", "P"], 
+			["", "", "", "", "", "", "", ""], ["", "", "", "", "", "", "", ""],
+			["", "", "", "", "", "", "", ""], ["", "", "", "", "", "", "", ""],
+			["p", "p", "p", "p", "p", "p", "p", "p"], ["r", "n", "b", "q", "k", "b", "n", "r"]];
+	playerToMove = "w";
+	castle = ["K", "Q", "k", "q"];
+	enPassant = "";
+	fiftyMoveRule = 0;
+	turnCount = 1;
+	blackKingPos = [4, 7];
+	whiteKingPos = [4, 0];
+	inCheck = false;
 }
 
 module.exports = {

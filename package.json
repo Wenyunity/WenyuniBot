@@ -1,9 +1,9 @@
 {
   "name": "Wenyunibot",
-  "version": "0.5.2",
-  "description": "Wenyunity's Bot, use WY! or wy!",
+  "version": "0.6.0",
+  "description": "Wenyunity's Bot. Activated with wy! or WY! prefix. Has 15+ functions.",
   "main": "Yuni.js",
-  "author": "Wenyunity",
+  "author": "Wenyunity#2442",
   "dependencies": {
     "better-sqlite3": "^5.4.0",
     "discord.js": "^11.5.1",

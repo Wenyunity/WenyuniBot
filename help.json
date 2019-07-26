@@ -1,10 +1,6 @@
 {
-	"General": 
+	"Basic": 
 	{
-		"help": {
-			"desc": "This is the help command. Use **WY!help** to get a list of all commands.",
-			"args": {}
-		}, 
 		"choose": {
 			"desc": "Chooses randomly between the choices given.",
 			"args": {
@@ -17,6 +13,21 @@
 				"No Arguments": "Chooses between 0 and 1.",
 				"1 Number": "Chooses between 0 and the number given.",
 				"2 Numbers": "Chooses between the two numbers given."
+			}
+		},
+		"vote": {
+			"desc": "Choose to either vote this number up or down. Voting available every 90 minutes.",
+			"args": {
+				"No Arguments": "Shows where the vote is at.",
+				"up/plus/yes": "Adds 1 to the vote.",
+				"down/minus/no": "Subtracts 1 from the vote."
+			}
+		},
+		"find": {
+			"desc": "Find a number between 0 and 999. If you get it wrong, it'll tell you if your number is higher or lower.\r\nSabotaging bounds is allowed. Find available every 2 minutes.",
+			"args": {
+				"No Arguments": "See the current bounds.",
+				"Number": "Attempt to find the number."
 			}
 		}
 	},
@@ -54,16 +65,6 @@
 				"detail": "If you are unable to work, shows exact time in UTC when you can work again."
 			}
 		},
-		"leaderboard": {
-			"desc": "Shows the top 10 in a specific category.",
-			"args": {
-				"points": "Shows the people who have the most points.",
-				"bestWork": "Shows the people who got the most in one work session.",
-				"bestEggplant": "Shows the best eggplant sales.",
-				"first": "Goes to easteregg's first command, showing all easteregg finders.",
-				"found": "Goes to easteregg's found command, showing all found easter eggs."
-			}
-		},
 		"eggplant": {
 			"desc": "Buy and sell eggplants in a variable market. Just be careful - eggplants only are good for a week.",
 			"args": {
@@ -75,11 +76,44 @@
 				"help": "Gives a more detailed explanation of eggplant."
 			}
 		},
+		"count": {
+			"desc": "Costs a lot of points to move this counter up. It starts at 1000 points for a single number, and it only gets higher the more you count.",
+			"args": {}
+		},
+		"leaderboard": {
+			"desc": "Shows the top 10 in a specific category.",
+			"args": {
+				"points": "Shows the people who have the most points.",
+				"bestWork": "Shows the people who got the most in one work session.",
+				"bestEggplant": "Shows the best eggplant sales.",
+				"first": "Goes to easteregg's first command, showing all easteregg finders.",
+				"found": "Goes to easteregg's found command, showing all found easter eggs."
+			}
+		},
 		"profile": {
 			"desc": "Returns some summary statistics about a person.",
 			"args" : {
 				"user": "If given, tries to find a user. If not given, displays the profile of the message sender."
 			}
+		}
+		
+	},
+	"Auxiliary": {
+		"help": {
+			"desc": "This is the help command. Use **WY!help** to get a list of all commands.",
+			"args": {}
+		}, 
+		"invite": {
+			"desc": "Gives the link to invite Wenyunibot to another server.",
+			"args": {}
+		},
+		"bothomeserver": {
+			"desc": "Gives the link to Wenyunity's server, where Wenyunibot is being tested.",
+			"args": {}
+		},
+		"botinfo": {
+			"desc": "Gives information about the bot.",
+			"args": {}
 		}
 	}
 }
