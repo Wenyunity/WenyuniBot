@@ -1,5 +1,11 @@
 # Version Control
 
+### Version 0.6.1
+- Yuni: Fixed error when creating new row.
+- Find, Vote: Fixed error when checking for new row.
+- Find: Added title when using wy!find with no arguments.
+- Find: Added return statement to NaN error, preventing the cooldown timer from activating.
+
 ## Version 0.6.0
 - Chess, Yuni, Eggplant: Reorganizing of functions.
 - Yuni: Reorganizing of imports.
