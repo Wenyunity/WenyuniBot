@@ -236,7 +236,7 @@ function getData(user) {
 	let data = client.getScore.get(user.id);
 	
 	if (!data) {
-		createData(user);
+		data = createData(user);
 	}
 	return data;
 }
@@ -322,7 +322,7 @@ function randomCommand(commandArgs, msg) {
 // Counts up or down
 function voteCommand(commandArgs, msg) {
 	data = sql.prepare(`SELECT user, voteTime FROM scores WHERE user = ${msg.author.id}`).get();
-	if (data === {}) {
+	if (!data) {
 		data = createData(msg.author)
 	}
 	
@@ -364,13 +364,13 @@ function voteCommand(commandArgs, msg) {
 function findCommand(commandArgs, msg) {
 	// Get or create data
 	data = sql.prepare(`SELECT user, findTime, find FROM scores WHERE user = ${msg.author.id}`).get();
-	if (data === {}) {
+	if (!data) {
 		data = createData(msg.author)
 	}
-	
+
 	// Return places to find
 	if (commandArgs.length === 0) {
-		baseEmbed("", `The lower bound is at **${countBoard.findMin}**, and the upper bound at **${countBoard.findMax}**.`, msg.channel, "#AA1177");
+		baseEmbed("Find Bounds", `The lower bound is at **${countBoard.findMin}**, and the upper bound at **${countBoard.findMax}**.`, msg.channel, "#AA1177");
 		return;
 	} 
 	
@@ -385,6 +385,7 @@ function findCommand(commandArgs, msg) {
 	// Error handling
 	if (isNaN(suggestedNumber)) {
 		baseEmbed("Find Failed", "You did not put in a number!", msg.channel, "#AA1177");
+		return;
 	} // It's lower
 	else if (suggestedNumber < countBoard.findNumber) {
 		countBoard.findMin = suggestedNumber;
