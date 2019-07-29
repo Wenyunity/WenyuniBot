@@ -20,7 +20,7 @@ Randomly chooses a floating point number.
 
 ### find
 
-Find a number between 0 and 999.
+Find a number between 0 and 9999.
 
 ### vote
 
