@@ -24,6 +24,7 @@ const minute = 1000 * 60;
 const second = 1000;
 const voteDelay = 1000 * 60 * 90; // 90 minutes
 const findDelay = 1000 * 60 * 2; // 2 minutes
+let findBounds = {min: 0, max: 9999} // Bounds for find
 
 // -- LISTS AND LINKS --
 const sortRows = ["points", "bestWork", "eggplant", "bestEggplant", "countTime", "find"];
@@ -169,6 +170,9 @@ client.on('message', msg => {
 							case 'sync':
 								sync(msg);
 								break;
+							case 'delete':
+								deleteRow(msg);
+								break;
 							default:
 								baseEmbed("Admin Command Failed", "Wenyunity, what are you doing?", msg.channel);
 								break;
@@ -206,6 +210,13 @@ function sync(msg) {
 			save.run(data);
 		}
 		baseEmbed("Sync", "Complete!", msg.channel)
+}
+
+// Deletes user
+function deleteRow(msg) {
+	sql.prepare(`DELETE FROM scores WHERE user = ${msg.author.id}`).run();
+	
+	baseEmbed("Delete", `Deleted ${msg.author.tag}'s data!`, msg.channel)
 }
 
 // -- CLIENT FUNCTIONS -- 
@@ -386,6 +397,10 @@ function findCommand(commandArgs, msg) {
 	if (isNaN(suggestedNumber)) {
 		baseEmbed("Find Failed", "You did not put in a number!", msg.channel, "#AA1177");
 		return;
+	} // It's outside of the legal bounds
+	else if (suggestedNumber < findBounds.min || suggestedNumber > findBounds.max) {
+		baseEmbed("Find Failed", `Please put in a number between **${findBounds.min}** and **${findBounds.max}**`, msg.channel, "#AA1177");
+		return;
 	} // It's lower
 	else if (suggestedNumber < countBoard.findNumber) {
 		countBoard.findMin = suggestedNumber;
@@ -397,9 +412,10 @@ function findCommand(commandArgs, msg) {
 	} // Exactly
 	else {
 		data.find = data.find + 1;
-		countBoard.findMin = -1;
-		countBoard.findMax = 1000;
-		countBoard.findNumber = Math.floor(Math.random() * 1000);
+		countBoard.findMin = findBounds.min - 1;
+		countBoard.findMax = findBounds.max + 1;
+		countBoard.findNumber = Math.floor(Math.random() * (findBounds.max - findBounds.min) + findBounds.min);
+		sql.prepare(`UPDATE scores SET find = ${data.find} WHERE user = ${data.user};`).run();
 		baseEmbed("You found the right number!", `You've now found the number **${data.find} times**!`, msg.channel, "#AA1177");
 	}
 	
@@ -665,56 +681,43 @@ function workCommand(args, msg) {
 
 // Profile
 function profileCommand(msg, args) {
-	if (!args) {
+	if (!args) { // Not finding a user
 		data = getData(msg.author);
 		data.tag = msg.author.tag;
 		
-		// Add embed
-		let profileEmbed = new Discord.RichEmbed()
-			.setColor("#00AAFF")
-			.setTitle("Profile of " + msg.author.tag)
-			.setAuthor('Wenyunibot')
-			.setDescription("Profile")
-			.setFooter(textWenyuniFooter())
-			.addField("Total Points", data.points, true)
-			.addField("Best Work", data.bestWork, true)
-			.addField("Eggplants", data.eggplant, true)
-			.addField("Counting!", data.countTime, true)
-			.addField("Find Successes", data.find, true);
-		
 		// Print
-		msg.channel.send(profileEmbed);
+		msg.channel.send(profileEmbed(data));
 		
 		// Save for now
 		client.setScore.run(data)
 	}
-	else {
-		const user = sql.prepare(`SELECT * FROM scores WHERE tag LIKE '${args}%' LIMIT 1;`).all();
-		let found = false;
-		for(const data of user) {
-			// Add embed
-			let profileEmbed = new Discord.RichEmbed()
-				.setColor("#00AAFF")
-				.setTitle("Profile of " + data.tag)
-				.setAuthor('Wenyunibot')
-				.setDescription("Profile")
-				.setFooter(textWenyuniFooter())
-				.addField("Total Points", data.points)
-				.addField("Best Work", data.bestWork)
-				.addField("Eggplants", data.eggplant)
-				.addField("Counting!", data.countTime, true);
-				
-			// Print
-			msg.channel.send(profileEmbed);
-			
-			found = true;
-		}
+	else { // Finding a user
+		const user = sql.prepare(`SELECT * FROM scores WHERE tag LIKE '${args}%' LIMIT 1;`).get();
 		
-		// Not found
-		if (!found) {
+		if (user) {
+			msg.channel.send(profileEmbed(user));
+		} // Not found
+		else {
 			baseEmbed("Profile Error", `Could not find ${args} in user database.`, msg.channel);
 		}
 	}
+}
+
+// Helper function for profile
+function profileEmbed(data) {
+	let profileEmbed = new Discord.RichEmbed()
+		.setColor("#00AAFF")
+		.setTitle("Profile of " + data.tag)
+		.setAuthor('Wenyunibot')
+		.setDescription("Profile")
+		.setFooter(textWenyuniFooter())
+		.addField("Total Points", data.points, true)
+		.addField("Best Work", data.bestWork, true)
+		.addField("Eggplants", data.eggplant, true)
+		.addField("Counting!", data.countTime, true)
+		.addField("Find Successes", data.find, true);
+	
+	return profileEmbed;
 }
 
 // Leaderboard

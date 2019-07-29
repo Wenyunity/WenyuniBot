@@ -1,6 +1,6 @@
 {
   "name": "Wenyunibot",
-  "version": "0.6.1",
+  "version": "0.6.2",
   "description": "Wenyunity's Bot. Activated with wy! or WY! prefix. Has 15+ functions.",
   "main": "Yuni.js",
   "author": "Wenyunity#2442",
