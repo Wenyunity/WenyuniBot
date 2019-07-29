@@ -1,5 +1,13 @@
 # Version Control
 
+### Version 0.6.2
+- Profile: Added helper function to reduce repeated code.
+- Find: Fixed error with saving find.
+- Find: New error for putting a number outside of bounds.
+- Find: findBounds object holds minimum and maximum possible numbers.
+- Find: Maximum moved up to 10000.
+- Admin: Delete function added for testing.
+
 ### Version 0.6.1
 - Yuni: Fixed error when creating new row.
 - Find, Vote: Fixed error when checking for new row.
