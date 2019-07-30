@@ -1,5 +1,12 @@
 # Version Control
 
+## Version 0.7.0
+- Chess: Each channel now has their own game.
+- Chess: Games are auto-loaded on reset.
+- Chess: Load spits out a new board if auto-loading fails. No more failure message.
+- Chess: Load only prints out board if auto.
+- Yuni: newboss command added.
+
 ### Version 0.6.2
 - Profile: Added helper function to reduce repeated code.
 - Find: Fixed error with saving find.
