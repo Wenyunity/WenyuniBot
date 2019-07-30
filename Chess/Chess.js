@@ -1,37 +1,28 @@
+// -- REQUIRES --
 const Discord = require('discord.js');
 const SQLite = require("better-sqlite3");
 const fs = require('fs');
+
+// -- CONSTANTS
 const boardStyle = JSON.parse(fs.readFileSync('./Chess/boardStyle.json', 'utf8'));
 const boardPosition = JSON.parse(fs.readFileSync('./Chess/boardPosition.json', 'utf8'));
-let board = [["R", "N", "B", "Q", "K", "B", "N", "R"], ["P", "P", "P", "P", "P", "P", "P", "P"], 
-			["", "", "", "", "", "", "", ""], ["", "", "", "", "", "", "", ""],
-			["", "", "", "", "", "", "", ""], ["", "", "", "", "", "", "", ""],
-			["p", "p", "p", "p", "p", "p", "p", "p"], ["r", "n", "b", "q", "k", "b", "n", "r"]];
-let playerToMove = "w";
-let castle = ["K", "Q", "k", "q"];
-let enPassant = "";
-let fiftyMoveRule = 0;
-let turnCount = 1;
-let whiteKingPos = [4, 0];
-let blackKingPos = [4, 7];
-let whiteStyle = "compact";
-let blackStyle = "compact";
-let inCheck = false;
-let columnName = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
 let lastMoveTime = 0;
 const hour = 1000 * 60 * 60;
 const timeOut = 1000 * 60 * 60 * 2; // 2 hours
 const moduleColor = "#FFFFFF"
-
 const whitePiece = ["P", "R", "N", "B", "Q", "K"]
 const blackPiece = ["p", "r", "n", "b", "q", "k"]
 const boardStyleSet = ["highlight", "diagonal", "versus", "compact"]
+const columnName = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
+
+// -- I should really get rid of these --
+
 			
 // -- VIEW BOARD --
 
 // View the board with a given style
 // This function assumes the given style exists
-function viewBoard(style, order) {
+function viewBoard(style, order, board, boardInfo) {
 	
 	// Color style
 	message = '```' + boardStyle[style]["color"] + "\r\n"
@@ -69,16 +60,16 @@ function viewBoard(style, order) {
 			// Found a piece
 			if (board[j][i]) {
 				// Find the right set of player turn and which team the piece is on
-				if (playerToMove === "w" && whitePiece.includes(board[j][i])) { // White on-turn
+				if (boardInfo.playerToMove === "w" && whitePiece.includes(board[j][i])) { // White on-turn
 					message += boardStyle[style]["piece"]["whiteOnTurn"][0] + board[j][i] + boardStyle[style]["piece"]["whiteOnTurn"][1]
 				}
-				else if (playerToMove === "b" && whitePiece.includes(board[j][i])) { // White off-turn
+				else if (boardInfo.playerToMove === "b" && whitePiece.includes(board[j][i])) { // White off-turn
 					message += boardStyle[style]["piece"]["whiteOffTurn"][0] + board[j][i] + boardStyle[style]["piece"]["whiteOffTurn"][1]
 				}
-				else if (playerToMove === "b" && blackPiece.includes(board[j][i])) { // Black on-turn
+				else if (boardInfo.playerToMove === "b" && blackPiece.includes(board[j][i])) { // Black on-turn
 					message += boardStyle[style]["piece"]["blackOnTurn"][0] + board[j][i] + boardStyle[style]["piece"]["blackOnTurn"][1]
 				}
-				else if (playerToMove === "w" && blackPiece.includes(board[j][i])) { // Black off-turn
+				else if (boardInfo.playerToMove === "w" && blackPiece.includes(board[j][i])) { // Black off-turn
 					message += boardStyle[style]["piece"]["blackOffTurn"][0] + board[j][i] + boardStyle[style]["piece"]["blackOffTurn"][1]
 				}
 			}
@@ -108,11 +99,11 @@ function viewBoard(style, order) {
 }
 
 // Prints current board state
-function printBoard(msg, addFEN, style, view) {
+function printBoard(msg, addFEN, style, view, board, boardInfo) {
 	let message = ""
 	
 	// See if board was flipped
-	let check = view || playerToMove;
+	let check = view || boardInfo.playerToMove;
 	// Which way to flip the board
 	order = 1;
 	if (check === "b") {
@@ -121,37 +112,37 @@ function printBoard(msg, addFEN, style, view) {
 	
 	// If style given
 	if (boardStyleSet.includes(style)) {
-		message += viewBoard(style, order)
+		message += viewBoard(style, order, board, boardInfo)
 	}
 	else { // Default
-		if (playerToMove === "w") {
-			message += viewBoard(whiteStyle, order)
+		if (boardInfo.playerToMove === "w") {
+			message += viewBoard(boardInfo.whiteStyle, order, board, boardInfo)
 		}
 		else {
-			message += viewBoard(blackStyle, order)
+			message += viewBoard(boardInfo.blackStyle, order, board, boardInfo)
 		}
 	}
 	
 	// Border color matches player to move
 	let borderColor = "#FFFFFF";
 	let player = "White";
-	if (playerToMove == "b") {
+	if (boardInfo.playerToMove == "b") {
 		borderColor = "#000000";
 		player = "Black";
 	}
 	
 	let castleText = ""
-	if (castle[0] || castle[1]) {
-		castleText += "White: " + castle[0] + " " + castle[1] + "\r\n";
+	if (boardInfo.castle[0] || boardInfo.castle[1]) {
+		castleText += "White: " + boardInfo.castle[0] + " " + boardInfo.castle[1] + "\r\n";
 	}
-	if (castle[2] || castle[3]) {
-		castleText += "Black: " + castle[2] + " " + castle[3] + "\r\n";
+	if (boardInfo.castle[2] || boardInfo.castle[3]) {
+		castleText += "Black: " + boardInfo.castle[2] + " " + boardInfo.castle[3] + "\r\n";
 	}
 	if (!castleText) {
 		castleText = "None";
 	}
 	
-	enPassantText = enPassant || "None";
+	enPassantText = boardInfo.enPassant || "None";
 		
 	// Create text
 	let chessboardEmbed = new Discord.RichEmbed()
@@ -162,18 +153,18 @@ function printBoard(msg, addFEN, style, view) {
 		.addField("Move", player, true)
 		.addField("Castling", castleText, true)
 		.addField("En Passant", enPassantText, true)
-		.addField("50-Move Rule Count", fiftyMoveRule, true)
-		.addField("Turn Count", turnCount, true)
+		.addField("50-Move Rule Count", boardInfo.fiftyMoveRule, true)
+		.addField("Turn Count", boardInfo.turnCount, true)
 		
 	if (addFEN) {
-		chessboardEmbed.setFooter("FEN: "+getFEN());
+		chessboardEmbed.setFooter("FEN: "+getFEN(board, boardInfo));
 	}
 
 	msg.channel.send(chessboardEmbed);
 }
 
 // Get FEN for board
-function getFEN() {
+function getFEN(board, boardInfo) {
 	base = ""
 	
 	// This gets the board state
@@ -200,13 +191,13 @@ function getFEN() {
 	}
 	
 	// Player to move
-	base += " " + playerToMove + " ";
+	base += " " + boardInfo.playerToMove + " ";
 	// Castling
-	base += ((castle[0]+castle[1]+castle[2]+castle[3]) || "-") + " ";
+	base += ((boardInfo.castle[0]+boardInfo.castle[1]+boardInfo.castle[2]+boardInfo.castle[3]) || "-") + " ";
 	// enPassant
-	base += (enPassant || "-");
-	// fiftyMoveRule + turnCount
-	base += " " + fiftyMoveRule + " " + turnCount;
+	base += (boardInfo.enPassant || "-");
+	// boardInfo.fiftyMoveRule + boardInfo.turnCount
+	base += " " + boardInfo.fiftyMoveRule + " " + boardInfo.turnCount;
 	
 	return base;
 }
@@ -214,7 +205,7 @@ function getFEN() {
 // -- PIECE MOVEMENT --
 
 // Moves piece if legal
-function movePiece(msg, args, client) {
+function movePiece(msg, args, client, board, boardInfo) {
 	
 	if (args.length < 1) {
 		client.basicEmbed("Input Error", "Please put coordinates in the form a1, where a-h, 1-8 are allowed. Castling: O-O for kingside, O-O-O for queenside.", msg.channel);
@@ -223,7 +214,7 @@ function movePiece(msg, args, client) {
 	
 	// Castling
 	if (["0", "O"].includes(args[0].substring(0, 1))) {
-		castling(msg, args[0], client);
+		castling(msg, args[0], client, board, boardInfo);
 		return;
 	}
 	// Turn into arrays
@@ -251,7 +242,7 @@ function movePiece(msg, args, client) {
 	let endPiece = board[to[1]][to[0]];
 	
 	// Check if it's the right player's piece
-	if (playerToMove === "w") {
+	if (boardInfo.playerToMove === "w") {
 		pieceFound = false;
 		for (x in whitePiece) {
 			if (whitePiece[x] === piece) { // Found a piece to move
@@ -287,69 +278,69 @@ function movePiece(msg, args, client) {
 	
 	// Piece to move
 	if (piece === "k" || piece ===  "K") {
-		moveLegal = kingMove(from, to)
+		moveLegal = kingMove(from, to, board, boardInfo)
 		if (moveLegal) {
 			client.basicEmbed("Illegal Move", moveLegal, msg.channel);
 			return;
 		}
 	}
 	else if (piece === "Q" || piece ===  "q") {
-		moveLegal = queenMove(from, to, [false, false], false)
+		moveLegal = queenMove(from, to, [false, false], false, board, boardInfo)
 		if (moveLegal) {
 			client.basicEmbed("Illegal Move", moveLegal, msg.channel);
 			return;
 		}
 	}
 	else if (piece === "N" || piece ===  "n") {
-		moveLegal = knightMove(from, to)
+		moveLegal = knightMove(from, to, board, boardInfo)
 		if (moveLegal) {
 			client.basicEmbed("Illegal Move", moveLegal, msg.channel);
 			return;
 		}
 	}
 	else if (piece === "B" || piece ===  "b") {
-		moveLegal = bishopMove(from, to, [false, false], false)
+		moveLegal = bishopMove(from, to, [false, false], false, board, boardInfo)
 		if (moveLegal) {
 			client.basicEmbed("Illegal Move", moveLegal, msg.channel);
 			return;
 		}
 	}
 	else if (piece === "R" || piece ===  "r") {
-		moveLegal = rookMove(from, to, [false, false], false)
+		moveLegal = rookMove(from, to, [false, false], false, board, boardInfo)
 		if (moveLegal) {
 			client.basicEmbed("Illegal Move", moveLegal, msg.channel);
 			return;
 		}
 	}
 	else if (piece === "P" || piece ===  "p") {
-		moveLegal = pawnMove(from, to, args[1])
+		moveLegal = pawnMove(from, to, args[1], board, boardInfo)
 		if (moveLegal) {
 			client.basicEmbed("Illegal Move", moveLegal, msg.channel);
 			return;
 		}
 	}
 	else { // We really shouldn't end up here
-		client.basicEmbed("Illegal Move", "What?", msg.channel);
+		client.basicEmbed("Illegal Move", "What?", msg.channel, board, boardInfo);
 		return;
 	}
 	
 	// Check for check
 	if (piece === "k" || piece === "K") {
-		let full = fullCheck(to, playerToMove, from, [false, false]);
+		let full = fullCheck(to, boardInfo.playerToMove, from, [false, false], board, boardInfo);
 		if (full) {
 			client.basicEmbed("Illegal Move", "This move puts you into check!", msg.channel);
 			return;
 		}
 	}
-	else if (!inCheck) { // Not in check
+	else if (!boardInfo.inCheck) { // Not in check
 		let king = [-1, -1];
-		if (playerToMove === "b") {
-			king = blackKingPos;
+		if (boardInfo.playerToMove === "b") {
+			king = boardInfo.blackKingPos;
 		}
 		else {
-			king = whiteKingPos;
+			king = boardInfo.whiteKingPos;
 		}
-		let full = fullCheck(king, playerToMove, from, to);
+		let full = fullCheck(king, boardInfo.playerToMove, from, to, board, boardInfo);
 		if (full) {
 			client.basicEmbed("Illegal Move", "This move puts you into check!", msg.channel);
 			return;
@@ -357,13 +348,13 @@ function movePiece(msg, args, client) {
 	}
 	else { // In check
 		let king = [-1, -1];
-		if (playerToMove = "b") {
-			king = blackKingPos;
+		if (boardInfo.playerToMove = "b") {
+			king = boardInfo.blackKingPos;
 		}
 		else {
-			king = whiteKingPos;
+			king = boardInfo.whiteKingPos;
 		}
-		let full = fullCheck(king, playerToMove, from, to);
+		let full = fullCheck(king, boardInfo.playerToMove, from, to, board, boardInfo);
 		if (full) {
 			client.basicEmbed("Illegal Move", "This move does not get you out of check!", msg.channel);
 			return;
@@ -397,8 +388,8 @@ function movePiece(msg, args, client) {
 	board[from[1]][from[0]] = "";
 	
 	// If we did an enPassant capture
-	if (args[1] === enPassant && ["p", "P"].includes(piece)) {
-		if (playerToMove === "w") { // We captured a black on row 5
+	if (args[1] === boardInfo.enPassant && ["p", "P"].includes(piece)) {
+		if (boardInfo.playerToMove === "w") { // We captured a black on row 5
 			board[4][to[0]] = "";
 		}
 		else { // We captured a white on row 4
@@ -408,73 +399,73 @@ function movePiece(msg, args, client) {
 	
 	// En Passant Check
 	if (Math.abs(from[1] - to[1]) === 2 && ["p", "P"].includes(piece)) {
-		if (playerToMove === "w") {
-			enPassant = `${columnName[to[0]]}3`;
+		if (boardInfo.playerToMove === "w") {
+			boardInfo.enPassant = `${columnName[to[0]]}3`;
 		}
 		else {
-			enPassant = `${columnName[to[0]]}6`;
+			boardInfo.enPassant = `${columnName[to[0]]}6`;
 		}
 	}
 	else {
-		enPassant = "";
+		boardInfo.enPassant = "";
 	}
 	
 	// Castling disabling
 	if (piece === 'K') {
-		castle[0] = "";
-		castle[1] = "";
+		boardInfo.castle[0] = "";
+		boardInfo.castle[1] = "";
 	}
 	if (piece === 'k') {
-		castle[2] = "";
-		castle[3] = "";
+		boardInfo.castle[2] = "";
+		boardInfo.castle[3] = "";
 	}
 	
 	// Queenside Rook (W)
 	if ((from[0] === 0 && from[1] === 0) || (to[0] === 0 && to[1] === 0)) {
-		castle[1] = "";
+		boardInfo.castle[1] = "";
 	} // Kingside Rook (W)
 	if ((from[0] === 7 && from[1] === 0) || (to[0] === 7 && to[1] === 0)) {
-		castle[0] = "";
+		boardInfo.castle[0] = "";
 	} // Queenside Rook (B)
 	if ((from[0] === 0 && from[1] === 7) || (to[0] === 0 && to[1] === 7)) {
-		castle[3] = "";
+		boardInfo.castle[3] = "";
 	} // Kingside Rook (B)
 	if ((from[0] === 7 && from[1] === 7) || (to[0] === 7 && to[1] === 7)) {
-		castle[2] = "";
+		boardInfo.castle[2] = "";
 	}
 	
 	// Reset 50 move rule
 	if (piece === "P" || piece === "p" || endPiece) {
-		fiftyMoveRule = 0
+		boardInfo.fiftyMoveRule = 0
 	}
 	else { // Increment 50 move rule
-		fiftyMoveRule = fiftyMoveRule + 1;
+		boardInfo.fiftyMoveRule = boardInfo.fiftyMoveRule + 1;
 	}
 	
 	// King place update
 	if (piece === "k") {
-		blackKingPos = to;
+		boardInfo.blackKingPos = to;
 	}
 	if (piece === "K") {
-		whiteKingPos = to;
+		boardInfo.whiteKingPos = to;
 	}
 	
-	setupNext(msg, client);
+	setupNext(msg, client, board, boardInfo);
 }
 
 // Castling
-function castling(msg, arguments, client) {
+function castling(msg, arguments, client, board, boardInfo) {
 	let sideCount = arguments.split('-')
 	
 	// If in check, no castle
-	if (inCheck) {
+	if (boardInfo.inCheck) {
 		client.basicEmbed("Castling Fail", "You are in check and cannot castle!", msg.channel);
 		return;
 	}
 	
 	let row = 0;
 	let castleCheck = 0;
-	if (playerToMove === "w") { // White
+	if (boardInfo.playerToMove === "w") { // White
 		row = 0;
 	}
 	else { // Black
@@ -502,7 +493,7 @@ function castling(msg, arguments, client) {
 	}
 
 	// Check if castling available
-	if (!castle[castleCheck]) {
+	if (!boardInfo.castle[castleCheck]) {
 		client.basicEmbed("Castling Fail", "You lost your ability to castle in that direction!", msg.channel);
 		return;
 	}
@@ -514,7 +505,7 @@ function castling(msg, arguments, client) {
 			client.basicEmbed("Castling Fail", "There is a piece in the way!", msg.channel);
 			return;
 		}
-		if (fullCheck(castleMoves[i], playerToMove, [4, row], [false, false])) {
+		if (fullCheck(castleMoves[i], boardInfo.playerToMove, [4, row], [false, false], board, boardInfo)) {
 			client.basicEmbed("Castling Fail", "You cannot move through or into check!", msg.channel);
 			return;
 		}
@@ -535,59 +526,59 @@ function castling(msg, arguments, client) {
 	}
 	console.log("Alive post-row5")
 	// White castling removal
-	if (playerToMove === "w") {
-		castle[0] = "";
-		castle[1] = "";
+	if (boardInfo.playerToMove === "w") {
+		boardInfo.castle[0] = "";
+		boardInfo.castle[1] = "";
 	}
 	else { // Black castling removal
-		castle[2] = "";
-		castle[3] = "";
+		boardInfo.castle[2] = "";
+		boardInfo.castle[3] = "";
 	}
 	
 	// Fifty move rule increment
-	fiftyMoveRule++;
+	boardInfo.fiftyMoveRule++;
 	// En Passant update
-	enPassant = "";
+	boardInfo.enPassant = "";
 	
-	setupNext(msg, client);
+	setupNext(msg, client, board, boardInfo);
 }
 
 // Sets up next move
-function setupNext(msg, client) {
+function setupNext(msg, client, board, boardInfo) {
 	// Turn and player swap
-	if (playerToMove === 'w') {
-		playerToMove = 'b';
+	if (boardInfo.playerToMove === 'w') {
+		boardInfo.playerToMove = 'b';
 	}
 	else {
-		playerToMove = 'w';
-		turnCount = turnCount + 1;
+		boardInfo.playerToMove = 'w';
+		boardInfo.turnCount = boardInfo.turnCount + 1;
 	}
 	
 	// Check for check
-	if (playerToMove === "w") {
-		inCheck = fullCheck(whiteKingPos, playerToMove, [false, false], [false, false]);
+	if (boardInfo.playerToMove === "w") {
+		boardInfo.inCheck = fullCheck(boardInfo.whiteKingPos, boardInfo.playerToMove, [false, false], [false, false], board, boardInfo);
 	}
 	else {
-		inCheck = fullCheck(blackKingPos, playerToMove, [false, false], [false, false]);
+		boardInfo.inCheck = fullCheck(boardInfo.blackKingPos, boardInfo.playerToMove, [false, false], [false, false], board, boardInfo);
 	}
 	
 	// Check message
-	if (inCheck) {
+	if (boardInfo.inCheck) {
 		msg.channel.send("Check!");
 	}
 	
 	// Print board
-	if (playerToMove === "w") {
-		printBoard(msg, true, whiteStyle, playerToMove);		
+	if (boardInfo.playerToMove === "w") {
+		printBoard(msg, true, boardInfo.whiteStyle, boardInfo.playerToMove, board, boardInfo);		
 	}
 	else {
-		printBoard(msg, true, blackStyle, playerToMove);
+		printBoard(msg, true, boardInfo.blackStyle, boardInfo.playerToMove, board, boardInfo);
 	}
 	
 	// Timeout
 	lastMoveTime = Date.now();
 	// Save board
-	saveBoard(msg, client, true);
+	saveBoard(msg, client, true, board, boardInfo);
 }
 
 // Converts a1 to [x, y] format
@@ -608,7 +599,7 @@ function determinePlace(place) {
 // Checks if the rook can move from X to Y.
 // Does not check piece at X or Y.
 // Can also be used for Queen.
-function rookMove(from, to, ignore, block) {
+function rookMove(from, to, ignore, block, board, boardInfo) {
 	// Check if destination is legal for a rook to move to
 	// Move vertically
 	if (from[0] === to[0]) {
@@ -655,7 +646,7 @@ function rookMove(from, to, ignore, block) {
 // Checks if the bishop can move from X to Y.
 // Does not check piece at X or Y.
 // Can also be used for Queen.
-function bishopMove(from, to, ignore, block) {
+function bishopMove(from, to, ignore, block, board, boardInfo) {
 	diffX = to[0] - from[0]
 	diffY = to[1] - from[1]
 	
@@ -702,9 +693,9 @@ function bishopMove(from, to, ignore, block) {
 }
 
 // Queen is the sum of bishop and rook
-function queenMove (from, to, ignore, block) {
-	let rookResult = rookMove(from, to, ignore, block);
-	let bishopResult = bishopMove(from, to, ignore, block);
+function queenMove (from, to, ignore, block, board, boardInfo) {
+	let rookResult = rookMove(from, to, ignore, block, board, boardInfo);
+	let bishopResult = bishopMove(from, to, ignore, block, board, boardInfo);
 	
 	// If one of these is fine, queen can move
 	if (!bishopResult || !rookResult) {
@@ -726,7 +717,7 @@ function queenMove (from, to, ignore, block) {
 
 // Knights just need to check if their destination is legal
 // Since they jump over all pieces
-function knightMove (from, to) {
+function knightMove (from, to, board, boardInfo) {
 	answer = Math.abs(from[0] - to[0]) + Math.abs(from[1] - to[1])
 	if (answer === 3 && !(from[0] === to[0]) && !(from[1] === to[1])) {
 		return "";
@@ -738,7 +729,7 @@ function knightMove (from, to) {
 
 // Because we've previously checked the destination, the only thing we need to do is check that his move is legal
 // Castling will have to be done separately
-function kingMove (from, to) {
+function kingMove (from, to, board, boardInfo) {
 	// Illegal move
 	if (Math.abs(from[0] - to[0]) > 1 || Math.abs(from[1] - to[1]) > 1) {
 		return "The king cannot move to that square!";
@@ -748,13 +739,13 @@ function kingMove (from, to) {
 
 // We need to check if capturing is legal
 // Or if moving, that there is no piece at the destination
-function pawnMove (from, to, toa1Form) {
+function pawnMove (from, to, toa1Form, board, boardInfo) {
 	// This is the start
 	if (from[0] === to[0]) {
 		// Same row moves
 		// Double move check
 		if (Math.abs(from[1] - to[1]) === 2) {
-			if (playerToMove === "w" && from[1] === 1) { // White double move check
+			if (boardInfo.playerToMove === "w" && from[1] === 1) { // White double move check
 				if (!board[2][from[0]] && !board[3][from[0]]) { // Check if spaces clear
 					return "";
 				}
@@ -762,7 +753,7 @@ function pawnMove (from, to, toa1Form) {
 					return "There is a piece in the way!";
 				}
 			}
-			else if (playerToMove === "b" && from[1] === 6) {
+			else if (boardInfo.playerToMove === "b" && from[1] === 6) {
 				if (!board[5][from[0]] && !board[4][from[0]]) { // Check if spaces clear
 					return "";
 				}
@@ -788,9 +779,9 @@ function pawnMove (from, to, toa1Form) {
 	}
 	// Capture check
 	else if (Math.abs(from[0] - to[0]) === 1) {
-		if ((from[1] - to[1] === 1 && playerToMove === "b") || (from[1] - to[1] === -1 && playerToMove === "w")) {
+		if ((from[1] - to[1] === 1 && boardInfo.playerToMove === "b") || (from[1] - to[1] === -1 && boardInfo.playerToMove === "w")) {
 			// En passant bypass
-			if (enPassant === toa1Form) {
+			if (boardInfo.enPassant === toa1Form) {
 				return "";
 			} // If it's empty, cannot capture
 			else if (!(board[to[1]][to[0]])) {
@@ -812,7 +803,7 @@ function pawnMove (from, to, toa1Form) {
 // -- CHECK --
 
 // Checks if pawn puts king in check
-function pawnCheck (pawn, king, player) {
+function pawnCheck (pawn, king, player, board, boardInfo) {
 	if (Math.abs(pawn[0] - king[0]) === 1) {
 		if ((pawn[1] - king[1] === 1 && player === "b") || (pawn[1] - king[1] === -1 && player === "w")) {
 			return true;
@@ -827,7 +818,7 @@ function pawnCheck (pawn, king, player) {
 }
 
 // Checks for check
-function fullCheck (kingPos, player, from, to) {
+function fullCheck (kingPos, player, from, to, board, boardInfo) {
 	let danger = [];
 	
 	if (player === "w") {
@@ -841,41 +832,41 @@ function fullCheck (kingPos, player, from, to) {
 	for (i = 0; i < 8; i++) {
 		for (j = 0; j < 8; j++) {
 			// Found a dangerous piece
-			if (danger.includes(board[j][i])) {
+			if (danger.includes(board[j][i]) && !(to[0] === i && to[1] === j)) {
 				let piece = board[j][i];
 				// Determine piece
 				if (piece === "k" || piece ===  "K") {
 					// If legal then we are in check
-					if (!(kingMove([i, j], kingPos))) {					
+					if (!(kingMove([i, j], kingPos, board, boardInfo))) {					
 						return true;
 					}
 				}
 				else if (piece === "Q" || piece === "q") {
-					moveLegal = queenMove([i, j], kingPos, from, to)
+					moveLegal = queenMove([i, j], kingPos, from, to, board, boardInfo)
 					if (!moveLegal) {
 						return true;
 					}
 				}
 				else if (piece === "N" || piece ===  "n") {
-					moveLegal = knightMove([i, j], kingPos)
+					moveLegal = knightMove([i, j], kingPos, board, boardInfo)
 					if (!moveLegal) {
 						return true;
 					}
 				}
 				else if (piece === "B" || piece ===  "b") {
-					moveLegal = bishopMove([i, j], kingPos, from, to)
+					moveLegal = bishopMove([i, j], kingPos, from, to, board, boardInfo)
 					if (!moveLegal) {
 						return true;
 					}
 				}
 				else if (piece === "R" || piece ===  "r") {
-					moveLegal = rookMove([i, j], kingPos, from, to)
+					moveLegal = rookMove([i, j], kingPos, from, to, board, boardInfo)
 					if (!moveLegal) {
 						return true;
 					}
 				}
 				else if (piece === "P" || piece ===  "p") {
-					moveLegal = pawnCheck([i, j], kingPos, player)
+					moveLegal = pawnCheck([i, j], kingPos, player, board, boardInfo)
 					if (moveLegal) {
 						return true;
 					}
@@ -893,18 +884,19 @@ function fullCheck (kingPos, player, from, to) {
 // -- STYLE --
 
 // Find board style
-function setStyle(msg, args, client) {
+function setStyle(msg, args, client, board, boardInfo) {
 	// White or black
 	if (args[0] === "w" || args[0] === "b") { 
 		if (boardStyleSet.includes(args[1])) { // If style exists
 			if (args[0] === "w") { // Set style
-				whiteStyle = args[1];
+				boardInfo.whiteStyle = args[1];
 				client.basicEmbed("Style Changed", "Set white's style!", msg.channel, moduleColor);
 			}
 			else { // Black
-				blackStyle = args[1];
+				boardInfo.blackStyle = args[1];
 				client.basicEmbed("Style Changed", "Set black's style!", msg.channel, moduleColor);
 			}
+			saveBoard(msg, client, true, board, boardInfo);
 		}
 		else {
 			client.basicEmbed("Style Error", "Could not find style!", msg.channel);
@@ -931,16 +923,15 @@ function loadBoard(msg, client, auto) {
 	x = {}
 	if (auto) {
 		try {
-			x = JSON.parse(fs.readFileSync(`./Chess/Data/Auto.json`, 'utf8'));
+			x = JSON.parse(fs.readFileSync(`./Chess/Data/Auto${msg.guild.id}-${msg.channel.id}.json`, 'utf8'));
 		}
 		catch (err) {
-			client.basicEmbed("Load Error", "Could not find your save file", msg.channel);
-			return;
+			x = newBoard(msg, client);
 		}
 	}
 	else {
 		try {
-			x = JSON.parse(fs.readFileSync(`./Chess/Data/${msg.author.id}.json`, 'utf8'));
+			x = JSON.parse(fs.readFileSync(`./Chess/Data/SV${msg.author.id}.json`, 'utf8'));
 		}
 		catch (err) {
 			client.basicEmbed("Load Error", "Could not find your save file", msg.channel);
@@ -948,40 +939,26 @@ function loadBoard(msg, client, auto) {
 		}
 	}
 	board = x.board;
-	playerToMove = x.playerToMove;
-	castle = x.castle;
-	enPassant = x.enPassant;
-	fiftyMoveRule = x.fiftyMoveRule;
-	turnCount = x.turnCount;
-	whiteKingPos = x.whiteKingPos;
-	blackKingPos = x.blackKingPos;
-	whiteStyle = x.whiteStyle;
-	blackStyle = x.blackStyle;
-	inCheck = x.inCheck;
 	lastMove = Date.now();
 	
-	client.basicEmbed("Load Complete", "Done loading file!", msg.channel, moduleColor);
-	printBoard(msg, true);
+	if (!auto) {
+		client.basicEmbed("Load Complete", "Done loading file!", msg.channel, moduleColor);
+		printBoard(msg, true, x.style, x.view, board, x);
+		saveBoard(msg, client, true, x.board, x);
+	}
+	
+	return [board, x];
 }
 
 // Saves board state
 // To prevent spam, saves to usertag.json
-function saveBoard(msg, client, auto) {
-	let x = {};
+function saveBoard(msg, client, auto, board, boardInfo) {
+	
+	let x = boardInfo;
 	x.board = board;
-	x.playerToMove = playerToMove;
-	x.castle = castle;
-	x.enPassant = enPassant;
-	x.fiftyMoveRule = fiftyMoveRule;
-	x.turnCount = turnCount;
-	x.whiteKingPos = whiteKingPos;
-	x.blackKingPos = blackKingPos;
-	x.whiteStyle = whiteStyle;
-	x.blackStyle = blackStyle;
-	x.inCheck = inCheck;
 	
 	if (auto) {
-		fs.writeFile(`./Chess/Data/Auto.json`, JSON.stringify(x, null, 4), function(err) {
+		fs.writeFile(`./Chess/Data/Auto${msg.guild.id}-${msg.channel.id}.json`, JSON.stringify(x, null, 4), function(err) {
 			if (err) throw err;
 		})
 	}
@@ -995,19 +972,29 @@ function saveBoard(msg, client, auto) {
 }
 
 // Resets board to default
-function newBoard() {
-	board = [["R", "N", "B", "Q", "K", "B", "N", "R"], ["P", "P", "P", "P", "P", "P", "P", "P"], 
+function newBoard(msg, client) {
+	let boardInfo = {};
+	boardInfo.board = [["R", "N", "B", "Q", "K", "B", "N", "R"], ["P", "P", "P", "P", "P", "P", "P", "P"], 
 			["", "", "", "", "", "", "", ""], ["", "", "", "", "", "", "", ""],
 			["", "", "", "", "", "", "", ""], ["", "", "", "", "", "", "", ""],
 			["p", "p", "p", "p", "p", "p", "p", "p"], ["r", "n", "b", "q", "k", "b", "n", "r"]];
-	playerToMove = "w";
-	castle = ["K", "Q", "k", "q"];
-	enPassant = "";
-	fiftyMoveRule = 0;
-	turnCount = 1;
-	blackKingPos = [4, 7];
-	whiteKingPos = [4, 0];
-	inCheck = false;
+	boardInfo.playerToMove = "w";
+	boardInfo.castle = ["K", "Q", "k", "q"];
+	boardInfo.enPassant = "";
+	boardInfo.fiftyMoveRule = 0;
+	boardInfo.turnCount = 1;
+	boardInfo.blackKingPos = [4, 7];
+	boardInfo.whiteKingPos = [4, 0];
+	boardInfo.inCheck = false;
+	boardInfo.whiteStyle = "compact";
+	boardInfo.blackStyle = "compact";
+	
+	saveBoard(msg, client, true, boardInfo.board, boardInfo);
+	return boardInfo;
+}
+
+function helpText(msg, client) {
+	client.basicEmbed("Lol", "Whoops", msg.channel);
 }
 
 module.exports = {
@@ -1018,24 +1005,30 @@ module.exports = {
 		let mainCommand = args[1];
 		let arguments = args.slice(2);
 		
+		if (!mainCommand) {
+			helpText(msg, client);
+			return;
+		}
+		
+		let [board, boardInfo] = loadBoard(msg, client, true);
         switch(mainCommand) {
             case 'help':
                 msg.channel.send("Unfinished! Ask Wenyunity.")
                 break;
 
             case 'view':
-                printBoard(msg, true, arguments[0], arguments[1]);
+                printBoard(msg, true, arguments[0], arguments[1], board, boardInfo);
                 break;
 				
 			case 'move':
-				movePiece(msg, arguments, client);
+				movePiece(msg, arguments, client, board, boardInfo);
 				break;
 			
 			case 'clear':
 			case 'reset':
 				if (Date.now() > lastMoveTime + timeOut) {
 					msg.channel.send("Board reset!");
-					newBoard();
+					newBoard(msg, client);
 				}
 				else {
 					noTimeOut(msg);
@@ -1044,11 +1037,11 @@ module.exports = {
 				
 			case 'set':
 			case 'style':
-				setStyle(msg, arguments, client);
+				setStyle(msg, arguments, client, board, boardInfo);
 				break;
 				
 			case 'save':
-				saveBoard(msg, client);
+				saveBoard(msg, client, false, board, boardInfo);
 				lastMoveTime = 0;
 				break;
 				
@@ -1074,18 +1067,16 @@ module.exports = {
 			default:
 				if (!(determinePlace(mainCommand) === "Error")) {
 					let newArgs = args.slice(1);
-					movePiece(msg, newArgs, client);
+					movePiece(msg, newArgs, client, board, boardInfo);
 				}
 				else if (["O-O", "0-0", "O-O-O", "0-0-0"].includes(mainCommand)) {
 					let newArgs = args.slice(1);
-					movePiece(msg, newArgs, client);
+					movePiece(msg, newArgs, client, board, boardInfo);
 				}
 				else {
 					msg.channel.send("Still not finished yet");
 				}
 				break;
-
-            // ... more admin commands
         }
 	}
 }

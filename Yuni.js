@@ -24,14 +24,15 @@ const minute = 1000 * 60;
 const second = 1000;
 const voteDelay = 1000 * 60 * 90; // 90 minutes
 const findDelay = 1000 * 60 * 2; // 2 minutes
-let findBounds = {min: 0, max: 9999} // Bounds for find
+const findBounds = {min: 0, max: 9999} // Bounds for find
 
 // -- LISTS AND LINKS --
 const sortRows = ["points", "bestWork", "eggplant", "bestEggplant", "countTime", "find"];
 const topTenEmoji = [":trophy:", ":two:", ":three:", ":four:", ":five:", ":six:", ":seven:", ":eight:", ":nine:", ":keycap_ten:"];
 const inviteLink = "https://discordapp.com/api/oauth2/authorize?client_id=599476939194892298&permissions=0&scope=bot";
 const serverLink = "https://discord.gg/Y2fTCHM";
-
+const bossNames = ["Stomper", "Walushell", "Waludisk"]
+const moveNames = ["Stomp", "Spin-kick", "Cut"]
 
 
 // -- DISCORD FUNCTIONS --
@@ -118,6 +119,9 @@ client.on('message', msg => {
 					break;
 				case 'find':
 					findCommand(commandArgs, msg)
+					break;
+				case 'newboss':
+					newBossCommand(commandArgs, msg)
 					break;
 				
 				// -- FUN FUNCTIONS --
@@ -429,6 +433,20 @@ function findCommand(commandArgs, msg) {
 	})
 }
 	
+// Generates a boss
+function newBossCommand(commandArgs, msg) {
+	let boss = {};
+	// Name
+	let nameSelect = Math.floor(Math.random() * (bossNames.length))
+	boss.name = bossNames[nameSelect];
+	// Moves
+	let moveSelect = Math.floor(Math.random() * (moveNames.length))
+	boss.move = moveNames[moveSelect];
+	// HP (50 and 500)
+	boss.hp = Math.floor(Math.random() * 10 + 1) * 50;
+	
+	baseEmbed("Not very serious boss", `Your boss is named ${boss.name}, has the move ${boss.move}, and has ${boss.hp} HP.`, msg.channel, "#123456");
+}
 
 // -- FUN FUNCTIONS --
 
