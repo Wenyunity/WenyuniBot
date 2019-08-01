@@ -2,6 +2,71 @@ const Discord = require('discord.js');
 const SQLite = require("better-sqlite3");
 const fs = require('fs');
 const newMove = JSON.parse(fs.readFileSync('./Arena/movelist.json', 'utf8'));
+//const Battle = require('./Arena/Battle.js');
+
+// -- CHARACTER CREATION --
+
+// Creates a character
+function create(msg, arguments, client) {
+	let team = {};
+	team.character = {};
+	if(arguments.length < 2) {
+		client.basicEmbed("Create Error", "Please send two numbers indicating the number of magic attack moves! (Between 0 and 5)", msg.channel);
+		return;
+	}
+	
+	if (isNaN(parseInt(arguments[0])) || isNaN(parseInt(arguments[0]))) {
+		client.basicEmbed("Create Error", "These are not numbers!", msg.channel);
+		return;
+	}
+	
+	if(arguments[0] > 5 || arguments[1] > 5) {
+		client.basicEmbed("Create Error", "Only up to five magic moves allowed!", msg.channel);
+		return;
+	}
+	else {
+		for (m = 0; m < 2; m++) {
+			// Create character
+			team.character[m] = {};
+			// Name
+			team.character[m].name = arguments[m+4] || "Char" + m;
+			// Defense
+			if (arguments[m+2]) {
+				if (["0", "1", "2", "3"].includes(arguments[m+2])) {
+					team.character[m].DEF = arguments[m+2]
+				}
+				else {
+					client.basicEmbed("Create Error", "Defense must be between 0 and 3.", msg.channel);
+					return;
+				}
+			}
+			else {
+				team.character[m].DEF = Math.floor(Math.random() * 4)
+			}
+			team.character[m].HP = 40 - 5 * team.character[m].DEF;
+			team.character[m].HPGain = 6 - team.character[m].DEF;
+			team.character[m].MP = 20;
+			team.character[m].MPGain = 4;
+			team.character[m].slots = 2;
+			// Create thing to hold moves
+			team.character[m].move = {};
+			team.character[m].move.B = createAttackMove(true);
+			for (i = 0; i < Math.floor(arguments[m]); i++) {
+				team.character[m].move[i] = createAttackMove(false)
+			};
+			for (i = Math.floor(arguments[m]); i < 5; i++) {
+				team.character[m].move[i] = createSupportMove()
+			}	
+		}
+	}
+	
+	fs.writeFile(`./Arena/Fighter/${msg.author.id}.json`, JSON.stringify(team, null, 4), function(err) {
+		if (err) throw err;
+		console.log('completed writing to arena');
+	})
+	
+	displayPlayerTeam(msg, team);
+}
 
 // Creates an attack/basic move
 function createAttackMove(isBasic) {
@@ -85,6 +150,8 @@ function createSupportMove() {
 	return nameObject;
 }
 
+// -- CHARACTER DISPLAY --
+
 // Creates a character
 function displayPlayerTeam(msg, team) {
 	const teamEmbed = new Discord.RichEmbed()
@@ -130,68 +197,6 @@ function displayMoves(moveset) {
 		message += "\r\n" + readMove(moveset[i]);
 	}
 	return message;
-}
-
-// Creates a team
-function create(msg, arguments, client) {
-	let team = {};
-	team.character = {};
-	if(arguments.length < 2) {
-		client.basicEmbed("Create Error", "Please send two numbers indicating the number of magic attack moves! (Between 0 and 5)", msg.channel);
-		return;
-	}
-	
-	if (isNaN(parseInt(arguments[0])) || isNaN(parseInt(arguments[0]))) {
-		client.basicEmbed("Create Error", "These are not numbers!", msg.channel);
-		return;
-	}
-	
-	if(arguments[0] > 5 || arguments[1] > 5) {
-		client.basicEmbed("Create Error", "Only up to five magic moves allowed!", msg.channel);
-		return;
-	}
-	else {
-		for (m = 0; m < 2; m++) {
-			// Create character
-			team.character[m] = {};
-			// Name
-			team.character[m].name = arguments[m+4] || "Char" + m;
-			// Defense
-			if (arguments[m+2]) {
-				if (["0", "1", "2", "3"].includes(arguments[m+2])) {
-					team.character[m].DEF = arguments[m+2]
-				}
-				else {
-					client.basicEmbed("Create Error", "Defense must be between 0 and 3.", msg.channel);
-					return;
-				}
-			}
-			else {
-				team.character[m].DEF = Math.floor(Math.random() * 4)
-			}
-			team.character[m].HP = 40 - 5 * team.character[m].DEF;
-			team.character[m].HPGain = 6 - team.character[m].DEF;
-			team.character[m].MP = 20;
-			team.character[m].MPGain = 4;
-			team.character[m].slots = 2;
-			// Create thing to hold moves
-			team.character[m].move = {};
-			team.character[m].move.B = createAttackMove(true);
-			for (i = 0; i < Math.floor(arguments[m]); i++) {
-				team.character[m].move[i] = createAttackMove(false)
-			};
-			for (i = Math.floor(arguments[m]); i < 5; i++) {
-				team.character[m].move[i] = createSupportMove()
-			}	
-		}
-	}
-	
-	fs.writeFile(`./Arena/Fighter/${msg.author.id}.json`, JSON.stringify(team, null, 4), function(err) {
-		if (err) throw err;
-		console.log('completed writing to arena');
-	})
-	
-	displayPlayerTeam(msg, team);
 }
 
 // Turns object move into readable text
@@ -246,6 +251,11 @@ function readMove(move) {
 	}
 	
 	return message;
+}
+
+// -- START A FIGHT --
+function startFight(msg) {
+	// Uh
 }
 
 function fight() {

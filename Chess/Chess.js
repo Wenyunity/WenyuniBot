@@ -14,9 +14,6 @@ const whitePiece = ["P", "R", "N", "B", "Q", "K"]
 const blackPiece = ["p", "r", "n", "b", "q", "k"]
 const boardStyleSet = ["highlight", "diagonal", "versus", "compact"]
 const columnName = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
-
-// -- I should really get rid of these --
-
 			
 // -- VIEW BOARD --
 

@@ -24,10 +24,18 @@
 			}
 		},
 		"find": {
-			"desc": "Find a number between 0 and 999. If you get it wrong, it'll tell you if your number is higher or lower.\r\nSabotaging bounds is allowed. Find available every 2 minutes.",
+			"desc": "Find a number between selected bounds. If you get it wrong, it'll tell you if your number is higher or lower.\r\nSabotaging bounds is allowed. Find available every 2 minutes.",
 			"args": {
 				"No Arguments": "See the current bounds.",
 				"Number": "Attempt to find the number."
+			}
+		},
+		"halfhour": {
+			"desc": "Sends a message to the channel this is used in every half-hour from the time it is sent.",
+			"args": {
+				"No Arguments Needed": "<-",
+				"When Not Running": "Starts the half-hour timer.",
+				"When Running": "Stops the half-hour timer."
 			}
 		}
 	},
@@ -47,7 +55,7 @@
 			}
 		},
 		"chess": {
-			"desc": "Play a game of chess!",
+			"desc": "Play a game of chess! Each channel has its own game.",
 			"args": {
 				"move/(none)": "Use a1 style coordinates. Castle with O-O and O-O-O.\r\nExample move: `wy!chess move g1 f3`",
 				"set/style": "Sets the style of chessboard. Use `wy!chess set help` to get style names.",

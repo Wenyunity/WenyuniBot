@@ -7,6 +7,7 @@ const SQLite = require("better-sqlite3");
 const arena = require('./Arena/Arena.js');
 const chess = require('./Chess/Chess.js');
 const eggplant = require('./Eggplant/Eggplant.js');
+const mathfind = require('./Mathfind/Mathfind.js');
 
 // -- JSON AND SQL FILES -- 
 const auth = require('./auth.json');
@@ -31,9 +32,10 @@ const sortRows = ["points", "bestWork", "eggplant", "bestEggplant", "countTime",
 const topTenEmoji = [":trophy:", ":two:", ":three:", ":four:", ":five:", ":six:", ":seven:", ":eight:", ":nine:", ":keycap_ten:"];
 const inviteLink = "https://discordapp.com/api/oauth2/authorize?client_id=599476939194892298&permissions=0&scope=bot";
 const serverLink = "https://discord.gg/Y2fTCHM";
-const bossNames = ["Stomper", "Walushell", "Waludisk"]
-const moveNames = ["Stomp", "Spin-kick", "Cut"]
-
+const bossNames = ["Stomper", "Walushell", "Waludisk", "WaluKaratebot", "WaluSpinner"]
+const moveNames = ["Stomp", "Spin-kick", "Cut", "Combo", "Punch-kick", "Punching Spin"]
+const attackNames = ["Tackle", "Quick Attack", "Triplepunch-Jump", "Dig-Attack"]
+let halfHourDelay = {};
 
 // -- DISCORD FUNCTIONS --
 // Initialize Discord client
@@ -44,7 +46,7 @@ const client = new Discord.Client({
 client.on('ready', function (evt) {
     console.log(`Logged in as ${client.user.tag}!`);
 
-	// Check if the table "points" exists.
+	// Check if the table exists
     const table = sql.prepare("SELECT count(*) FROM sqlite_master WHERE type='table' AND name = 'scores';").get();
     if (!table['count(*)']) {
 		// If the table isn't there, create it and setup the database correctly.
@@ -105,6 +107,9 @@ client.on('message', msg => {
 				case 'chess':
 					chess.chessCommand(msg, client);
 					break;
+				case 'mathfind':
+					mathfind.mathfindCommand(msg, client);
+					break;
 					
 				// -- BASIC FUNCTIONS --
 				
@@ -123,6 +128,13 @@ client.on('message', msg => {
 				case 'newboss':
 					newBossCommand(commandArgs, msg)
 					break;
+				case 'attackboss':
+					attackbossCommand(commandArgs, msg)
+					break;
+				case 'halfhour':
+					halfHourCommand(msg)
+					break;
+					
 				
 				// -- FUN FUNCTIONS --
 				
@@ -286,6 +298,22 @@ function createData(user) {
 
 // -- BASIC FUNCTIONS -- 
 
+// Attacks the boss
+function attackbossCommand(commandArgs, msg)
+{
+	baseEmbed("Attack the boss", `This isn't even done yet`, msg.channel, "#123456");
+	return;
+	var attack = {};
+	// Name
+	let attacknameSelect = Math.floor(Math.random() * (attackNames.length))
+	attack.name = attackNames[attacknameSelect]
+	// Effectiveness
+	attack.effective = Math.floor(Math.random() * 10 + 1) * 50;
+	boss.damageonehp = boss.hp - attack.effective
+	baseEmbed("Attack the boss", `You attacked the boss with the move ${attack.name}. It dealt ${attack.effective} Damage!`, msg.channel, "#123456");
+	baseEmbed("Attack the boss continued", `The boss now has ${boss.damageonehp}.`, msg.channel, "#123456");
+}
+
 // Chooses between choices
 function chooseCommand(commandArgs, msg) {
 	let chooseText = "";
@@ -446,6 +474,28 @@ function newBossCommand(commandArgs, msg) {
 	boss.hp = Math.floor(Math.random() * 10 + 1) * 50;
 	
 	baseEmbed("Not very serious boss", `Your boss is named ${boss.name}, has the move ${boss.move}, and has ${boss.hp} HP.`, msg.channel, "#123456");
+}
+
+// Sends a message every half-hour.
+function halfHourCommand(msg) {
+	// Get channel name
+	let commandChannelName = `${msg.guild.id}CH${msg.channel.id}`;
+	// Start a timer
+	if (!halfHourDelay[commandChannelName]) {
+		// Setup timer
+		halfHourDelay[commandChannelName] = setInterval(function() {halfHourMessage(msg.channel);}, hour/2);
+		baseEmbed("Half Hour Notice", "Your timer has started. Use **wy!halfhour** to stop messages.", msg.channel, "#1B7740");
+	}
+	else { // Stop
+		clearInterval(halfHourDelay[commandChannelName]);
+		halfHourDelay[commandChannelName] = null;
+		baseEmbed("Half Hour Ended", "Your timer has ended. No more messages will be sent.", msg.channel, "#1B7740");
+	}
+}
+
+// Helper function for halfHourCommand. Actually sends the message.
+function halfHourMessage(channel) {
+	baseEmbed("Half Hour Notice", "It has been half an hour since the last message. Use **wy!halfhour** to stop messages.", channel, "#1B7740");
 }
 
 // -- FUN FUNCTIONS --

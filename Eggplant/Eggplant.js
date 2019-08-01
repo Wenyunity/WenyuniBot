@@ -1,13 +1,18 @@
+// -- REQUIRES --
 const Discord = require('discord.js');
 const SQLite = require("better-sqlite3");
-const emoji = ":eggplant:";
+const fs = require('fs');
+
+// -- NUMBERS --
 const expireTime = 1000 * 60 * 60 * 24 * 7; // 7 days
 const rerollTime = 1000 * 60 * 60 * 6; // 6 hours
 const day = 1000 * 60 * 60 * 24
 const hour = 1000 * 60 * 60
-const moduleColor = "#AA10AA"
 const maxRandom = 8 // Max price is 100 + maxRandom cubed
-const fs = require('fs');
+
+// -- CONSTANTS --
+const emoji = ":eggplant:";
+const moduleColor = "#AA10AA"
 const descEggplant = JSON.parse(fs.readFileSync('./Eggplant/eggplantDesc.json', 'utf8'));
 
 // -- BUY, SELL, AND THROW -- 
@@ -308,10 +313,14 @@ function randomizePrice(client, msg) {
 // -- HELP --
 
 // Help.
-function helpCommand(client, msg) {
+function helpCommand(client, msg, error) {
+	let title = "Eggplant Help"
+	if (error) {
+		title += " (Due to Invalid Command)"
+	}
 	let eggplantEmbed = new Discord.RichEmbed()
 		.setColor(moduleColor)
-		.setTitle("Eggplant Help")
+		.setTitle(title)
 		.setAuthor('Wenyunibot')
 		.setDescription("Eggplants are used to get a lot of points. The eggplant market can be very variable. Buy eggplants for 100 points, and then sell them later for a profit!\r\n Be careful, as eggplants only last a week!")
 		.addField("Stability", "Stability determines how much the price of eggplants can change in one roll. The more unstable, the more the price can change.")
@@ -334,7 +343,7 @@ module.exports = {
 		
         switch(mainCommand) {
             case 'help':
-                helpCommand(client, msg);
+                helpCommand(client, msg, false);
                 break;
 
             case 'sell':
@@ -358,7 +367,7 @@ module.exports = {
 				break;
 				
 			default:
-				msg.channel.send("Could not find the command!")
+				helpCommand(client, msg, true);
 				break;
         }
 	}
