@@ -1,5 +1,28 @@
 # Version Control
 
+## Version 0.8.0
+- Mathfind: Added module.
+- Mathfind: Saving/Loading through JSON.
+- Mathfind: Can ask questions.
+- Mathfind: Can guess the number.
+- Mathfind: Game ends properly.
+- Mathfind: Divisible question added.
+- Mathfind: Triangle Number question added.
+- Yuni: Halfhour, Attackboss, Mathfind added.
+- Halfhour: Messages the channel every half hour after the initial message is sent.
+- Halfhour: Repeating the command will stop the messages in the channel.
+- Halfhour: Works with multiple channels at once, with different timers each.
+- Help: Fixed text for find.
+- Help: Added halfhour text.
+- Help: Chess text now says it works with different channels.
+- Newboss: Added new bosses.
+- Attackboss: Incomplete. Exits out with a message without crashing.
+- Eggplant: Help is pulled up if an unrecognized command is input.
+- Eggplant: Organized imports and constants.
+- Chess: Removed errant comment.
+- Arena: Reorganizing of functions.
+- Arena/Battle: Added, but unused.
+
 ## Version 0.7.0
 - Chess: Each channel now has their own game.
 - Chess: Games are auto-loaded on reset.
