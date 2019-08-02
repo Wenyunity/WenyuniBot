@@ -1,0 +1,12 @@
+{
+	"divisible (div)": "Parameter: Positive Integer. Returns true if the number is a multiple of the parameter.",
+	"triangle": "Returns true if the number is a triangle number - that is: 1+2+3...+(n-1)+n for some integer n.",
+	"digit": "Parameter: Digit between 0-9. Returns true if the number has the parameter as a digit.",
+	"square": "Returns true if the number is a square number - that is, the number is A x A for some integer A.",
+	"cube": "Returns true if the number is a cube number - that is, the number is A x A x A for some integer A.",
+	"fibonacci (fib)": "Returns true if the number is a fibonacci number - term N is the sum of term N-1 and N-2. Starts with 1, 1.",
+	"binary (bi)": "Parameter: Positive Integer. Returns true if the number in base 2 is parameter digits long.",
+	"trinary (tri)": "Parameter: Positive Integer. Returns true if the number in base 3 is parameter digits long.",
+	"prime": "Returns true if the number is a prime number - has no factors except itself and 1.",
+	"digitroot (droot)": "Parameter: Digit between 1-9. Returns true if the digital root is equal to parameter. The digital root is the sum of digits, repeated until reaching a single digit."
+}
