@@ -64,6 +64,17 @@
 				"load": "Loads the chessboard from a previous state. Pass auto as an argument to load the previous state.",
 				"save": "Saves the chessboard to your save data."
 			}
+		},
+		"mathfind": {
+			"desc": "Find a number by asking questions! You have 20 questions to find out what the number is.",
+			"args": {
+				"start": "Starts a game with the selected difficulty.",
+				"question": "Asks a question of your current number.",
+				"helpq": "Shows all possible questions.",
+				"guess": "Guess the current number.",
+				"profile": "Shows your personal statistics.",
+				"help": "Gives more info about this game."
+			}
 		}
 	},
 	"Economy": {

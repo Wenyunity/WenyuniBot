@@ -77,6 +77,9 @@ client.on('ready', function (evt) {
 	client.user.setActivity('for wy!help', {type: 'WATCHING'})
 	
 	timeOn = Date.now();
+	
+	// For Modules
+	mathfind.onStart;
 });
 
 // Upon getting a message
@@ -299,8 +302,7 @@ function createData(user) {
 // -- BASIC FUNCTIONS -- 
 
 // Attacks the boss
-function attackbossCommand(commandArgs, msg)
-{
+function attackbossCommand(commandArgs, msg) {
 	baseEmbed("Attack the boss", `This isn't even done yet`, msg.channel, "#123456");
 	return;
 	var attack = {};
