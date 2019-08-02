@@ -1,5 +1,35 @@
 # Version Control
 
+## Version 0.9.0
+- Mathfind: SQL added.
+- Mathfind: Changed module color.
+- Mathfind: Questions list added to its own function.
+- Mathfind: question/q is not needed to ask a question.
+- Mathfind: Fixed errors in error message on question.
+- Mathfind: Can no longer fail by asking your last question with no guesses.
+- Mathfind: List of questions is viewable.
+- Mathfind: Many messages now have author's tag attached to them.
+- Mathfind: List of guesses is viewable.
+- Mathfind: SQL counts number of wins in each difficulty, and number of games started.
+- Mathfind: Added hasdigit.
+- Mathfind: Added square.
+- Mathfind: Added cube.
+- Mathfind: Added fibonacci.
+- Mathfind: Added binary.
+- Mathfind: Added trinary.
+- Mathfind: Added digitroot.
+- Mathfind: Added prime.
+- Mathfind: Added view function.
+- Mathfind: Added profile function.
+- Mathfind: Added abort function.
+- Mathfind: Difficulty automatically lowercased.
+- Mathfind: Added help function.
+- Mathfind: Added help question function.
+- Mathfind: Added question json.
+- Yuni/Mathfind: Initiates table on start.
+- Help: Added mathfind to fun section.
+- Package: Edited description.
+
 ## Version 0.8.0
 - Mathfind: Added module.
 - Mathfind: Saving/Loading through JSON.
