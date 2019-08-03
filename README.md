@@ -26,6 +26,10 @@ Find a number between 0 and 9999.
 
 Vote up or down and watch the number move.
 
+### halfhour
+
+Get messaged every halfhour.
+
 ## Fun
 
 ### easterEgg
@@ -39,6 +43,10 @@ Randomly chooses between giving the Luigi and WALUIGI roles.
 ### Chess
 
 Plays a game of chess.
+
+### Mathfind
+
+Find a number by asking up to twenty questions about the number.
 
 ## Economy
 
