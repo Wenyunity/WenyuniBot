@@ -1,5 +1,18 @@
 # Version Control
 
+### Version 0.9.1
+- Arena: Separated requires from constants.
+- Arena: Reverted to two characters.
+- Arena: Added MaxHP, MaxMP, team to player team JSON.
+- Arena: Added moduleColor.
+- Arena: Use Ceiling function on MP costs, to adjust to non-integer MP weights.
+- Movelist: Now uses non-integer MP weights.
+- Arena: Movelist now has tags in front of them.
+- Arena: View function added.
+- Arena: Start function added, but only spits out a JSON.
+- Chess: Added different textbox when passing the argument "flip".
+- Yuni/Attackboss: Different error textbox.
+
 ## Version 0.9.0
 - Mathfind: SQL added.
 - Mathfind: Changed module color.
