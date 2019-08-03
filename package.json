@@ -1,6 +1,6 @@
 {
   "name": "Wenyunibot",
-  "version": "0.9.0",
+  "version": "0.9.1",
   "description": "Wenyunity's Bot. Activated with wy! or WY! prefix. Has 15+ functions, including eggplant, mathfind, and chess.",
   "main": "Yuni.js",
   "author": "Wenyunity#2442",

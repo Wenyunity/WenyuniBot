@@ -1,27 +1,42 @@
+// -- REQUIRES --
 const Discord = require('discord.js');
 const SQLite = require("better-sqlite3");
 const fs = require('fs');
-const newMove = JSON.parse(fs.readFileSync('./Arena/movelist.json', 'utf8'));
 //const Battle = require('./Arena/Battle.js');
+
+// -- CONSTANTS --
+const newMove = JSON.parse(fs.readFileSync('./Arena/movelist.json', 'utf8'));
+const moduleColor = "#ED9105"
 
 // -- CHARACTER CREATION --
 
 // Creates a character
 function create(msg, arguments, client) {
-	let team = {};
+	team = {};
+	try { // If a team is loaded, you already have one
+		team = JSON.parse(fs.readFileSync(`./Arena/Fighter/${msg.author.id}.json`, 'utf8'));
+		client.basicEmbed("You already have a team!", "Use `wy!arena delete` to delete your team.", msg.channel, moduleColor);
+		return;
+	}
+	catch (err) { // No team, time to make one.
+		team = {};
+	}
+
 	team.character = {};
 	if(arguments.length < 2) {
-		client.basicEmbed("Create Error", "Please send two numbers indicating the number of magic attack moves! (Between 0 and 5)", msg.channel);
+		client.basicEmbed("Create Error", "Please send two numbers indicating the number of magic attack moves! (Between 0 and 5)", msg.channel, moduleColor);
 		return;
 	}
 	
 	if (isNaN(parseInt(arguments[0])) || isNaN(parseInt(arguments[0]))) {
-		client.basicEmbed("Create Error", "These are not numbers!", msg.channel);
+		client.basicEmbed("Create Error", "These are not numbers!", msg.channel, moduleColor);
 		return;
 	}
 	
+	// Team type
+	team.type = "player";
 	if(arguments[0] > 5 || arguments[1] > 5) {
-		client.basicEmbed("Create Error", "Only up to five magic moves allowed!", msg.channel);
+		client.basicEmbed("Create Error", "Only up to five magic moves allowed!", msg.channel, moduleColor);
 		return;
 	}
 	else {
@@ -33,10 +48,10 @@ function create(msg, arguments, client) {
 			// Defense
 			if (arguments[m+2]) {
 				if (["0", "1", "2", "3"].includes(arguments[m+2])) {
-					team.character[m].DEF = arguments[m+2]
+					team.character[m].DEF = parseInt(arguments[m+2]);
 				}
 				else {
-					client.basicEmbed("Create Error", "Defense must be between 0 and 3.", msg.channel);
+					client.basicEmbed("Create Error", "Defense must be between 0 and 3.", msg.channel, moduleColor);
 					return;
 				}
 			}
@@ -44,8 +59,10 @@ function create(msg, arguments, client) {
 				team.character[m].DEF = Math.floor(Math.random() * 4)
 			}
 			team.character[m].HP = 40 - 5 * team.character[m].DEF;
+			team.character[m].MaxHP = team.character[m].HP;
 			team.character[m].HPGain = 6 - team.character[m].DEF;
 			team.character[m].MP = 20;
+			team.character[m].MaxMP = team.character[m].MP;
 			team.character[m].MPGain = 4;
 			team.character[m].slots = 2;
 			// Create thing to hold moves
@@ -98,7 +115,7 @@ function createAttackMove(isBasic) {
 		// Set effect and length and calculate power difference
 		nameObject["effect"] = effectType[0];		
 		nameObject["length"] = lengthType[0];
-		nameObject["power"] = nameObject["power"] + lengthType[1] * effectType[1];
+		nameObject["power"] = nameObject["power"] + Math.ceil(lengthType[1] * effectType[1]);
 	}
 	else { // No effect (50% chance)
 		nameObject["effect"] = "None";
@@ -145,7 +162,7 @@ function createSupportMove() {
 	// Set effect and length and calculate power difference
 	nameObject.effect = effectType[0];		
 	nameObject.length = lengthType[0];
-	nameObject.MP = nameObject.MP + lengthType[1] * effectType[1];
+	nameObject.MP = nameObject.MP + Math.ceil(lengthType[1] * effectType[1]);
 	
 	return nameObject;
 }
@@ -155,10 +172,10 @@ function createSupportMove() {
 // Creates a character
 function displayPlayerTeam(msg, team) {
 	const teamEmbed = new Discord.RichEmbed()
-			.setColor('#ED9105')
+			.setColor(moduleColor)
 			.setTitle('Team Name')
 			.setAuthor('Wenyunibot')
-			.setDescription(`Team Owner: Someone`)
+			.setDescription(`Team Owner: ${msg.author.tag}`)
 			.addField("Summary Statistics", displayTeamStats(team.character));
 	for (z = 0; z < 2; z++) {
 		teamEmbed.addField(team.character[z].name +"'s Moves", displayMoves(team.character[z].move));
@@ -173,10 +190,14 @@ function displayTeamStats(character) {
 	
 	message = "";
 	for (c = 0; c < 2; c++) {
-		message += `\r\n**${character[c].name}** -|- ${character[c].HP}/${character[c].HP} HP, ${character[c].MP}/${character[c].MP} MP, ${character[c].DEF} DEF`;
+		message += displayPlayerStats(character[c]) + "\r\n";
 	}
 	
 	return message;
+}
+
+function displayPlayerStats(player) {
+	return `**${player.name}** -|- ${player.HP}/${player.MaxHP} HP, ${player.MP}/${player.MaxMP} MP, ${player.DEF} DEF`;
 }
 
 function displayGrowthStats(character) {
@@ -192,9 +213,9 @@ function displayGrowthStats(character) {
 function displayMoves(moveset) {
 	// Basic move
 	message = "";
-	message += readMove(moveset.B)
+	message += "**B** -|- " + readMove(moveset.B)
 	for (i = 0; i < 5; i++) {
-		message += "\r\n" + readMove(moveset[i]);
+		message += `\r\n**${i}** -|- ` + readMove(moveset[i]);
 	}
 	return message;
 }
@@ -204,7 +225,7 @@ function readMove(move) {
 	message = "";
 	
 	// Move Name
-	message = message + "**" + move["name"] + "** *(" + move["MP"] + " MP)*: ";
+	message = message + "*" + move["name"] + "* - **(" + move["MP"] + " MP)**: ";
 	// Attack Move
 	if (move["team"] == "enemy") {
 		// Power
@@ -253,9 +274,56 @@ function readMove(move) {
 	return message;
 }
 
+// -- VIEW TEAM --
+function viewTeam(msg, client) {
+	// Try to load team
+	team = {};
+	try {
+		team = JSON.parse(fs.readFileSync(`./Arena/Fighter/${msg.author.id}.json`, 'utf8'));
+	}
+	catch (err) {
+		client.basicEmbed("No team found!", `Could not find a team for ${msg.author.tag}`, msg.channel, moduleColor);
+		return;
+	}
+	
+	displayPlayerTeam(msg, team);
+}
+
 // -- START A FIGHT --
-function startFight(msg) {
-	// Uh
+
+function startFight(msg, client, arguments) {
+	// So how do we do this...
+	// Try to load team
+	team = {};
+	try {
+		team = JSON.parse(fs.readFileSync(`./Arena/Fighter/${msg.author.id}.json`, 'utf8'));
+	}
+	catch (err) {
+		client.basicEmbed("No team found!", `Could not find a team for ${msg.author.tag}`, msg.channel, moduleColor);
+		return;
+	}
+	
+	enemy = JSON.parse(fs.readFileSync(`./Arena/Enemy/20.json`, 'utf8'));
+	
+	battle = {front: team, back: enemy, turn: "back", moves: [0, 0, 0, 0, 0]};
+	
+	fs.writeFile(`./Arena/Battle/BA${msg.author.id}.json`, JSON.stringify(battle, null, 4), function(err) {
+		if (err) throw err;
+		console.log('completed writing to arena battle');
+	})
+}
+
+function displayBattle(msg, client) {
+	// So how do we do this...
+	// Try to load battle
+	battle = {};
+	try {
+		battle = JSON.parse(fs.readFileSync(`./Arena/Battle/BA${msg.author.id}.json`, 'utf8'));
+	}
+	catch (err) {
+		client.basicEmbed("No team found!", `Could not find a battle for ${msg.author.tag}`, msg.channel, moduleColor);
+		return;
+	}
 }
 
 function fight() {
@@ -280,7 +348,17 @@ module.exports = {
                 create(msg, arguments, client);
                 break;
 				
+			case 'view':
+				viewTeam(msg, client);
+				break;
+				
+			case 'startFight':
+				startFight(msg, client, arguments);
+				break;
 			
+			default:
+				client.basicEmbed("Not Done", "Not Done Yet", msg.channel, moduleColor);
+				break;
         }
 	}
 }

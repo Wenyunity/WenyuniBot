@@ -2,8 +2,8 @@
 	"base": 5,
 	"attack": {
 		"target": [["front", 1], ["any", 0], ["all", -5]],
-		"effect": [["poison", -1], ["dizzy", -2], ["atk-down", -3]],
-		"length": [[1, 1], [2, 2], [3, 4], [4, 6]]
+		"effect": [["poison", -1.25], ["dizzy", -2.5], ["atk-down", -2]],
+		"length": [[1, 1], [2, 2], [3, 3.5], [4, 5]]
 	},
 	"basic": {
 		"target": [["front", 1], ["any", 0]],
@@ -12,8 +12,8 @@
 	},
 	"support": {
 		"target": [["self", 0]],
-		"effect": [["regen", 1], ["dodge", 2], ["atk-up", 3], ["def-up", 2], ["payback", 3]],
-		"length": [[1, 1], [2, 2], [3, 4], [4, 6], [5, 10]]
+		"effect": [["regen", 1.25], ["dodge", 2.5], ["atk-up", 2], ["def-up", 1.75], ["payback", 3]],
+		"length": [[1, 1], [2, 2], [3, 3.5], [4, 5], [5, 7]]
 	},
 	"name": {
 		"adjective": ["United", "Wuigi", "Blue", "Red", "Green", "Spiky", "Orange", "Waluigi", "Tax-free", "Electric", "Smashing", "Purple", "Yellow", "Small", "Twirling", "Sick", "Light", "Downward", "Upward", "Sideways", "Grass", "Tall"],

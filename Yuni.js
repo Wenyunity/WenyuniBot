@@ -303,7 +303,7 @@ function createData(user) {
 
 // Attacks the boss
 function attackbossCommand(commandArgs, msg) {
-	baseEmbed("Attack the boss", `This isn't even done yet`, msg.channel, "#123456");
+	baseEmbed("Attacc the errors", `This is not finished yet, and it probably never wil be.`, msg.channel, "#123456");
 	return;
 	var attack = {};
 	// Name

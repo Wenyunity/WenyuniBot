@@ -1061,6 +1061,11 @@ module.exports = {
 				}
 				break;
 			
+			// A little joke
+			case 'flip':
+				client.basicEmbed("Chess Flip", "*flips table* GAME OVER!!", msg.channel, moduleColor);
+				break;
+				
 			default:
 				if (!(determinePlace(mainCommand) === "Error")) {
 					let newArgs = args.slice(1);
