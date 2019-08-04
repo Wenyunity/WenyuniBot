@@ -8,6 +8,7 @@ const arena = require('./Arena/Arena.js');
 const chess = require('./Chess/Chess.js');
 const eggplant = require('./Eggplant/Eggplant.js');
 const mathfind = require('./Mathfind/Mathfind.js');
+const sillyboss = require('./Boss/Boss.js');
 
 // -- JSON AND SQL FILES -- 
 const auth = require('./auth.json');
@@ -15,7 +16,9 @@ const helpText = require('./help.json');
 const easterEgg = JSON.parse(fs.readFileSync('./Data/easterEgg.json', 'utf8'));
 const botInfo = JSON.parse(fs.readFileSync('./package.json', 'utf8'));
 const countBoard = JSON.parse(fs.readFileSync('./Data/countBoard.json', 'utf8'));
+const channelAllowed = JSON.parse(fs.readFileSync('./Data/channels.json', 'utf8'));
 const sql = new SQLite('./scores.sqlite');
+const guildSQL = new SQLite('./guild.sqlite');
 
 // -- NUMBERS --
 let timeOn = 0;
@@ -27,14 +30,12 @@ const voteDelay = 1000 * 60 * 90; // 90 minutes
 const findDelay = 1000 * 60 * 2; // 2 minutes
 const findBounds = {min: 0, max: 9999} // Bounds for find
 
+
 // -- LISTS AND LINKS --
 const sortRows = ["points", "bestWork", "eggplant", "bestEggplant", "countTime", "find"];
 const topTenEmoji = [":trophy:", ":two:", ":three:", ":four:", ":five:", ":six:", ":seven:", ":eight:", ":nine:", ":keycap_ten:"];
 const inviteLink = "https://discordapp.com/api/oauth2/authorize?client_id=599476939194892298&permissions=0&scope=bot";
 const serverLink = "https://discord.gg/Y2fTCHM";
-const bossNames = ["Stomper", "Walushell", "Waludisk", "WaluKaratebot", "WaluSpinner"]
-const moveNames = ["Stomp", "Spin-kick", "Cut", "Combo", "Punch-kick", "Punching Spin"]
-const attackNames = ["Tackle", "Quick Attack", "Triplepunch-Jump", "Dig-Attack"]
 let halfHourDelay = {};
 
 // -- DISCORD FUNCTIONS --
@@ -68,18 +69,32 @@ client.on('ready', function (evt) {
 		+ " @eggplantMaxSellPrice, @eggplantReroll, @bestEggplant, @countTime, @voteTime, @findTime, @find);");
 	//client.addColumn = sql.prepare("ALTER TABLE scores ADD name = ? type = ? NOT NULL DEFAULT default = ?")
 	
+	// Prepare guild table
+	guildTable();
+	
 	// Send basic embed
 	client.basicEmbed = baseEmbed;
+	// Footer
 	client.footer = textWenyuniFooter;
+	// Load data
 	client.loadData = getData;
 	
 	// Tag
 	client.user.setActivity('for wy!help', {type: 'WATCHING'})
 	
+	// Time bot started
 	timeOn = Date.now();
+	
+	// Get list of guilds
+	guildList = client.guilds.array().sort();
+	
+	console.log("\x1b[41mServer List\x1b[0m");
+	guildList.forEach(list => console.log(list.name));
 	
 	// For Modules
 	mathfind.onStart;
+	
+	console.log(`${client.user.tag} is ready!`);
 });
 
 // Upon getting a message
@@ -87,6 +102,9 @@ client.on('message', msg => {
     // It will listen for messages that will start with `WY!`
 	// Except for those that came from the client itself.
     if ((msg.content.substring(0, 3) == 'WY!' || msg.content.substring(0, 3) == 'wy!') && !msg.author.bot) {
+		
+		// Set channel check
+		
 		// Get rid of WY!
 		let args = msg.content.substring(3).split(' ');
 		// Find the main command
@@ -96,6 +114,10 @@ client.on('message', msg => {
 		
 		// These messages will only work if it's a guild
 		if (msg.guild) {
+			
+			// Increment number of posts in guild
+			countGuildPost(msg.guild);
+			
 			switch(mainCommand) {
 				
 				// -- MODULE COMMANDS --
@@ -113,6 +135,9 @@ client.on('message', msg => {
 				case 'mathfind':
 					mathfind.mathfindCommand(msg, client);
 					break;
+				case 'sillyboss':
+					sillyboss.bossCommand(msg, client);
+					break;
 					
 				// -- BASIC FUNCTIONS --
 				
@@ -127,12 +152,6 @@ client.on('message', msg => {
 					break;
 				case 'find':
 					findCommand(commandArgs, msg)
-					break;
-				case 'newboss':
-					newBossCommand(commandArgs, msg)
-					break;
-				case 'attackboss':
-					attackbossCommand(commandArgs, msg)
 					break;
 				case 'halfhour':
 					halfHourCommand(msg)
@@ -178,6 +197,9 @@ client.on('message', msg => {
 					break;
 				case 'botinfo':
 					botInfoCommand(msg);
+					break;
+				case 'guildlead':
+					guildLeaderboard(msg);
 					break;
 				
 				// -- ADMIN FUNCTIONS --
@@ -236,6 +258,13 @@ function deleteRow(msg) {
 	sql.prepare(`DELETE FROM scores WHERE user = ${msg.author.id}`).run();
 	
 	baseEmbed("Delete", `Deleted ${msg.author.tag}'s data!`, msg.channel)
+}
+
+// -- OWNER PERMISSIONS --
+
+// Sets channel
+function addChannel(msg) {
+	
 }
 
 // -- CLIENT FUNCTIONS -- 
@@ -299,22 +328,54 @@ function createData(user) {
 	return data;
 }
 
-// -- BASIC FUNCTIONS -- 
-
-// Attacks the boss
-function attackbossCommand(commandArgs, msg) {
-	baseEmbed("Attacc the errors", `This is not finished yet, and it probably never wil be.`, msg.channel, "#123456");
-	return;
-	var attack = {};
-	// Name
-	let attacknameSelect = Math.floor(Math.random() * (attackNames.length))
-	attack.name = attackNames[attacknameSelect]
-	// Effectiveness
-	attack.effective = Math.floor(Math.random() * 10 + 1) * 50;
-	boss.damageonehp = boss.hp - attack.effective
-	baseEmbed("Attack the boss", `You attacked the boss with the move ${attack.name}. It dealt ${attack.effective} Damage!`, msg.channel, "#123456");
-	baseEmbed("Attack the boss continued", `The boss now has ${boss.damageonehp}.`, msg.channel, "#123456");
+// Get data for a guild
+function getGuildData(guild) {
+	let data = guildSQL.prepare(`SELECT * FROM guild WHERE id = ${guild.id}`).get();
+	
+	if (!data) {
+		data = createGuildData(guild);
+	}
+	return data;
 }
+
+// Create guild data
+function createGuildData(guild) {
+	data = {
+		id: guild.id,
+		name: guild.name,
+		posts: 0
+	}
+	
+	return data;
+}
+
+// Create a guild table
+function guildTable() {
+	// Check if the table exists
+    const table = guildSQL.prepare("SELECT count(*) FROM sqlite_master WHERE type='table' AND name = 'guild';").get();
+    if (!table['count(*)']) {
+		// If the table isn't there, create it and setup the database correctly.
+		guildSQL.prepare("CREATE TABLE guild (id TEXT PRIMARY KEY, name TEXT, posts INTEGER);").run();
+		// Ensure that the "id" row is always unique and indexed.
+		guildSQL.prepare("CREATE UNIQUE INDEX idx_scores_id ON guild (id);").run();
+		guildSQL.pragma("synchronous = 1");
+		guildSQL.pragma("journal_mode = wal");
+	}
+}
+
+// Save guild data
+function saveGuildData(data) {
+	guildSQL.prepare("INSERT OR REPLACE INTO guild (id, name, posts) VALUES (@id, @name, @posts);").run(data);
+}
+
+// Count a post
+function countGuildPost(guild) {
+	data = getGuildData(guild);
+	data.posts++;
+	saveGuildData(data);
+}
+
+// -- BASIC FUNCTIONS -- 
 
 // Chooses between choices
 function chooseCommand(commandArgs, msg) {
@@ -463,21 +524,6 @@ function findCommand(commandArgs, msg) {
 	})
 }
 	
-// Generates a boss
-function newBossCommand(commandArgs, msg) {
-	let boss = {};
-	// Name
-	let nameSelect = Math.floor(Math.random() * (bossNames.length))
-	boss.name = bossNames[nameSelect];
-	// Moves
-	let moveSelect = Math.floor(Math.random() * (moveNames.length))
-	boss.move = moveNames[moveSelect];
-	// HP (50 and 500)
-	boss.hp = Math.floor(Math.random() * 10 + 1) * 50;
-	
-	baseEmbed("Not very serious boss", `Your boss is named ${boss.name}, has the move ${boss.move}, and has ${boss.hp} HP.`, msg.channel, "#123456");
-}
-
 // Sends a message every half-hour.
 function halfHourCommand(msg) {
 	// Get channel name
@@ -814,7 +860,12 @@ function leaderBoardCommand(commandArgs, msg) {
 	let messageDesc = "";
 	let rank = 0;
 	for(const data of top10) {
-		messageDesc += `${topTenEmoji[rank]} - **${client.users.get(data.user).tag}** - ${data[commandArgs[0]]} \r\n`;
+		try {
+			messageDesc += `${topTenEmoji[rank]} - **${client.users.get(data.user).tag}** - ${data[commandArgs[0]]} \r\n`;
+		}
+		catch {
+			messageDesc += `${topTenEmoji[rank]} - **ID ${data.user}** - ${data[commandArgs[0]]} \r\n`;
+		}
 		rank++;
 	}
 	
@@ -861,7 +912,6 @@ function countCommand(msg) {
 		console.log('completed writing to countUp.json');
 	})
 }
-
 
 // -- AUXILIARY FUNCTIONS --
 
@@ -940,11 +990,42 @@ function botInfoCommand(msg) {
 		.addField("Bot Creator", botInfo.author, true)
 		.addField("Current Runtime", `${(Math.floor(((Date.now() - timeOn)/hour)*100)/100)} hours`, true)
 		.addField("Creation Time", client.user.createdAt.toLocaleString("default", {timeZone: "UTC", timeZoneName: "short"}), true)
-		.addField("Server Join Time", msg.guild.joinedAt.toLocaleString("default", {timeZone: "UTC", timeZoneName: "short"}), true);
-			
+		.addField("Server Join Time", msg.guild.joinedAt.toLocaleString("default", {timeZone: "UTC", timeZoneName: "short"}), true)
+		.addField("Number of Wenyunibot Calls", getGuildData(msg.guild).posts, true);
+		
 	msg.channel.send(infoEmbed);
 }
 
+// Guild posts
+function guildLeaderboard(msg) {
+	const top10 = guildSQL.prepare(`SELECT * FROM guild ORDER BY posts DESC LIMIT 10;`).all();
+
+	let messageDesc = "";
+	let rank = 0;
+	for(const data of top10) {
+		try {
+			messageDesc += `${topTenEmoji[rank]} - **${client.guilds.get(data.id).name}** - ${data.posts} \r\n`;
+		}
+		catch {
+			messageDesc += `${topTenEmoji[rank]} - **ID ${data.id}** - ${data.posts} \r\n`;
+		}
+		rank++;
+	}
+	
+	var x = guildSQL.prepare("SELECT count(*) AS userCount FROM guild");
+	
+	messageDesc += `Total guilds: ${x.all()[0].userCount}`;
+	
+    // Now shake it and show it! (as a nice embed, too!)
+	const leaderboardEmbed = new Discord.RichEmbed()
+		.setTitle(`Top 10 Guilds`)
+		.setAuthor("Wenyunibot")
+		.setDescription(messageDesc)
+		.setColor("#101010")
+		.setFooter(textWenyuniFooter());
+	
+	return msg.channel.send(leaderboardEmbed);
+}
 
 // -- IMPORTANT LOGIN --
 

@@ -37,6 +37,13 @@
 				"When Not Running": "Starts the half-hour timer.",
 				"When Running": "Stops the half-hour timer."
 			}
+		},
+		"sillyboss": {
+			"desc": "The code in this module wasn't 100% written by me. Can't say who did it quite yet - haven't cleared that up.",
+			"args": {
+				"new": "Creates a new boss.",
+				"attack": "Attacks the boss."
+			}
 		}
 	},
 	"Fun":
@@ -132,6 +139,10 @@
 		},
 		"botinfo": {
 			"desc": "Gives information about the bot.",
+			"args": {}
+		},
+		"guildlead": {
+			"desc": "Shows which guilds have used Wenyunibot the most.",
 			"args": {}
 		}
 	}
