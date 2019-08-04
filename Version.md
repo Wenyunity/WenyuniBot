@@ -1,5 +1,30 @@
 # Version Control
 
+## Version 0.10.0
+- Arena: Name sanitizer for @, \\, and * characters.
+- Arena: Character -> CharacterList, also changed from object to array.
+- Arena: DEF now forced to int.
+- Arena: Various changes to text functions to accomodate new array.
+- Arena: Enemy stats now able to be displayed.
+- Arena: Battle able to be viewed.
+- Arena: Battle JSON has been created.
+- Arena: Old view -> team.
+- Arena: New view views current battle.
+- Attackboss/Newboss: Moved to separate module.
+- Attackboss: Now accessed by wy!sillyboss attack.
+- Attackboss: Now functional.
+- Newboss: Now accessed by wy!sillyboss new.
+- Newboss: Stores boss in an object. Does not store to JSON.
+- Yuni: New SQLite for guild.
+- Yuni: Prints all guild names in console on start.
+- Yuni: Counts number of posts per guild.
+- Yuni: Guild load, save, new functions added.
+- Leaderboard: Now has a try/catch. Failed loads will just spit out ID number.
+- Botinfo: Now shows how many times Wenyunibot has been used in the server.
+- guildlead: Function added, shows how many times Wenyunibot has been used per server.
+- help: sillyboss added under basic.
+- help: guildlead added under auxiliary.
+
 ### Version 0.9.1
 - Arena: Separated requires from constants.
 - Arena: Reverted to two characters.
