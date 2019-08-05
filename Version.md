@@ -1,5 +1,25 @@
 # Version Control
 
+## Version 0.11.0
+- start: Added .bat file to start Wenyunibot.
+- startRepeat: .bat file that restarts Wenyunibot on crash.
+- Arena: Name character limit.
+- Arena: Each occassion of @, \\, and * results in a 1-to-1 change to +.
+- Yuni: ChannelAllow JSON used.
+- Yuni/Mod: Mod commands happen before checking if channel is whitelisted.
+- Yuni: Checks if channel is whitelisted (or if there is a whitelist).
+- Yuni/Mod: wy!mod help added.
+- Yuni/Mod: addChannel added.
+- Yuni/Mod: removeChannel added.
+- Yuni/Mod: reset added.
+- Yuni/Mod: viewChannel added.
+- Help: modhelp, reset, addChannel, reset, viewChannel added under Mod.
+- Help: Mod header shows requirements.
+- Yuni/Mod: Only those with Manage Messages permissions can use Mod commands.
+- Yuni: wy!admin crash added; crashes Wenyunibot on command.
+- Easteregg: Changed to Data/Easteregg.
+- Help: Added argument to help.
+
 ## Version 0.10.0
 - Arena: Name sanitizer for @, \\, and * characters.
 - Arena: Character -> CharacterList, also changed from object to array.
