@@ -151,6 +151,7 @@ function guessAnswer(client, msg, guess) {
 	// Guess correctly
 	if (parseInt(guess) === gameFile.randNumber) {
 		client.basicEmbed("Found Answer", `${msg.author.tag}, **you found the number!** You have won in **${gameFile.difficulty}** difficulty!`, msg.channel, moduleColor);
+		viewInfo(client, msg, true);
 		// Get or create data
 		data = mathsql.prepare(`SELECT user, wins, ${gameFile.difficulty} FROM mathfind WHERE user = ${msg.author.id}`).get();
 		if (!data) {
@@ -347,7 +348,14 @@ function digitalRoot(client, msg, number, param) {
 // Asks if a number is prime
 function prime(client, msg, number) {
 	let limit = Math.sqrt(number)
+	
+	// False
 	let foundFactor = false;
+	
+	// In the rare case we get a square
+	if (Math.floor(limit) === limit) {
+		foundFactor = true;
+	}
 	// Handle 2 separately
 	if (number % 2 === 0) {
 		foundFactor = true;
@@ -357,7 +365,7 @@ function prime(client, msg, number) {
 	let i = 3;
 	
 	// While we have not found a factor
-	while (i < limit && !foundFactor) {
+	while (i <= limit && !foundFactor) {
 		// If this is a factor, hit true
 		if (number % i === 0) {
 			foundFactor = true;
@@ -380,7 +388,7 @@ function prime(client, msg, number) {
 
 // -- VIEW --
 // Views questions and guesses
-function viewInfo(client, msg) {
+function viewInfo(client, msg, won) {
 	// Load file
 	gameFile = loadGame(client, msg)
 	// No file
@@ -389,12 +397,19 @@ function viewInfo(client, msg) {
 		return;
 	}
 	
+	let title = "Mathfind Game Info"
+	let desc = `${msg.author.tag}'s current mathfind game.\r\nDifficulty is **${gameFile.difficulty}**, for a max number of **${difficulty[gameFile.difficulty]}**.`;
+	if (won) {
+		title = "Game History!"
+		desc = `${msg.author.tag}'s question history for their won game in **${gameFile.difficulty}** difficulty.`;
+	}
+	
 	// Create embed and post
 	let mathfindEmbed = new Discord.RichEmbed()
 		.setColor(moduleColor)
-		.setTitle("Mathfind Info")
+		.setTitle(title)
 		.setAuthor('Wenyunibot')
-		.setDescription(`${msg.author.tag}'s current mathfind game.\r\nDifficulty is **${gameFile.difficulty}**, for a max number of **${difficulty[gameFile.difficulty]}**.`)
+		.setDescription(desc)
 		.addField("Question Results", questionView(gameFile), true)
 		.addBlankField(true)
 		.addField("Guesses", guessesView(gameFile), true)
@@ -698,7 +713,7 @@ module.exports = {
 				break;
 				
 			case 'view':
-				viewInfo(client, msg);
+				viewInfo(client, msg, false);
 				break;
 			
 			case 'profile':

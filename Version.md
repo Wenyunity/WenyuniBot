@@ -1,5 +1,10 @@
 # Version Control
 
+### Version 0.11.1
+- Mathfind: Fixed issue where perfect squares were called prime.
+- .gitignore: Updated to remove some folders.
+- package-lock.json: Added.
+
 ## Version 0.11.0
 - start: Added .bat file to start Wenyunibot.
 - startRepeat: .bat file that restarts Wenyunibot on crash.
