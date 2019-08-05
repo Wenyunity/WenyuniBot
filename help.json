@@ -127,7 +127,9 @@
 	"Auxiliary": {
 		"help": {
 			"desc": "This is the help command. Use **WY!help** to get a list of all commands.",
-			"args": {}
+			"args": {
+				"[command]": "Get help for a specific command"
+			}
 		}, 
 		"invite": {
 			"desc": "Gives the link to invite Wenyunibot to another server.",
@@ -144,6 +146,36 @@
 		"guildlead": {
 			"desc": "Shows which guilds have used Wenyunibot the most.",
 			"args": {}
+		}
+	},
+	"Mod (wy!mod command || need Manage Messages)": {
+		"reset": {
+			"desc": "Resets all channels in the guild, so Wenyunibot can respond in all channels.\r\nWorks in all channels.",
+			"args": {}
+		},
+		"modhelp": {
+			"desc": "Brings up Wenyunibot's help command. Works in all channels.",
+			"args": {
+				"[command]": "Get help for a specific command."
+			}
+		},
+		"addchannel": {
+			"desc": "Adds channel to the whitelist of Wenyunibot. Works in all channels.",
+			"args": {
+				"(No Args)": "Adds the current channel, if Wenyunibot is not enabled elsewhere.",
+				"(ID of channel)": "Enables the channel with the given ID."
+			}
+		},
+		"viewchannel": {
+			"desc": "Views all channels in the whitelist for Wenyunibot. Works in all channels.",
+			"args": {}
+		},
+		"removechannel": {
+			"desc": "Removes channel from the whitelist of Wenyunibot. Works in all channels.\r\nIf all channels are removed, Wenyunibot will revert to normal.",
+			"args": {
+				"(No Args)": "Adds the current channel, if Wenyunibot is not enabled elsewhere.",
+				"(ID of channel)": "Enables the channel with the given ID."
+			}
 		}
 	}
 }

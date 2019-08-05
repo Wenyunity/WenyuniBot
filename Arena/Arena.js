@@ -7,12 +7,13 @@ const fs = require('fs');
 // -- CONSTANTS --
 const newMove = JSON.parse(fs.readFileSync('./Arena/movelist.json', 'utf8'));
 const moduleColor = "#ED9105"
+const nameLimit = 40;
 
 // -- CHARACTER CREATION --
 
 // Sanitizes names. For now, replaces them all with "+".
 function sanitize(name) {
-	return name.replace(/(@|\\|\*)+/g, "+");
+	return name.replace(/(@|\\|\*)/g, "+").substring(0, nameLimit);
 }
 
 // Creates a character
@@ -82,8 +83,6 @@ function create(msg, arguments, client) {
 			team.characterList.push(character);
 		}
 	}
-	
-	console.log(team);
 	
 	fs.writeFile(`./Arena/Fighter/${msg.author.id}.json`, JSON.stringify(team, null, 4), function(err) {
 		if (err) throw err;

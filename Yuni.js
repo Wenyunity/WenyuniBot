@@ -16,7 +16,7 @@ const helpText = require('./help.json');
 const easterEgg = JSON.parse(fs.readFileSync('./Data/easterEgg.json', 'utf8'));
 const botInfo = JSON.parse(fs.readFileSync('./package.json', 'utf8'));
 const countBoard = JSON.parse(fs.readFileSync('./Data/countBoard.json', 'utf8'));
-const channelAllowed = JSON.parse(fs.readFileSync('./Data/channels.json', 'utf8'));
+const channelAllow = JSON.parse(fs.readFileSync('./Data/channels.json', 'utf8'));
 const sql = new SQLite('./scores.sqlite');
 const guildSQL = new SQLite('./guild.sqlite');
 
@@ -103,14 +103,66 @@ client.on('message', msg => {
 	// Except for those that came from the client itself.
     if ((msg.content.substring(0, 3) == 'WY!' || msg.content.substring(0, 3) == 'wy!') && !msg.author.bot) {
 		
-		// Set channel check
-		
 		// Get rid of WY!
 		let args = msg.content.substring(3).split(' ');
 		// Find the main command
 		let mainCommand = args[0];
 		// And then the rest of the arguments
 		let commandArgs = args.slice(1);
+		
+		// -- MOD FUNCTIONS --
+		
+		// Placed before channel check so that mods can access Wenyunibot.
+		if (msg.guild && mainCommand === "mod") {
+			if (msg.member.hasPermission("MANAGE_MESSAGES", false, true, true)) {
+				let modCommand = commandArgs[0];
+				switch(modCommand) {
+					case 'addchannel':
+						addChannel(commandArgs[1], msg);
+						break;
+					
+					case 'removechannel':
+						removeChannel(commandArgs[1], msg);
+						break;
+						
+					case 'viewchannel':
+						viewChannel(msg);
+						break;
+						
+					case 'help':
+					case 'modhelp':
+						helpCommand(commandArgs.slice(1), msg);
+						break;
+					
+					case 'reset':
+						resetChannels(msg);
+						break;
+					
+					default:
+						baseEmbed("Mod Command Failed", "Could not find the mod command!", msg.channel); // Couldn't find command
+						break;
+				}
+			}
+			else {
+				if (channelAllow[msg.guild.id]) { // Don't want to spam
+					if (!channelAllow[msg.guild.id].includes(msg.channel.id)) { // If not approved channel, end
+						return;
+					}
+				}
+				baseEmbed("Access Denied", "You do not have the ability to manage messages!", msg.channel); // Message only if approved
+			}
+			return;
+		}
+		
+		// -- CHANNEL CHECK --
+		// For all non-mod functions, returns if not in a good channel.
+		if (msg.guild) {
+			if (channelAllow[msg.guild.id]) {
+				if (!channelAllow[msg.guild.id].includes(msg.channel.id)) { // If not approved channel, end
+					return;
+				}
+			}
+		}
 		
 		// These messages will only work if it's a guild
 		if (msg.guild) {
@@ -214,6 +266,12 @@ client.on('message', msg => {
 							case 'delete':
 								deleteRow(msg);
 								break;
+							case 'crash':
+								// Doesn't crash it
+								baseEmbed("Crashing now!", "Why, Wenyunity?", msg.channel);
+								// Does crash it
+								baseEmbed("Crash", "Crash", msg);
+								break;
 							default:
 								baseEmbed("Admin Command Failed", "Wenyunity, what are you doing?", msg.channel);
 								break;
@@ -223,7 +281,7 @@ client.on('message', msg => {
 						baseEmbed("Access Denied", "You are not Wenyunity! Access denied!", msg.channel);
 					}
 					break;
-				
+					
 				// -- NOT FOUND --
 				
 				default:
@@ -263,8 +321,138 @@ function deleteRow(msg) {
 // -- OWNER PERMISSIONS --
 
 // Sets channel
-function addChannel(msg) {
+function addChannel(channel, msg) {
+	let addChannel = channel || msg.channel.id;
+	try {
+		if (msg.guild.channels.has(addChannel)) { // Find Channel
+			if (channelAllow[msg.guild.id]) { // Already has channels
+				if (channelAllow[msg.guild.id].includes(addChannel)) { // Channel already is in list
+					baseEmbed("Add Channel Fail", "Channel is already on whitelist!", msg.channel);
+					return;
+				}
+				else { // Add channel to list
+					channelAllow[msg.guild.id].push(addChannel);
+				}
+			}
+			else { // Create list with channel
+				channelAllow[msg.guild.id] = [addChannel];
+			}
+
+		}
+		else {
+			baseEmbed("Add Channel Fail", "Could not find the channel!", msg.channel);
+			return;
+		}
+		// Save
+		fs.writeFile ("Data/channels.json", JSON.stringify(channelAllow, null, 4), function(err) {
+			if (err) throw err;
+			console.log('completed writing to channelAllow.json');
+		})
+		baseEmbed("Add Channel Success", `Successfully added ${msg.guild.channels.get(addChannel).name} to Wenyunibot's whitelist!`, msg.channel);
+	}
+	catch {
+		baseEmbed("Add Channel Fail", "Something went bad.", msg.channel);
+	}
+}
+
+// Resets channel list
+function resetChannels(msg) {
+	if (channelAllow[msg.guild.id]) {
+		delete channelAllow[msg.guild.id];
+	}
+	else {
+		baseEmbed("No Channels Set", "There were no channels to reset!", msg.channel)
+		return;
+	}
+	// Save
+	fs.writeFile ("Data/channels.json", JSON.stringify(channelAllow, null, 4), function(err) {
+		if (err) throw err;
+		console.log('completed writing to channelAllow.json');
+	})
+	baseEmbed("Reset success!", "Successfully reset all responses! Wenyunibot should work in all channels.", msg.channel);
+}
+
+// Views channel list
+function viewChannel(msg) {
+	deleteMsg = [];
+	if (channelAllow[msg.guild.id]) {
+		let message = "";
+		channelAllow[msg.guild.id].forEach(function(item) {
+			try { 
+				message += msg.guild.channels.get(item).name + "\r\n";
+			} 
+			catch { 
+				deleteMsg.push(item);
+			}
+		});
+		if (message) {
+			baseEmbed("Channel List", message, msg.channel, "#00FF00");
+		}
+		else {
+			baseEmbed("Channel List", "Wenyunibot seems to be available in all channels.", msg.channel, "#00FF00");
+		}
+	}
+	else {
+		baseEmbed("Channel List", "Wenyunibot seems to be available in all channels.", msg.channel, "#00FF00");
+		return;
+	}
 	
+	if (!(deleteMsg === [])) {
+		// Delete channels that could not be found
+		channelAllow[msg.guild.id] = channelAllow[msg.guild.id].filter(item => !deleteMsg.includes(item))
+		
+		if (channelAllow[msg.guild.id].length === 0) {
+			delete channelAllow[msg.guild.id];
+		}
+		
+		// Save
+		fs.writeFile ("Data/channels.json", JSON.stringify(channelAllow, null, 4), function(err) {
+			if (err) throw err;
+			console.log('completed writing to channelAllow.json');
+		})
+	}
+}
+
+// Removes channel
+function removeChannel(channel, msg) {
+	let addChannel = channel || msg.channel.id;
+	try {
+		if (msg.guild.channels.has(addChannel)) { // Find Channel
+			if (channelAllow[msg.guild.id]) { // If there is a whitelist
+				let index = channelAllow[msg.guild.id].indexOf(addChannel);
+				if (index != -1) { // Channel is in list, so remove it
+					channelAllow[msg.guild.id].splice(index, 1);
+					
+					if (channelAllow[msg.guild.id].length === 0) { // No more channels, allow all
+						delete channelAllow[msg.guild.id];
+						baseEmbed("Whitelist Removed", "All channels were removed, so Wenyunibot is available in all channels.", msg.channel, "#FFFFFF");
+					}
+				}
+				else { // Channel not on whitelist
+					baseEmbed("Remove Channel Fail", "The channel was not on the whitelist!", msg.channel);
+					return;
+				}
+			}
+			else { // Couldn't find whitelist
+				baseEmbed("No Whitelist", "There is no whitelist to remove channels from!", msg.channel);
+				return;
+			}
+
+		}
+		else {
+			baseEmbed("Add Channel Fail", "Could not find the channel!", msg.channel);
+			return;
+		}
+		// Save
+		fs.writeFile ("Data/channels.json", JSON.stringify(channelAllow, null, 4), function(err) {
+			if (err) throw err;
+			console.log('completed writing to channelAllow.json');
+		})
+		baseEmbed("Remove Channel Success", `Successfully removed ${msg.guild.channels.get(addChannel).name} from Wenyunibot's whitelist!`, msg.channel);
+	}
+	catch {
+		baseEmbed("Remove Channel Fail", "Something went bad.", msg.channel);
+	}
 }
 
 // -- CLIENT FUNCTIONS -- 
@@ -608,7 +796,7 @@ function easterEggFound(mainCommand, msg) {
 	
 	// Write the number down
 	easterEgg[mainCommand]["num"] = easterEgg[mainCommand]["num"] + 1;
-	fs.writeFile ("easterEgg.json", JSON.stringify(easterEgg, null, 4), function(err) {
+	fs.writeFile (".Data/easterEgg.json", JSON.stringify(easterEgg, null, 4), function(err) {
 		if (err) throw err;
 		console.log('completed writing to easterEgg.json');
 	})
