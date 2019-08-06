@@ -1,5 +1,18 @@
 # Version Control
 
+## Version 0.12.0
+- Arena: Reactivated Battle requirement.
+- Arena: Switched moves to an array.
+- Arena: Player now has strikethrough when dead.
+- Arena: Display battle now can change description text.
+- Arena: Move framework now setup.
+- Battle: Status activated (but not used.)
+- Battle: Basic attacking framework setup.
+- Battle: Turn properly set and changed.
+- Battle: Attacking moves work.
+- Battle: Proper targeting.
+- Mathfind: Error messages changed.
+
 ### Version 0.11.1
 - Mathfind: Fixed issue where perfect squares were called prime.
 - .gitignore: Updated to remove some folders.

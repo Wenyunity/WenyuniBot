@@ -67,7 +67,7 @@ function askQuestion(client, msg, question, param) {
 	gameFile = loadGame(client, msg)
 	// No file
 	if (!gameFile) {
-		client.basicEmbed("Could not find game!", "Load failed. Use **wy!mathfind start [difficulty]** to start a game.", msg.channel, moduleColor);
+		noGameMessage(client, msg);
 		return;
 	}
 	// Too many questions
@@ -120,7 +120,7 @@ function guessAnswer(client, msg, guess) {
 	gameFile = loadGame(client, msg)
 	// No file
 	if (!gameFile) {
-		client.basicEmbed("Could not find game!", "Load failed. Use **wy!mathfind start [difficulty]** to start a game.", msg.channel, moduleColor);
+		noGameMessage(client, msg);
 		return;
 	}
 	// Guess invalid
@@ -472,6 +472,11 @@ function guessesView(gameFile) {
 	return string;
 }
 
+// No game error message
+function noGameMessage(client, msg) {
+	client.basicEmbed("Could not find game!", `${msg.author.tag}, you aren't playing mathfind!\r\n\r\nTry **wy!mathfind help** for information about mathfind.`, msg.channel, moduleColor);
+}
+
 // -- SQL DATA MANAGEMENT --
 
 // Initiate table (Runs on start)
@@ -546,7 +551,7 @@ function abortGame(client, msg) {
 		client.basicEmbed("Game Aborted", `${msg.author.tag} has aborted their game.`, msg.channel, moduleColor);
 	}
 	else {
-		client.basicEmbed("No Game Found", `${msg.author.tag}, you don't have a game going on!`, msg.channel, moduleColor);
+		noGameMessage(client, msg);
 	}
 }
 
@@ -641,11 +646,8 @@ function saveGame(client, msg, game) {
 }
 
 // -- HELP --
-function helpCommand(client, msg, error) {
+function helpCommand(client, msg) {
 	let title = "Mathfind Help"
-	if (error) {
-		title += " (Due to Invalid Command)"
-	}
 	let helpEmbed = new Discord.RichEmbed()
 		.setColor(moduleColor)
 		.setTitle(title)
@@ -661,6 +663,7 @@ function helpCommand(client, msg, error) {
 	msg.channel.send(helpEmbed);
 }
 
+// Questions
 function questionHelp(client, msg, error) {
 	// Create list of all commands
 	const helpEmbed = new Discord.RichEmbed()
@@ -704,7 +707,7 @@ module.exports = {
 					questionHelp(client, msg);
 				}
                 else {
-					helpCommand(client, msg, false);
+					helpCommand(client, msg);
                 }
 				break;
 				
@@ -731,7 +734,7 @@ module.exports = {
 					askQuestion(client, msg, mainCommand, arguments[0]);
 				}
 				else { // Pull up help text
-					helpCommand(client, msg, true);
+					client.basicEmbed("Command not found", "Try **wy!mathfind help** for more information about mathfind.", msg.channel, moduleColor);
 				}
 				break;
         }

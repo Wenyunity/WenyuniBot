@@ -2,7 +2,7 @@
 const Discord = require('discord.js');
 const SQLite = require("better-sqlite3");
 const fs = require('fs');
-//const Battle = require('./Arena/Battle.js');
+const Battle = require('./Battle.js');
 
 // -- CONSTANTS --
 const newMove = JSON.parse(fs.readFileSync('./Arena/movelist.json', 'utf8'));
@@ -17,7 +17,7 @@ function sanitize(name) {
 }
 
 // Creates a character
-function create(msg, arguments, client) {
+function create(msg, client, arguments) {
 	team = {};
 	try { // If a team is loaded, you already have one
 		team = JSON.parse(fs.readFileSync(`./Arena/Fighter/${msg.author.id}.json`, 'utf8'));
@@ -72,13 +72,13 @@ function create(msg, arguments, client) {
 			character.MPGain = 4;
 			character.slots = 2;
 			// Create thing to hold moves
-			character.move = {};
-			character.move.B = createAttackMove(true);
+			character.move = [];
+			character.move.push(createAttackMove(true));
 			for (i = 0; i < Math.floor(arguments[m]); i++) {
-				character.move[i] = createAttackMove(false)
+				character.move.push(createAttackMove(false))
 			};
 			for (i = Math.floor(arguments[m]); i < 5; i++) {
-				character.move[i] = createSupportMove()
+				character.move.push(createSupportMove())
 			}
 			team.characterList.push(character);
 		}
@@ -204,7 +204,11 @@ function displayTeamStats(characterList) {
 
 // Displays a player's stats
 function displayPlayerStats(player) {
-	return `**${player.name}** -|- ${player.HP}/${player.MaxHP} HP, ${player.MP}/${player.MaxMP} MP, ${player.DEF} DEF`;
+	let cross = "";
+	if (player.HP <= 0) {
+		cross = "~~";
+	}
+	return cross + `**${player.name}** -|- ${player.HP}/${player.MaxHP} HP, ${player.MP}/${player.MaxMP} MP, ${player.DEF} DEF` + cross;
 }
 
 // Displays a player's growth
@@ -220,8 +224,7 @@ function displayGrowthStats(characterList) {
 function displayMoves(moveset) {
 	// Basic move
 	message = "";
-	message += "**B** -|- " + readMove(moveset.B)
-	for (i = 0; i < 5; i++) {
+	for (i = 0; i < moveset.length; i++) {
 		message += `\r\n**${i}** -|- ` + readMove(moveset[i]);
 	}
 	return message;
@@ -309,20 +312,24 @@ function displayEnemyTeamStats(characterList) {
 
 // Helper function
 function displayEnemyStats(enemy) {
-	message = `**${enemy.name}** -|- ${enemy.HP}/${enemy.MaxHP} HP, ${enemy.ATK} ATK, ${enemy.DEF} DEF`;
+	let cross = "";
+	if (enemy.HP <= 0) {
+		cross = "~~";
+	}
+	message = cross + `**${enemy.name}** -|- ${enemy.HP}/${enemy.MaxHP} HP, ${enemy.ATK} ATK, ${enemy.DEF} DEF` + cross;
 	return message;
 }
 
 // -- DISPLAY --
 
 // Display current battle state.
-function displayBattle(msg, client, battle) {
+function displayBattle(msg, client, battle, description) {
 	// Setup Embed
 	const battleEmbed = new Discord.RichEmbed()
 		.setColor(moduleColor)
 		.setTitle('Battle!')
 		.setAuthor('Wenyunibot')
-		.setDescription(`${msg.author.tag}'s current battle.`)
+		.setDescription(description || `${msg.author.tag}'s current battle.`)
 		
 	// Front team
 	if (battle.front.type === "player") {
@@ -374,10 +381,12 @@ function startFight(msg, client, arguments) {
 		return;
 	}
 	
+	console.log(team);
 	enemy = JSON.parse(fs.readFileSync(`./Arena/Enemy/20.json`, 'utf8'));
+	console.log(enemy);
 	
 	battle = {front: team, back: enemy, turn: "back", moves: [0, 0, 0, 0, 0]};
-	
+	Battle.switchTurn(battle);
 	msg.channel.send(displayBattle(msg, client, battle));
 	
 	fs.writeFile(`./Arena/Battle/BA${msg.author.id}.json`, JSON.stringify(battle, null, 4), function(err) {
@@ -386,10 +395,49 @@ function startFight(msg, client, arguments) {
 	})
 }
 
-function fight() {
-    console.log('in admin 2 command');
-    // your command code here
+// Attacks
+function attackMenu(msg, client, arguments) {
+	// For now we'll leave it like this
+    let battle = {};
+	try {
+		battle = JSON.parse(fs.readFileSync(`./Arena/Battle/BA${msg.author.id}.json`, 'utf8'));
+	}
+	catch (err) {
+		client.basicEmbed("No battle found!", `Could not find a battle for ${msg.author.tag}`, msg.channel, moduleColor);
+		return;
+	}
+	
+	// Arguments
+	if (!arguments || arguments.length < 2) {
+		client.basicEmbed("Not Enough Arguments", "Could not find arguments", msg.channel, moduleColor);
+		return;
+	}
+	
+	if (isNaN(...arguments)) {
+		client.basicEmbed("Arguments are not numbers", "Cannot input numbers", msg.channel, moduleColor);
+	}
+	
+	let moveText = ""
+	try {
+		moveText = Battle.useMove(battle, arguments[0], arguments[1], arguments[2]);
+	}
+	catch (err) {
+		client.basicEmbed("Move Error", err, msg.channel, moduleColor);
+		return;
+	}
+	
+	// Save
+	fs.writeFile(`./Arena/Battle/BA${msg.author.id}.json`, JSON.stringify(battle, null, 4), function(err) {
+		if (err) throw err;
+		console.log('completed writing to arena battle');
+	})
+	
+	// Send
+	msg.channel.send(displayBattle(msg, client, battle, moveText));
 }
+
+// -- MIGHT NEED TO BE IN BATTLE JS --
+// Ideally, I would like for the battle to be able to be done without the discord.js front-end.
 
 module.exports = {
     arenaCommand: function(sql, msg, client) {
@@ -405,7 +453,7 @@ module.exports = {
                 break;
 
             case 'create':
-                create(msg, arguments, client);
+                create(msg, client, arguments);
                 break;
 				
 			case 'team':
@@ -416,8 +464,12 @@ module.exports = {
 				viewBattle(msg, client);
 				break;
 			
-			case 'startFight':
+			case 'battle':
 				startFight(msg, client, arguments);
+				break;
+				
+			case 'move':
+				attackMenu(msg, client, arguments);
 				break;
 			
 			default:
