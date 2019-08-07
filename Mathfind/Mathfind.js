@@ -393,7 +393,7 @@ function viewInfo(client, msg, won) {
 	gameFile = loadGame(client, msg)
 	// No file
 	if (!gameFile) {
-		client.basicEmbed("Could not find game!", "Load failed. Use **wy!mathfind start [difficulty]** to start a game.", msg.channel, moduleColor);
+		noGameMessage(client, msg);
 		return;
 	}
 	

@@ -1,5 +1,14 @@
 # Version Control
 
+## Version 0.12.1
+- Find: Reduced cooldown to 30 seconds.
+- Mathfind: Switched view with no game error to proper text.
+- help: Changed find text to reflect find change.
+- status (json): Added.
+- Status (js): Has exports.
+- Battle: Framework for Status.js started.
+- Arena: Various changes to formatting text.
+
 ## Version 0.12.0
 - Arena: Reactivated Battle requirement.
 - Arena: Switched moves to an array.

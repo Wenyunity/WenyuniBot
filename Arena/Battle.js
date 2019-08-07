@@ -23,7 +23,7 @@ function useMove(battle, player, move, target) {
 	}
 	
 	// Character
-	let charUpdate = currentTeam.characterList[player];
+	let moveUser = currentTeam.characterList[player];
 
 	// Already moved, dead, whatever
 	if (battle.moves[player] <= 0) {
@@ -31,12 +31,12 @@ function useMove(battle, player, move, target) {
 	}
 	
 	// Check move
-	if (move < 0 || move > charUpdate.move.length) {
+	if (move < 0 || move > moveUser.move.length) {
 		throw "Move not found!";
 	}
 	
 	// Correct move
-	let moveSelected = charUpdate.move[move];
+	let moveSelected = moveUser.move[move];
 	
 	// Find the target
 	if (moveSelected.target === "any") {
@@ -55,14 +55,21 @@ function useMove(battle, player, move, target) {
 		}
 	}
 	
+	// MP Error (Only for player, enemy does not use MP)
+	if (moveSelected.MP > moveUser.MP) {
+		throw "Character does not have enough MP!";
+	}
+	
 	// Do move if legal
-	damageText = doMove(moveSelected, charUpdate, currentTeam, enemyTeam, target);
+	damageText = doMove(moveSelected, moveUser, currentTeam, enemyTeam, target);
 	
 	// Move successful, subtract 1 from allowed moves
 	battle.moves[player]--;
 	
+	// Subtract FP
+	moveUser.MP -= moveSelected.MP;
+	
 	// Move Turn
-	console.log(Math.max(...battle.moves));
 	if (Math.max(...battle.moves) === 0) {
 		switchTurn(battle);
 	}
@@ -72,18 +79,12 @@ function useMove(battle, player, move, target) {
 
 // Does move
 // Throws error if unsuccessful
+// Usable for both player and enemy
 function doMove(moveSelected, moveUser, currentTeam, enemyTeam, target) {
-
-	// MP Error
-	if (moveSelected.MP > moveUser.MP) {
-		throw "Character does not have enough MP!";
-	}
 	
 	if (moveSelected.team === "ally" && target != -1 && currentTeam.characterList[target].HP <= 0) {
 		throw "Target is dead!";
 	}
-	
-	console.log(enemyTeam);
 	
 	// Damage Array
 	damageText = [];
@@ -119,17 +120,46 @@ function doMove(moveSelected, moveUser, currentTeam, enemyTeam, target) {
 			enemyTeam.characterList.forEach(enemy => damageText.push([enemy.name, attack(moveSelected, moveUser, enemy)]));
 		}
 	}
-	else {
-
-		return true;
+	else { // Ally status move
+		// Self status
+		if (moveSelected.target === "self") {
+			checkStatus(move, moveUser, moveUser);
+		} // Status to any
+		else if (moveSelected.target === "any") {
+			// The target is dead.
+			if (currentTeam.characterList[target].HP <= 0) {
+				throw "Target is dead!";
+			}
+			// Add Status!
+			checkStatus(move, moveUser, currentTeam.characterList[target]);
+		}
+		else { // Add status to all!
+			currentTeam.characterList.forEach(ally => damageText.push([ally.name, checkStatus(moveSelected, moveUser, ally)]));
+		}
 	}
 	return damageText;
 }
 
+// Checks if status is good to go
+function checkStatus(move, user, target) {
+	
+}
+
 // Attacks enemy
 function attack(move, user, enemy) {
+	
+	// Check for hitting
+	let hitCheck = statusEffect.hitCheck(user, enemy);
+	if (!hitCheck) {
+		return "miss";
+	}
+	
+	// Check for damage and defense statuses
+	let damageBoost = statusEffect.power(user);
+	let defenseBoost = statusEffect.defense(enemy);
+	
 	// Damage is power - defense
-	let damage = move.power - enemy.DEF;
+	let damage = (move.power + damageBoost) - (enemy.DEF + defenseBoost);
 	// Deal no damage
 	if (damage < 1) {
 		return 0;
@@ -139,6 +169,11 @@ function attack(move, user, enemy) {
 	enemy.HP = enemy.HP - damage;
 	if (enemy.HP < 0) {
 		enemy.HP = 0;
+	}
+	
+	// Add effect if possible
+	if (move.effect != "None") {
+		statusEffect.addStatus(move.effect, move.length, enemy);
 	}
 	return damage;
 }

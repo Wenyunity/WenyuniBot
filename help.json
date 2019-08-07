@@ -24,7 +24,7 @@
 			}
 		},
 		"find": {
-			"desc": "Find a number between selected bounds. If you get it wrong, it'll tell you if your number is higher or lower.\r\nSabotaging bounds is allowed. Find available every 2 minutes.",
+			"desc": "Find a number between selected bounds. If you get it wrong, it'll tell you if your number is higher or lower.\r\nSabotaging bounds is allowed. Find available every 30 seconds.",
 			"args": {
 				"No Arguments": "See the current bounds.",
 				"Number": "Attempt to find the number."

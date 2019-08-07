@@ -27,7 +27,7 @@ const hour = 1000 * 60 * 60;
 const minute = 1000 * 60;
 const second = 1000;
 const voteDelay = 1000 * 60 * 90; // 90 minutes
-const findDelay = 1000 * 60 * 2; // 2 minutes
+const findDelay = 1000 * 30; // 30 seconds
 const findBounds = {min: 0, max: 9999} // Bounds for find
 
 

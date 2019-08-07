@@ -71,6 +71,8 @@ function create(msg, client, arguments) {
 			character.MaxMP = character.MP;
 			character.MPGain = 4;
 			character.slots = 2;
+			// Statuses
+			character.statusList = [];
 			// Create thing to hold moves
 			character.move = [];
 			character.move.push(createAttackMove(true));
@@ -197,7 +199,7 @@ function displayTeamStats(characterList) {
 	
 	message = "";
 	for (c = 0; c < characterList.length; c++) {
-		message += `${c} --- ` + displayPlayerStats(characterList[c]) + "\r\n";
+		message += "`[" + c + "]` - " + displayPlayerStats(characterList[c]) + "\r\n";
 	}
 	return message;
 }
@@ -208,14 +210,14 @@ function displayPlayerStats(player) {
 	if (player.HP <= 0) {
 		cross = "~~";
 	}
-	return cross + `**${player.name}** -|- ${player.HP}/${player.MaxHP} HP, ${player.MP}/${player.MaxMP} MP, ${player.DEF} DEF` + cross;
+	return cross + `**${player.name}** - ${player.HP}/${player.MaxHP} HP, ${player.MP}/${player.MaxMP} MP, ${player.DEF} DEF` + cross;
 }
 
 // Displays a player's growth
 function displayGrowthStats(characterList) {
 	message = "";
 	for (c = 0; c < characterList.length; c++) {
-		message += `\r\n**${characterList[c].name}** -|- +${characterList[c].HPGain} HP/level, +${characterList[c].MPGain} MP/level`;
+		message += `\r\n**${characterList[c].name}** - +${characterList[c].HPGain} HP/level, +${characterList[c].MPGain} MP/level`;
 	}
 	return message;
 }
@@ -225,7 +227,7 @@ function displayMoves(moveset) {
 	// Basic move
 	message = "";
 	for (i = 0; i < moveset.length; i++) {
-		message += `\r\n**${i}** -|- ` + readMove(moveset[i]);
+		message += "\r\n`[" + i + "]` " + readMove(moveset[i]);
 	}
 	return message;
 }
@@ -235,7 +237,7 @@ function readMove(move) {
 	message = "";
 	
 	// Move Name
-	message = message + "*" + move["name"] + "* - **(" + move["MP"] + " MP)**: ";
+	message = message + "- **" + move["name"] + " (" + move["MP"] + " MP)**: ";
 	// Attack Move
 	if (move["team"] == "enemy") {
 		// Power
@@ -305,7 +307,7 @@ function viewTeam(msg, client) {
 function displayEnemyTeamStats(characterList) {
 	message = "";
 	for (c = 0; c < characterList.length; c++) {
-		message += `${c} --- ` + displayEnemyStats(characterList[c]) + "\r\n";
+		message += "`[" + c + "]` - " + displayEnemyStats(characterList[c]) + "\r\n";
 	}
 	return message;
 }
@@ -316,7 +318,7 @@ function displayEnemyStats(enemy) {
 	if (enemy.HP <= 0) {
 		cross = "~~";
 	}
-	message = cross + `**${enemy.name}** -|- ${enemy.HP}/${enemy.MaxHP} HP, ${enemy.ATK} ATK, ${enemy.DEF} DEF` + cross;
+	message = cross + `**${enemy.name}** - ${enemy.HP}/${enemy.MaxHP} HP, ${enemy.ATK} ATK, ${enemy.DEF} DEF` + cross;
 	return message;
 }
 
@@ -435,9 +437,6 @@ function attackMenu(msg, client, arguments) {
 	// Send
 	msg.channel.send(displayBattle(msg, client, battle, moveText));
 }
-
-// -- MIGHT NEED TO BE IN BATTLE JS --
-// Ideally, I would like for the battle to be able to be done without the discord.js front-end.
 
 module.exports = {
     arenaCommand: function(sql, msg, client) {
