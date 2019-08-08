@@ -1,2 +1,44 @@
 {
+	"dizzy": {
+		"type": "accuracy",
+		"effect": 0.5,
+		"extendable": true,
+		"counts": "after"
+	},
+	"atk-up": {
+		"type": "power",
+		"effect": 2,
+		"extendable": true,
+		"counts": "after"
+	},
+	"atk-down": {
+		"type": "power",
+		"effect": -2,
+		"extendable": true,
+		"counts": "after"
+	},
+	"def-up": {
+		"type": "defense",
+		"effect": 2,
+		"extendable": true,
+		"counts": "before"
+	},
+	"poison": {
+		"type": "health",
+		"effect": -1,
+		"extendable": true,
+		"counts": "after"
+	},
+	"regen": {
+		"type": "health",
+		"effect": 1,
+		"extendable": true,
+		"counts": "after"
+	},
+	"dodgy": {
+		"type": "dodge",
+		"effect": 0.5,
+		"extendable": true,
+		"counts": "before"
+	}
 }

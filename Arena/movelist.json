@@ -11,8 +11,8 @@
 		"length": [[1, 1], [2, 2]]
 	},
 	"support": {
-		"target": [["self", 0]],
-		"effect": [["regen", 1.25], ["dodge", 2.5], ["atk-up", 2], ["def-up", 1.75], ["payback", 3]],
+		"target": [["self", 0], ["any", 1], ["all", 5]],
+		"effect": [["regen", 1.25], ["dodgy", 2.5], ["atk-up", 2], ["def-up", 1.75]],
 		"length": [[1, 1], [2, 2], [3, 3.5], [4, 5], [5, 7]]
 	},
 	"name": {

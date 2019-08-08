@@ -1,5 +1,31 @@
 # Version Control
 
+## Version 0.13.0
+- Arena: Fixed error with name.
+- Arena: Statuses added to view.
+- Arena/Battle: moveText replaced with returnValue object.
+- Battle: Winner check placed, but not implemented.
+- Battle: Attack now pushes an array.
+- Battle: Ally-moves are now working.
+- Battle: Moves can now miss.
+- Battle: Damage is affected by statuses.
+- Battle: Statuses now affect health.
+- Battle: Moves now give statuses if they don't miss.
+- Battle: Attacks and AoE statuses skip dead units.
+- Battle/Status: Statuses now countdown correctly.
+- Status: Added findStatus.
+- Status: Added findTypeStatus.
+- Status: Implemented addStatus.
+- Status: Implemented preTurnStatus.
+- Status: Implemented postTurnStatus.
+- Status: Implemented hitCheck.
+- Status: Implemented power.
+- Status: Implemented defense.
+- Status: Implemented healthStatus.
+- Status: Added healthStatus export.
+- movelist.json: Readded Any/All to ally moves.
+- movelist.json: Removed payback, fixed dodgy.
+
 ## Version 0.12.1
 - Find: Reduced cooldown to 30 seconds.
 - Mathfind: Switched view with no game error to proper text.

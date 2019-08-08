@@ -50,7 +50,12 @@ function create(msg, client, arguments) {
 			// Create character
 			character = {};
 			// Name
-			character.name = sanitize(arguments[m+4]) || "Char" + m;
+			if (arguments.length > m+3) {
+				character.name = sanitize(arguments[m+4]);
+			}
+			else {
+				character.name = "Character " + m
+			}
 			// Defense
 			if (arguments[m+2]) {
 				if (["0", "1", "2", "3"].includes(arguments[m+2])) {
@@ -207,10 +212,14 @@ function displayTeamStats(characterList) {
 // Displays a player's stats
 function displayPlayerStats(player) {
 	let cross = "";
+	let statusText = "";
 	if (player.HP <= 0) {
 		cross = "~~";
 	}
-	return cross + `**${player.name}** - ${player.HP}/${player.MaxHP} HP, ${player.MP}/${player.MaxMP} MP, ${player.DEF} DEF` + cross;
+	if (player.statusList.length > 0) {
+		statusText = getStatusText(player.statusList);
+	}
+	return cross + `**${player.name}** - ${player.HP}/${player.MaxHP} HP, ${player.MP}/${player.MaxMP} MP, ${player.DEF} DEF ${statusText}` + cross;
 }
 
 // Displays a player's growth
@@ -315,14 +324,32 @@ function displayEnemyTeamStats(characterList) {
 // Helper function
 function displayEnemyStats(enemy) {
 	let cross = "";
+	let statusText = "";
 	if (enemy.HP <= 0) {
 		cross = "~~";
+	};
+	if (enemy.statusList.length > 0) {
+		statusText = getStatusText(enemy.statusList);
 	}
-	message = cross + `**${enemy.name}** - ${enemy.HP}/${enemy.MaxHP} HP, ${enemy.ATK} ATK, ${enemy.DEF} DEF` + cross;
+	message = cross + `**${enemy.name}** - ${enemy.HP}/${enemy.MaxHP} HP, ${enemy.ATK} ATK, ${enemy.DEF} DEF ` + statusText + cross;
 	return message;
 }
 
 // -- DISPLAY --
+
+// Display status text
+function getStatusText(statusList) {
+	let statusText = "*( - ";
+	
+	// Add status names
+	for (x = 0; x < statusList.length; x++) {
+		statusText += `${(statusList[x].name.charAt(0).toUpperCase() + statusList[x].name.substring(1))}! [${statusList[x].length}] - `;
+	}
+	
+	// Add status text
+	statusText += " )*";
+	return statusText;
+}
 
 // Display current battle state.
 function displayBattle(msg, client, battle, description) {
@@ -419,15 +446,16 @@ function attackMenu(msg, client, arguments) {
 		client.basicEmbed("Arguments are not numbers", "Cannot input numbers", msg.channel, moduleColor);
 	}
 	
-	let moveText = ""
+	let returnValue = {};
 	try {
-		moveText = Battle.useMove(battle, arguments[0], arguments[1], arguments[2]);
+		returnValue = Battle.useMove(battle, arguments[0], arguments[1], arguments[2]);
 	}
 	catch (err) {
 		client.basicEmbed("Move Error", err, msg.channel, moduleColor);
 		return;
 	}
 	
+	console.log(returnValue);
 	// Save
 	fs.writeFile(`./Arena/Battle/BA${msg.author.id}.json`, JSON.stringify(battle, null, 4), function(err) {
 		if (err) throw err;
@@ -435,7 +463,7 @@ function attackMenu(msg, client, arguments) {
 	})
 	
 	// Send
-	msg.channel.send(displayBattle(msg, client, battle, moveText));
+	msg.channel.send(displayBattle(msg, client, battle, returnValue));
 }
 
 module.exports = {
