@@ -64,6 +64,10 @@ function useMove(battle, player, move, target) {
 	// Do move if legal
 	returnValue = doMove(moveSelected, moveUser, currentTeam, enemyTeam, target);
 	
+	// Names
+	returnValue.moveName = moveSelected.name;
+	returnValue.moveUser = moveUser.name;
+	
 	// Move successful, subtract 1 from allowed moves
 	battle.moves[player]--;
 	
@@ -162,9 +166,22 @@ function doMove(moveSelected, moveUser, currentTeam, enemyTeam, target) {
 	return move;
 }
 
-// Checks if user is dead
+// Checks if team is dead
 function checkDead(team) {
+	
+	// Checks character array if any are alive
+	var index = team.characterList.findIndex(checkIfDead);
+	
+	// If not found, return false
+	if (index === -1) {
+		return true;
+	}
 	return false;
+}
+
+// Checks if unit is dead
+function checkIfDead (member) {
+	return (member.HP > 0);
 }
 
 // Checks if status is good to go and gets text
@@ -224,8 +241,8 @@ function attack(move, user, enemy) {
 	// Damage is power - defense
 	let damage = (move.power + damageBoost) - (enemy.DEF + defenseBoost);
 	// Deal no damage
-	if (damage < 1) {
-		return 0;
+	if (damage < 0) {
+		damage = 0;
 	}
 	
 	// Deal damage

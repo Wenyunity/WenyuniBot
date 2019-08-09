@@ -13,10 +13,10 @@
 	"support": {
 		"target": [["self", 0], ["any", 1], ["all", 5]],
 		"effect": [["regen", 1.25], ["dodgy", 2.5], ["atk-up", 2], ["def-up", 1.75]],
-		"length": [[1, 1], [2, 2], [3, 3.5], [4, 5], [5, 7]]
+		"length": [[1, 1], [2, 2], [3, 3.5], [4, 5]]
 	},
 	"name": {
-		"adjective": ["United", "Wuigi", "Blue", "Red", "Green", "Spiky", "Orange", "Waluigi", "Tax-free", "Electric", "Smashing", "Purple", "Yellow", "Small", "Twirling", "Sick", "Light", "Downward", "Upward", "Sideways", "Grass", "Tall"],
-		"noun": ["Marble", "Sword", "Tree", "Bowl", "Algodoo", "Melmon", "Scream", "Sorter", "Elimination", "Move", "Yoshi", "Pickaxe", "Shovel", "Diamond", "Shop", "Hat", "Laser", "Cloud", "Castle", "Luigi", "Dragon", "Tail", "Sphere", "Klein Bottle"]
+		"adjective": ["United", "Wuigi", "Blue", "Red", "Green", "Spiky", "Orange", "Waluigi", "Tax-free", "Electric", "Smashing", "Purple", "Yellow", "Small", "Twirling", "Sick", "Light", "Downward", "Upward", "Sideways", "Grass", "Tall", "Future", "Transient", "Black", "White", "Gold", "Allied", "Psychic", "Liquid", "Gas", "Plasma", "Solid", "Big", "Fast", "Zero"],
+		"noun": ["Marble", "Sword", "Tree", "Bowl", "Algodoo", "Melmon", "Scream", "Sorter", "Elimination", "Move", "Yoshi", "Pickaxe", "Shovel", "Diamond", "Shop", "Hat", "Laser", "Cloud", "Castle", "Luigi", "Dragon", "Tail", "Sphere", "Klein Bottle", "Sphere", "Square", "Water", "Chest", "Wheel", "Bruin", "Bear", "Donkey", "Star", "Planet", "Minecraft", "Ceiling", "Floor", "Manhole", "Dawn", "Night"]
 	}
 }

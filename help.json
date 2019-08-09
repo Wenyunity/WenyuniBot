@@ -143,9 +143,9 @@
 			"desc": "Gives information about the bot.",
 			"args": {}
 		},
-		"guildlead": {
-			"desc": "Shows which guilds have used Wenyunibot the most.",
-			"args": {}
+		"serverlead": {
+			"desc": "Shows which servers have used Wenyunibot the most.",
+			"args": {"Alias": "wy!guildlead will also work for serverlead."}
 		}
 	},
 	"Mod (wy!mod command || need Manage Messages)": {

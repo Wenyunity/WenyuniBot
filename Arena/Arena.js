@@ -352,14 +352,19 @@ function getStatusText(statusList) {
 }
 
 // Display current battle state.
-function displayBattle(msg, client, battle, description) {
+function displayBattle(msg, client, battle, moveList) {
 	// Setup Embed
 	const battleEmbed = new Discord.RichEmbed()
 		.setColor(moduleColor)
 		.setTitle('Battle!')
 		.setAuthor('Wenyunibot')
-		.setDescription(description || `${msg.author.tag}'s current battle.`)
-		
+		.setDescription(`${msg.author.tag}'s current battle.`)
+	
+	// Add moves
+	if (moveList) {
+		moveList.forEach(item => addMoveField(item, battleEmbed));
+	}
+	
 	// Front team
 	if (battle.front.type === "player") {
 		battleEmbed.addField("Front Team", displayTeamStats(battle.front.characterList));
@@ -395,6 +400,58 @@ function viewBattle(msg, client, battle) {
 	msg.channel.send(displayBattle(msg, client, battle));
 }
 
+// Adding fields
+function addMoveField(move, battleEmbed) {
+	var titleText = `**${move.moveUser}** used **${move.moveName}**!`;
+	var descriptionText = "";
+	
+	var descriptionTextArray = move.effectArray.filter(item => item.name).map(item => getArrayText(item));
+	descriptionText = descriptionTextArray.join("\r\n");
+	
+	if (descriptionText === "") {
+		descriptionText = "It didn't do anything...";
+	}
+	if (move.statusDamage) {
+		descriptionText += `\r\n${move.moveUser}'s HP changed by ${move.statusDamage} due to statuses.`;
+	}
+	
+	battleEmbed.addField(titleText, descriptionText);
+}
+
+function getArrayText(effectItem) {
+	// Name
+	var effectText = `${effectItem.name} `;
+	// Damage
+	if (effectItem.damage) {
+		// Miss
+		if (effectItem.damage === "miss") {
+			return `It missed ${effectItem.name}!`;
+		}
+		else { // Hit
+			effectText += `took ${effectItem.damage} damage`
+			// Status
+			if (effectItem.statusText) {
+				effectText += ` and now has the ${effectItem.statusText} effect for ${effectItem.statusLength} turn`
+				if (effectItem.statusLength !== 1) {
+					effectText += "s";
+				}
+			}
+		}
+	}
+	// Else (Just Status)
+	else if (effectItem.statusLength) {
+		effectText += `got the ${effectItem.statusText} effect for ${effectItem.statusLength} turn`;
+		if (effectItem.statusLength !== 1) {
+			effectText += "s";
+		}
+	}
+	else {
+		effectText += "wasn't affected by the move?";
+	}
+	effectText += "!"
+	return effectText;
+}
+
 // -- FIGHTING --
 
 // Start a fight
@@ -410,9 +467,7 @@ function startFight(msg, client, arguments) {
 		return;
 	}
 	
-	console.log(team);
 	enemy = JSON.parse(fs.readFileSync(`./Arena/Enemy/20.json`, 'utf8'));
-	console.log(enemy);
 	
 	battle = {front: team, back: enemy, turn: "back", moves: [0, 0, 0, 0, 0]};
 	Battle.switchTurn(battle);
@@ -446,16 +501,79 @@ function attackMenu(msg, client, arguments) {
 		client.basicEmbed("Arguments are not numbers", "Cannot input numbers", msg.channel, moduleColor);
 	}
 	
-	let returnValue = {};
+	let returnValue = [];
 	try {
-		returnValue = Battle.useMove(battle, arguments[0], arguments[1], arguments[2]);
+		returnValue.push(Battle.useMove(battle, arguments[0], arguments[1], arguments[2]));
 	}
 	catch (err) {
 		client.basicEmbed("Move Error", err, msg.channel, moduleColor);
 		return;
 	}
-	
 	console.log(returnValue);
+	console.log(returnValue[0].effectArray);
+	
+	// Send
+	msg.channel.send(displayBattle(msg, client, battle, returnValue));
+	
+	// Here, we have to do enemyPhase
+	if (battle[battle.turn].type === "enemy") {
+		enemyPhase(msg, client, battle);
+	}
+	else { // Save
+		fs.writeFile(`./Arena/Battle/BA${msg.author.id}.json`, JSON.stringify(battle, null, 4), function(err) {
+			if (err) throw err;
+			console.log('completed writing to arena battle');
+		});
+	}
+
+}
+
+// Enemy phase
+function enemyPhase(msg, client, battle) {
+	// This turn
+	var currentTurn = battle.turn;
+	// Number of allies
+	var numAlly = battle[battle.turn].characterList.length;
+	var numEnemies = 0;
+	// Number of enemies
+	if (currentTurn === "back") {
+		numEnemies = battle.front.characterList.length;
+	}
+	else {
+		numEnemies = battle.back.characterList.length;
+	}
+	var moveText = [];
+	var isWinner = false;
+	// While this is true
+	while (currentTurn === battle.turn && isWinner == false) {
+		
+		// Grab character who can move
+		var nextChar = battle.moves.findIndex(x => x > 0);
+		// Grab a random move
+		var nextMove = Math.floor(Math.random() * battle[battle.turn].characterList[nextChar].move.length);
+		
+		// Grab target
+		var target = 0;
+		if (battle[battle.turn].characterList[nextChar].move.team === "ally") {
+			var target = Math.floor(Math.random() * numAlly);
+		}
+		else {
+			var target = Math.floor(Math.random() * numEnemies);
+		}
+		
+		// Attack!
+		try {
+			moveText.push(Battle.useMove(battle, nextChar, nextMove, target));
+			isWinner = moveText[moveText.length - 1].winner;
+		}
+		catch (error) {
+			console.log(error);
+		}
+	}
+	
+	// Switched turn, save
+	console.log(moveText);
+
 	// Save
 	fs.writeFile(`./Arena/Battle/BA${msg.author.id}.json`, JSON.stringify(battle, null, 4), function(err) {
 		if (err) throw err;
@@ -463,7 +581,7 @@ function attackMenu(msg, client, arguments) {
 	})
 	
 	// Send
-	msg.channel.send(displayBattle(msg, client, battle, returnValue));
+	msg.channel.send(displayBattle(msg, client, battle, moveText));
 }
 
 module.exports = {

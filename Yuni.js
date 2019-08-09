@@ -250,6 +250,7 @@ client.on('message', msg => {
 				case 'botinfo':
 					botInfoCommand(msg);
 					break;
+				case 'serverlead':
 				case 'guildlead':
 					guildLeaderboard(msg);
 					break;
@@ -305,8 +306,13 @@ function sync(msg) {
 	const sync = sql.prepare(`SELECT user, tag FROM scores`).all();
 		
 		for(const data of sync) {
-			let save = sql.prepare(`UPDATE scores SET tag = '${client.users.get(data.user).tag}' WHERE user = ${data.user};`);
-			save.run(data);
+			try {
+				let save = sql.prepare(`UPDATE scores SET tag = '${client.users.get(data.user).tag}' WHERE user = ${data.user};`);
+				save.run(data);
+			}
+			catch {
+				console.log(`Failed to get tag for ${data.user}`);
+			}
 		}
 		baseEmbed("Sync", "Complete!", msg.channel)
 }
@@ -691,7 +697,7 @@ function findCommand(commandArgs, msg) {
 	} // It's higher
 	else if (suggestedNumber > countBoard.findNumber) {
 		countBoard.findMax = suggestedNumber;
-		baseEmbed("Your Number is Higher", `You've updated the **higher bound** to ${countBoard.findMax}.`, msg.channel, "#AA1177");
+		baseEmbed("Your Number is Higher", `You've updated the **upper bound** to ${countBoard.findMax}.`, msg.channel, "#AA1177");
 	} // Exactly
 	else {
 		data.find = data.find + 1;

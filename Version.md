@@ -1,6 +1,24 @@
 # Version Control
 
-## Version 0.13.0
+## Version 0.14.0 (Arena Text, Enemy Phase)
+- Arena: Move results are now printed out in fields in embed.
+- Arena: Return values are now stored in an array.
+- Arena: Enemy phase is added.
+- Arena: Enemy phase moves are printed out in fields in embed.
+- Battle: Returns necessary object for Arena to print out field.
+- Battle: Death check implemented.
+- Status: Fixed error with damaging statuses.
+- Status: Statuses only extend if the new status is higher.
+- movelist.json: Added more adjectives and nouns.
+- movelist.json: Removed 5-turn statuses.
+- Chess: Changed flip text.
+- help: guildlead -> serverlead.
+- serverlead: Works with both guildlead and serverlead.
+- Admin/Sync: try/catch added so it doesn't crash.
+- Admin/Sync: Logs ID's that cause errors.
+- Find: Altered text for numbers higher than the number needed to be found.
+
+## Version 0.13.0 (Arena Statuses)
 - Arena: Fixed error with name.
 - Arena: Statuses added to view.
 - Arena/Battle: moveText replaced with returnValue object.
@@ -26,7 +44,7 @@
 - movelist.json: Readded Any/All to ally moves.
 - movelist.json: Removed payback, fixed dodgy.
 
-## Version 0.12.1
+### Version 0.12.1
 - Find: Reduced cooldown to 30 seconds.
 - Mathfind: Switched view with no game error to proper text.
 - help: Changed find text to reflect find change.
@@ -35,7 +53,7 @@
 - Battle: Framework for Status.js started.
 - Arena: Various changes to formatting text.
 
-## Version 0.12.0
+## Version 0.12.0 (Arena Attacking)
 - Arena: Reactivated Battle requirement.
 - Arena: Switched moves to an array.
 - Arena: Player now has strikethrough when dead.
@@ -53,7 +71,7 @@
 - .gitignore: Updated to remove some folders.
 - package-lock.json: Added.
 
-## Version 0.11.0
+## Version 0.11.0 (Mod Functions)
 - start: Added .bat file to start Wenyunibot.
 - startRepeat: .bat file that restarts Wenyunibot on crash.
 - Arena: Name character limit.
@@ -73,7 +91,7 @@
 - Easteregg: Changed to Data/Easteregg.
 - Help: Added argument to help.
 
-## Version 0.10.0
+## Version 0.10.0 (Arena View, Sillyboss, Guildlead)
 - Arena: Name sanitizer for @, \\, and * characters.
 - Arena: Character -> CharacterList, also changed from object to array.
 - Arena: DEF now forced to int.
@@ -111,7 +129,7 @@
 - Chess: Added different textbox when passing the argument "flip".
 - Yuni/Attackboss: Different error textbox.
 
-## Version 0.9.0
+## Version 0.9.0 (Mathfind Functions)
 - Mathfind: SQL added.
 - Mathfind: Changed module color.
 - Mathfind: Questions list added to its own function.
@@ -141,7 +159,7 @@
 - Help: Added mathfind to fun section.
 - Package: Edited description.
 
-## Version 0.8.0
+## Version 0.8.0 (Mathfind Basics, Halfhour)
 - Mathfind: Added module.
 - Mathfind: Saving/Loading through JSON.
 - Mathfind: Can ask questions.
@@ -164,7 +182,7 @@
 - Arena: Reorganizing of functions.
 - Arena/Battle: Added, but unused.
 
-## Version 0.7.0
+## Version 0.7.0 (Chess Channel Separation)
 - Chess: Each channel now has their own game.
 - Chess: Games are auto-loaded on reset.
 - Chess: Load spits out a new board if auto-loading fails. No more failure message.
@@ -185,7 +203,7 @@
 - Find: Added title when using wy!find with no arguments.
 - Find: Added return statement to NaN error, preventing the cooldown timer from activating.
 
-## Version 0.6.0
+## Version 0.6.0 (Reorganization, Auxiliary)
 - Chess, Yuni, Eggplant: Reorganizing of functions.
 - Yuni: Reorganizing of imports.
 - Arena: Create now takes in defense parameter.
@@ -211,7 +229,7 @@
 - Help: Botinfo added to Auxiliary section.
 - Help: Bothomeserver added to Auxiliary section.
 
-### Version 0.5.2
+### Version 0.5.2 (Chess Save)
 - Arena: Changed order of attack/support move for consistency.
 - Arena: Saves team to JSON (incomplete).
 - Chess: Save, load functions added.
@@ -240,7 +258,7 @@
 - Yuni: Bot activity added ("Watching for wy!help")
 - Help: Added profile function.
 
-## Version 0.5.0
+## Version 0.5.0 (Eggplant Demand)
 - Chess: Minor edit to wy!chess set help
 - Yuni/Eggplant: getData now a client function.
 - Eggplant: NaN protection for buy/sell.
@@ -264,7 +282,7 @@
 - Leaderboard: Redirects to easteregg on found and first.
 - Help: Added "help" to easteregg arguments.
 
-## Version 0.4.0
+## Version 0.4.0 (Eggplant Base)
 - Arena: Create now displays two units.
 - Chess: Fixed crash that would occur when passing no arguments.
 - Chess: Set help will give a list of all current chessboard styles.
@@ -288,7 +306,7 @@
 - Waluigi: Removed illegal break statement, placed back where it's supposed to belong.
 - SQL: Added columns for eggplant.
 
-## Version 0.3.0
+## Version 0.3.0 (Chess Check + Unusual Moves, Work Format)
 - Chess: White now starts on rows 1-2 and Black now starts on rows 7-8.
 - Chess: Board styles are now defined in a JSON.
 - Chess: Board automatically flips so that the player to move is on the bottom.
@@ -314,7 +332,7 @@
 - Work: Added hour approximation when collecting.
 - Work: Fixed collecting after the first time.
 
-## Version 0.2.0
+## Version 0.2.0 (Chess Style, Work)
 - Work: Command added.
 - Work: Uses SQL table to save next work date and points.
 - Work: If used when not working, says how many hours until able to use command.
@@ -327,7 +345,7 @@
 - Support for bot-creator-only commands added using auth.admin field.
 - Removed FEN notes from package.json
 
-## Version 0.1.0
+## Version 0.1.0 (Chess View, Waluigi Role, Easteregg first)
 - Chess.js connected with Yuni.js
 - Chess: Placed into own folder.
 - Chess: View added.
@@ -343,7 +361,7 @@
 - easteregg: wy!easteregg Egg is now an alternative.
 - choose: Now separated by ", " instead of " ".
 
-### Version 0.0.5
+### Version 0.0.5 (Arena Create)
 - Arena: create creates a full moveset.
 - Arena: create spits out moves in proper form; no more JSON.
 - Arena: create now includes support moves
@@ -361,7 +379,7 @@
 - Updated help text for easterEgg.
 - Added SQL support for Yuni.js. Currently unused.
 
-### Version 0.0.3
+### Version 0.0.3 (Easteregg)
 - Added easterEgg command; lists all flavor texts for non-found easter eggs.
 - Easter egg now in embed
 - Easter egg activations counted
@@ -370,7 +388,7 @@
 - Added random command support w/ 1 or 2 arguments.
 - Help text updated.
 
-### Version 0.0.2
+### Version 0.0.2 (help)
 - Added support for wy! prefix
 - Add alternate text for Waluigi commands
 - Added help command w/o arguments
@@ -380,7 +398,7 @@
 - Random command (no arguments) added.
 - Easter eggs moved to own file.
 
-### Version 0.0.1
+### Version 0.0.1 (Base)
 - Added help command w/ Arguments
 - Added choose command
 - Added waluigi, Waluigi, WALUIGI command

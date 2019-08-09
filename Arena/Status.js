@@ -22,8 +22,8 @@ function addStatus(statusEffect, lengthEffect, target) {
 
 	// Effect is already on
 	if (statusIndex != -1) {
-		// Extend it if available
-		if (statDict[statusEffect].extendable) {
+		// Extend it if available and the new value is higher
+		if (statDict[statusEffect].extendable && lengthEffect > target.statusList[statusIndex].length) {
 			target.statusList[statusIndex].length = lengthEffect;
 		}
 		else { // Don't extend it
@@ -121,7 +121,7 @@ function healthStatus(user) {
 	// Find stuff that changes HP
 	let damage = 0;
 	for (x = 0; x < user.statusList.length; x++) {
-		if (findTypeStatus(user.statusList[x], "damage")) {
+		if (findTypeStatus(user.statusList[x], "health")) {
 			damage += statDict[user.statusList[x].name].effect;
 		}
 	}

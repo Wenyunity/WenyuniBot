@@ -1063,7 +1063,7 @@ module.exports = {
 			
 			// A little joke
 			case 'flip':
-				client.basicEmbed("Chess Flip", "*flips table* GAME OVER!!", msg.channel, moduleColor);
+				client.basicEmbed("Chess Flip", "*flips table* GAME OVER!!\r\n┻━┻ ︵ヽ(`Д´)ﾉ︵﻿ ┻━┻", msg.channel, moduleColor);
 				break;
 				
 			default:
