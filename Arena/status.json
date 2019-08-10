@@ -29,6 +29,12 @@
 		"extendable": true,
 		"counts": "after"
 	},
+	"burn": {
+		"type": "health",
+		"effect": -1,
+		"extendable": true,
+		"counts": "after"
+	},
 	"regen": {
 		"type": "health",
 		"effect": 1,

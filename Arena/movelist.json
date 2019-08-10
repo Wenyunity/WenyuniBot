@@ -2,12 +2,12 @@
 	"base": 5,
 	"attack": {
 		"target": [["front", 1], ["any", 0], ["all", -5]],
-		"effect": [["poison", -1.25], ["dizzy", -2.5], ["atk-down", -2]],
+		"effect": [["poison", -1.25], ["dizzy", -2.5], ["atk-down", -2], ["burn", -1]],
 		"length": [[1, 1], [2, 2], [3, 3.5], [4, 5]]
 	},
 	"basic": {
 		"target": [["front", 1], ["any", 0]],
-		"effect": [["poison", -1], ["dizzy", -2]],
+		"effect": [["poison", -1], ["dizzy", -2], ["burn", -1]],
 		"length": [[1, 1], [2, 2]]
 	},
 	"support": {

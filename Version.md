@@ -1,5 +1,16 @@
 # Version Control
 
+## Version 0.14.1
+- Arena: Added ownerID, arenaRank, teamName to json files.
+- Arena: teamName is used for field title.
+- Arena: End of battle function added, not implemented fully.
+- ArenaData: JS file added.
+- Battle: Fixed bug with statuses added.
+- Status: HP capped for HP raising statuses.
+- movelist: Added burn.
+- status.json: Added burn.
+- Find: Reduced cooldown to 10 seconds.
+
 ## Version 0.14.0 (Arena Text, Enemy Phase)
 - Arena: Move results are now printed out in fields in embed.
 - Arena: Return values are now stored in an array.

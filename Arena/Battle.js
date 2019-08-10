@@ -199,7 +199,7 @@ function checkStatus(move, user, target) {
 	
 	// Status check
 	if (statusEffect.addStatus(move.effect, move.length, target)) {
-		return {name: target.name, statusEffect: move.effect, statusLength: move.length};
+		return {name: target.name, statusText: move.effect, statusLength: move.length};
 	}
 	else {
 		return {};

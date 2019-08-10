@@ -3,6 +3,7 @@ const Discord = require('discord.js');
 const SQLite = require("better-sqlite3");
 const fs = require('fs');
 const Battle = require('./Battle.js');
+const Data = require('./ArenaData.js');
 
 // -- CONSTANTS --
 const newMove = JSON.parse(fs.readFileSync('./Arena/movelist.json', 'utf8'));
@@ -40,6 +41,9 @@ function create(msg, client, arguments) {
 	
 	// Team type
 	team.type = "player";
+	team.teamName = `${msg.author.tag}'s Team ` + Math.floor(Math.random() * 100);
+	team.ownerID = `${msg.author.id}`;
+	team.arenaRank = false;
 	if(arguments[0] > 5 || arguments[1] > 5) {
 		client.basicEmbed("Create Error", "Only up to five magic moves allowed!", msg.channel, moduleColor);
 		return;
@@ -367,18 +371,18 @@ function displayBattle(msg, client, battle, moveList) {
 	
 	// Front team
 	if (battle.front.type === "player") {
-		battleEmbed.addField("Front Team", displayTeamStats(battle.front.characterList));
+		battleEmbed.addField(`${battle.front.teamName}` || "Front Team", displayTeamStats(battle.front.characterList));
 	}
 	else {
-		battleEmbed.addField("Front Team", displayEnemyTeamStats(battle.front.characterList));
+		battleEmbed.addField(`${battle.front.teamName}` || "Front Team", displayEnemyTeamStats(battle.front.characterList));
 	}
 	
 	// Back Team
 	if (battle.back.type === "player") {
-		battleEmbed.addField("Back Team", displayTeamStats(battle.back.characterList));
+		battleEmbed.addField(`${battle.back.teamName}` || "Back Team", displayTeamStats(battle.back.characterList));
 	}
 	else {
-		battleEmbed.addField("Back Team", displayEnemyTeamStats(battle.back.characterList));
+		battleEmbed.addField(`${battle.back.teamName}` || "Back Team", displayEnemyTeamStats(battle.back.characterList));
 	}
 	
 	return battleEmbed;
@@ -418,6 +422,7 @@ function addMoveField(move, battleEmbed) {
 	battleEmbed.addField(titleText, descriptionText);
 }
 
+// Gets text for a move
 function getArrayText(effectItem) {
 	// Name
 	var effectText = `${effectItem.name} `;
@@ -515,11 +520,15 @@ function attackMenu(msg, client, arguments) {
 	// Send
 	msg.channel.send(displayBattle(msg, client, battle, returnValue));
 	
-	// Here, we have to do enemyPhase
-	if (battle[battle.turn].type === "enemy") {
+	// Winner found, end battle.
+	if (returnValue[0].winner) {
+		battleEnd(msg, client, battle, returnValue[0].winner);
+	}
+	// Player turn over, do enemy turn.
+	else if (battle[battle.turn].type === "enemy") {
 		enemyPhase(msg, client, battle);
 	}
-	else { // Save
+	else { // Save battle.
 		fs.writeFile(`./Arena/Battle/BA${msg.author.id}.json`, JSON.stringify(battle, null, 4), function(err) {
 			if (err) throw err;
 			console.log('completed writing to arena battle');
@@ -582,6 +591,16 @@ function enemyPhase(msg, client, battle) {
 	
 	// Send
 	msg.channel.send(displayBattle(msg, client, battle, moveText));
+	
+	// End battle, have winner.
+	if (moveText[moveText.length-1].winner) {
+		battleEnd(msg, client, battle, moveText[moveText.length-1].winner);
+	}
+}
+
+// End battle
+function battleEnd(msg, client, battle, winner) {
+	msg.channel.send("The battle is over!");
 }
 
 module.exports = {

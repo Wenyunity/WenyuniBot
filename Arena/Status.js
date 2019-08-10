@@ -126,6 +126,13 @@ function healthStatus(user) {
 		}
 	}
 	user.HP += damage;
+	if (user.HP > user.MaxHP) {
+		user.HP = user.MaxHP;
+	}
+	if (user.HP < 0) {
+		user.HP = 0;
+	}
+	
 	return damage;
 }
 
