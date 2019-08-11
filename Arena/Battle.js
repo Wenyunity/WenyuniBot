@@ -238,8 +238,17 @@ function attack(move, user, enemy) {
 	let damageBoost = statusEffect.power(user);
 	let defenseBoost = statusEffect.defense(enemy);
 	
+	// Calculate effective defense
+	let defense = (enemy.DEF + defenseBoost);
+	
+	// Note that we don't allow defense to go below 0 via statuses, but we do allow enemies to have negative DEF naturally.
+	// I do believe this works.
+	if (defense < 0 && defense < enemy.DEF) {
+		defense = Math.min(0, enemy.DEF);
+	}
+	
 	// Damage is power - defense
-	let damage = (move.power + damageBoost) - (enemy.DEF + defenseBoost);
+	let damage = (move.power + damageBoost) - defense;
 	// Deal no damage
 	if (damage < 0) {
 		damage = 0;

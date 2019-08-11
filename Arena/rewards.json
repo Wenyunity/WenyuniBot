@@ -1,0 +1,237 @@
+{
+	"official": {
+		"20": {
+			"win": {
+				"SP": 40,
+				"Coins": 5
+			},
+			"lose": {
+				"SP": 20,
+				"Coins": 1
+			}
+		},
+		"19": {
+			"win": {
+				"SP": 40,
+				"Coins": 5
+			},
+			"lose": {
+				"SP": 20,
+				"Coins": 1
+			}
+		},
+		"18": {
+			"win": {
+				"SP": 40,
+				"Coins": 6
+			},
+			"lose": {
+				"SP": 20,
+				"Coins": 1
+			}
+		},
+		"17": {
+			"win": {
+				"SP": 40,
+				"Coins": 6
+			},
+			"lose": {
+				"SP": 20,
+				"Coins": 1
+			}
+		},
+		"16": {
+			"win": {
+				"SP": 40,
+				"Coins": 7
+			},
+			"lose": {
+				"SP": 20,
+				"Coins": 1
+			}
+		},
+		"15": {
+			"win": {
+				"SP": 60,
+				"Coins": 20
+			},
+			"lose": {
+				"SP": 20,
+				"Coins": 1
+			}
+		},
+		"14": {
+			"win": {
+				"SP": 40,
+				"Coins": 7
+			},
+			"lose": {
+				"SP": 20,
+				"Coins": 1
+			}
+		},
+		"13": {
+			"win": {
+				"SP": 40,
+				"Coins": 5
+			},
+			"lose": {
+				"SP": 20,
+				"Coins": 1
+			}
+		},
+		"12": {
+			"win": {
+				"SP": 40,
+				"Coins": 5
+			},
+			"lose": {
+				"SP": 20,
+				"Coins": 1
+			}
+		},
+		"11": {
+			"win": {
+				"SP": 40,
+				"Coins": 6
+			},
+			"lose": {
+				"SP": 20,
+				"Coins": 1
+			}
+		},
+		"10": {
+			"win": {
+				"SP": 40,
+				"Coins": 6
+			},
+			"lose": {
+				"SP": 20,
+				"Coins": 1
+			}
+		},
+		"09": {
+			"win": {
+				"SP": 40,
+				"Coins": 7
+			},
+			"lose": {
+				"SP": 20,
+				"Coins": 1
+			}
+		},
+		"08": {
+			"win": {
+				"SP": 60,
+				"Coins": 20
+			},
+			"lose": {
+				"SP": 20,
+				"Coins": 1
+			}
+		},
+		"07": {
+			"win": {
+				"SP": 40,
+				"Coins": 7
+			},
+			"lose": {
+				"SP": 20,
+				"Coins": 1
+			}
+		},
+		"06": {
+			"win": {
+				"SP": 40,
+				"Coins": 7
+			},
+			"lose": {
+				"SP": 20,
+				"Coins": 1
+			}
+		},
+		"05": {
+			"win": {
+				"SP": 60,
+				"Coins": 20
+			},
+			"lose": {
+				"SP": 20,
+				"Coins": 1
+			}
+		},
+		"04": {
+			"win": {
+				"SP": 40,
+				"Coins": 7
+			},
+			"lose": {
+				"SP": 20,
+				"Coins": 1
+			}
+		},
+		"03": {
+			"win": {
+				"SP": 40,
+				"Coins": 5
+			},
+			"lose": {
+				"SP": 20,
+				"Coins": 1
+			}
+		},
+		"02": {
+			"win": {
+				"SP": 40,
+				"Coins": 5
+			},
+			"lose": {
+				"SP": 20,
+				"Coins": 1
+			}
+		},
+		"01": {
+			"win": {
+				"SP": 40,
+				"Coins": 6
+			},
+			"lose": {
+				"SP": 20,
+				"Coins": 1
+			}
+		},
+		"00": {
+			"win": {
+				"SP": 40,
+				"Coins": 6
+			},
+			"lose": {
+				"SP": 20,
+				"Coins": 1
+			}
+		}
+	},
+	"unofficial": {
+		"normal": {
+			"win": {
+				"SP": 40,
+				"Coins": 0
+			},
+			"lose": {
+				"SP": 20,
+				"Coins": 0
+			}
+		},
+		"quest": {
+			"win": {
+				"SP": 50,
+				"Coins": 0
+			},
+			"lose": {
+				"SP": 20,
+				"Coins": 0
+			}
+		}
+	}
+}
+			

@@ -1,5 +1,11 @@
 # Version Control
 
+## Version 0.14.2
+- Arena: Battle end connects to ArenaData.json
+- ArenaData: Preliminary setup; not working.
+- Battle: Negative DEF fix; statuses cannot cause negative DEF.
+- rewards.json: Added and filled out.
+
 ## Version 0.14.1
 - Arena: Added ownerID, arenaRank, teamName to json files.
 - Arena: teamName is used for field title.

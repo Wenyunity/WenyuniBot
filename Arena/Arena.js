@@ -600,6 +600,7 @@ function enemyPhase(msg, client, battle) {
 
 // End battle
 function battleEnd(msg, client, battle, winner) {
+	Data.matchEnd(battle, winner);
 	msg.channel.send("The battle is over!");
 }
 
