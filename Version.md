@@ -1,5 +1,29 @@
 # Version Control
 
+## Version 0.15.0
+- Arena: Profile function added.
+- Arena: Delete function added.
+- Arena: Delete function only occurs if user's tag is passed.
+- Yuni/Arena: OnStart function passed and added on client start.
+- Arena: Creates data on user creation.
+- ArenaData: addRewards -> findRewards function.
+- ArenaData: SQL added.
+- ArenaData: Rank up only happens if userRank = upRank.
+- ArenaData: setup added.
+- ArenaData: createData added.
+- ArenaData: viewData added.
+- ArenaData: (new) addRewards added.
+- ArenaData: getNextMatch added.
+- ArenaData: deleteUser added.
+- ArenaData: Added setup, viewData, createData, deleteUser, getNextMatch exports.
+- rewards.json: Changed coin rewards.
+- Boss: Added new boss and attack names.
+- Boss: Added defeat text for boss.
+- Boss: Changed error text.
+- Yuni: mod commands (if used by mod) increment serverlead.
+- profile: Changed SQL prepare.
+- serverLead: Changed title.
+
 ## Version 0.14.2
 - Arena: Battle end connects to ArenaData.json
 - ArenaData: Preliminary setup; not working.

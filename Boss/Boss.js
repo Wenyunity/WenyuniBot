@@ -9,9 +9,9 @@ const Discord = require('discord.js');
 const moduleColor = "#123456";
 
 // -- LISTS --
-const bossNames = ["Stomper", "Walushell", "Waludisk", "WaluKaratebot", "WaluSpinner"]
+const bossNames = ["Stomper", "Walushell", "Waludisk", "WaluKaratebot", "WaluSpinner", "Bigfist"]
 const moveNames = ["Stomp", "Spin-kick", "Cut", "Combo", "Punch-kick", "Punching Spin"]
-const attackNames = ["Tackle", "Quick Attack", "Triplepunch-Jump", "Dig-Attack"]
+const attackNames = ["Tackle", "Quick Attack", "Triplepunch-Jump", "Dig-Attack", "Blitzkrieg (german)", "Pu-pu-pu-PUNCH!!"]
 let currentBoss = {};
 
 // Generates a boss
@@ -33,6 +33,7 @@ function newBossCommand(msg, client) {
 
 // Attacks the boss
 function attackBossCommand(msg, client) {
+	let defeat = false;
 	if (!currentBoss.hp) {
 		client.basicEmbed("Boss Error", "There is no boss to attack!", msg.channel, moduleColor);
 		return;
@@ -45,6 +46,10 @@ function attackBossCommand(msg, client) {
 	attack.effective = Math.floor(Math.random() * 10 + 1) * 50;
 	currentBoss.hp = currentBoss.hp - attack.effective
 	client.basicEmbed("Attack the boss", `You attacked the boss with the move ${attack.name}. It dealt **${attack.effective} Damage!**\r\nThe boss now has **${currentBoss.hp} HP**.`, msg.channel, moduleColor);
+	if (currentBoss.hp <= 0) {
+		defeat = true;
+		client.basicEmbed("VICTORY!", `You defeated the boss! Reward: lotsa spaghet`, msg.channel, moduleColor);
+	}
 }
 
 module.exports = {
@@ -65,7 +70,7 @@ module.exports = {
 				break;
 				
 			default:
-				client.basicEmbed("errors attacc", "this is not done and probably wont be", msg.channel, moduleColor);
+				client.basicEmbed("Atc h os", `tak tebs`, msg.channel, moduleColor);
 		}
 	}
 }

@@ -95,6 +95,8 @@ function create(msg, client, arguments) {
 		}
 	}
 	
+	Data.createData(msg.author, team.teamName);
+	
 	fs.writeFile(`./Arena/Fighter/${msg.author.id}.json`, JSON.stringify(team, null, 4), function(err) {
 		if (err) throw err;
 		console.log('completed writing to arena');
@@ -314,7 +316,7 @@ function viewTeam(msg, client) {
 	displayPlayerTeam(msg, team);
 }
 
-// -- ENEMY TEAM --
+// -- ENEMY DISPLAY --
 
 // Displays enemy stats
 function displayEnemyTeamStats(characterList) {
@@ -602,6 +604,55 @@ function enemyPhase(msg, client, battle) {
 function battleEnd(msg, client, battle, winner) {
 	Data.matchEnd(battle, winner);
 	msg.channel.send("The battle is over!");
+	deleteGame(msg, client);
+}
+
+// Delete battle
+function deleteGame(msg, client) {
+	try {
+		fs.unlinkSync(`./Arena/Battle/BA${msg.author.id}.json`);
+		console.log(`${msg.author.tag}'s battle successfully deleted`);
+		return true;
+	}
+	catch {
+		console.log(`${msg.author.tag}'s battle not deleted`);
+		return false;
+	}
+}
+
+// -- FILE MANAGEMENT --
+
+// Deletes profile
+function deleteUser(msg, client, confirmation) {
+	if (msg.author.tag === confirmation) {
+		deleteProfile(msg, client);
+		client.basicEmbed("Deleted Profile", `Deleted ${msg.author.tag}'s arena data.`, msg.channel, moduleColor);
+	}
+	else {
+		client.basicEmbed("Delete Failure", `To delete your data, you need to pass your tag as an argument!\r\nYour tag: ${msg.author.tag}`, msg.channel, moduleColor);
+	}
+}
+
+// Deletes everything
+function deleteProfile(msg, client) {
+	deleteGame(msg, client);
+	
+	try {
+		fs.unlinkSync(`./Arena/Fighter/${msg.author.id}.json`);
+		console.log(`${msg.author.tag}'s team successfully deleted`);
+	}
+	catch {
+		console.log(`${msg.author.tag}'s team not deleted`);
+	}
+	
+	console.log(Data.deleteUser(msg.author.id));
+}
+
+// -- STARTUP --
+
+// Startup
+function onStart() {
+	Data.setup();
 }
 
 module.exports = {
@@ -636,10 +687,19 @@ module.exports = {
 			case 'move':
 				attackMenu(msg, client, arguments);
 				break;
+
+			case 'profile':
+				Data.viewData(msg, client);
+				break;
+				
+			case 'deleteUser':
+				deleteUser(msg, client, arguments.join(" "));
+				break;
 			
 			default:
 				client.basicEmbed("Not Done", "Not Done Yet", msg.channel, moduleColor);
 				break;
         }
-	}
+	},
+	onStart: onStart()
 }

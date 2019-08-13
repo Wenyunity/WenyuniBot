@@ -93,6 +93,7 @@ client.on('ready', function (evt) {
 	
 	// For Modules
 	mathfind.onStart;
+	arena.onStart;
 	
 	console.log(`${client.user.tag} is ready!`);
 });
@@ -115,6 +116,10 @@ client.on('message', msg => {
 		// Placed before channel check so that mods can access Wenyunibot.
 		if (msg.guild && mainCommand === "mod") {
 			if (msg.member.hasPermission("MANAGE_MESSAGES", false, true, true)) {
+				
+				// Increment number of posts in guild
+				countGuildPost(msg.guild);
+				
 				let modCommand = commandArgs[0];
 				switch(modCommand) {
 					case 'addchannel':
@@ -1002,7 +1007,7 @@ function profileCommand(msg, args) {
 		client.setScore.run(data)
 	}
 	else { // Finding a user
-		const user = sql.prepare(`SELECT * FROM scores WHERE tag LIKE '${args}%' LIMIT 1;`).get();
+		const user = sql.prepare(`SELECT * FROM scores WHERE tag LIKE ? LIMIT 1;`).get(args+"%");
 		
 		if (user) {
 			msg.channel.send(profileEmbed(user));
@@ -1212,7 +1217,7 @@ function guildLeaderboard(msg) {
 	
     // Now shake it and show it! (as a nice embed, too!)
 	const leaderboardEmbed = new Discord.RichEmbed()
-		.setTitle(`Top 10 Guilds`)
+		.setTitle(`Top 10 Servers (Wenyunibot Activity)`)
 		.setAuthor("Wenyunibot")
 		.setDescription(messageDesc)
 		.setColor("#101010")
