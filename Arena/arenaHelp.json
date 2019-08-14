@@ -1,0 +1,26 @@
+{
+	"title": "Arena Help",
+	"description": "In arena, you take control of two characters. Fight your way to the top of the board by taking down enemy HP to 0.",
+	"fields": [
+		{
+			"title": "Create",
+			"description": "Create your characters by doing `wy!arena create attack1 attack2 defense1 defense2 Name1 Name2`.\r\nAttack goes from 0-5, defense from 0-3."
+		},
+		{
+			"title": "Battle",
+			"description": "Battle teams by using `wy!arena battle`. Battling teams is the way to gain SP, level up, and climb the ranks."
+		},
+		{
+			"title": "Moving",
+			"description": "Use `wy!arena move PlayerNo MoveNo TargetNo` to choose your move, where each of the arguments is a number."
+		},
+		{
+			"title": "Victory",
+			"description": "The team that wins is the one that takes the other team to 0 HP first. Characters with 0 HP are out and cannot move."
+		},
+		{
+			"title": "Viewing",
+			"description": "View your team's moves by using `wy!arena team`.\r\nView the state of battle by using `wy!arena view`."
+		}
+	]
+}

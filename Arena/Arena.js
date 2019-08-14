@@ -9,6 +9,10 @@ const Data = require('./ArenaData.js');
 const newMove = JSON.parse(fs.readFileSync('./Arena/movelist.json', 'utf8'));
 const moduleColor = "#ED9105"
 const nameLimit = 40;
+const enemyList = JSON.parse(fs.readFileSync(`./Arena/Enemy/Season1.json`, 'utf8'));
+const hour = 1000 * 60 * 60;
+const minute = 1000 * 60;
+const helpText = JSON.parse(fs.readFileSync('./Arena/arenaHelp.json', 'utf8'));
 
 // -- CHARACTER CREATION --
 
@@ -316,6 +320,31 @@ function viewTeam(msg, client) {
 	displayPlayerTeam(msg, team);
 }
 
+// Levels up team
+function levelUp(msg, client) {
+	team = {};
+	try {
+		team = JSON.parse(fs.readFileSync(`./Arena/Fighter/${msg.author.id}.json`, 'utf8'));
+	}
+	catch (err) {
+		client.basicEmbed("No team found!", `Could not find a team for ${msg.author.tag}`, msg.channel, moduleColor);
+		return;
+	}
+	
+	for (m = 0; m < team.characterList.length; m++) {
+		let character = team.characterList[m];
+		character.HP += character.HPGain;
+		character.MaxHP += character.HPGain;
+		character.MP += character.MPGain;
+		character.MaxMP += character.MPGain;
+	}
+	
+	fs.writeFile(`./Arena/Fighter/${msg.author.id}.json`, JSON.stringify(team, null, 4), function(err) {
+		if (err) throw err;
+		console.log('completed writing to arena');
+	})
+}
+
 // -- ENEMY DISPLAY --
 
 // Displays enemy stats
@@ -386,6 +415,9 @@ function displayBattle(msg, client, battle, moveList) {
 	else {
 		battleEmbed.addField(`${battle.back.teamName}` || "Back Team", displayEnemyTeamStats(battle.back.characterList));
 	}
+	
+	// Who can move
+	battleEmbed.addField("Able To Move", battle.moves);
 	
 	return battleEmbed;
 }
@@ -474,12 +506,43 @@ function startFight(msg, client, arguments) {
 		return;
 	}
 	
-	enemy = JSON.parse(fs.readFileSync(`./Arena/Enemy/20.json`, 'utf8'));
+	// Try to load battle
+	let battle = {};
+	try {
+		battle = JSON.parse(fs.readFileSync(`./Arena/Battle/BA${msg.author.id}.json`, 'utf8'));
+		// If we succeed then don't let them through
+		client.basicEmbed("Battle ongoing", `${msg.author.tag}, you have a battle ongoing!`, msg.channel, moduleColor);
+		return;
+	}
+	catch (err) {
+		console.log(`Battle available for ${msg.author.tag}`);
+	}
 	
+	
+	// Check if cooldown
+	let time = Data.getTime(msg.author.id) - Date.now();
+	if (time > 0) {
+		client.basicEmbed("Cooldown!", `You'll need to wait about **${Math.floor(time/hour)} hours and ${Math.ceil((time%hour)/minute)} minutes** for the next match.`, msg.channel, moduleColor);
+		return;
+	}
+	
+	// Get enemy
+	enemy = enemyList[Data.getNextMatch(msg.author.id)];
+	if (!enemy) {
+		client.basicEmbed("Something went wrong!", `Could not find an enemy team for ${msg.author.tag}`, msg.channel, moduleColor);
+		return;
+	}
+	// Start battle
 	battle = {front: team, back: enemy, turn: "back", moves: [0, 0, 0, 0, 0]};
+	// Switch to player turn
 	Battle.switchTurn(battle);
+	// Display battle
 	msg.channel.send(displayBattle(msg, client, battle));
 	
+	// Set new cooldown
+	Data.setTime(msg.author.id);
+	
+	// Save
 	fs.writeFile(`./Arena/Battle/BA${msg.author.id}.json`, JSON.stringify(battle, null, 4), function(err) {
 		if (err) throw err;
 		console.log('completed writing to arena battle');
@@ -602,9 +665,19 @@ function enemyPhase(msg, client, battle) {
 
 // End battle
 function battleEnd(msg, client, battle, winner) {
+	// End the match, give XP and coins
 	Data.matchEnd(battle, winner);
-	msg.channel.send("The battle is over!");
+	// Delete the match
 	deleteGame(msg, client);
+	// Check if level up
+	levelUpCheck = Data.checkLevelUp(msg.author.id);
+	
+	// Level up
+	if (levelUpCheck) {
+		levelUp(msg, client);
+	}
+	// Send message
+	client.basicEmbed("The Battle is Over!", `Did you level up? ${levelUpCheck}`, msg.channel, moduleColor);
 }
 
 // Delete battle
@@ -655,17 +728,32 @@ function onStart() {
 	Data.setup();
 }
 
+// -- HELP --
+function help(msg, client) {
+	var helpEmbed = new Discord.RichEmbed()
+		.setColor(moduleColor)
+		.setAuthor("Wenyunibot")
+		.setFooter(client.footer())
+		.setTitle(helpText.title)
+		.setDescription(helpText.description)
+		
+	// Add fields	
+	helpText.fields.forEach(field => helpEmbed.addField(field.title, field.description));
+	
+	msg.channel.send(helpEmbed);
+}
+
 module.exports = {
     arenaCommand: function(sql, msg, client) {
 		// Here are the arguments
-		let args = msg.content.substring(3).split(' ');
+		let args = msg.content.substring(3).split(/ +/);
 		// We have the form WY!arena mainCommand [arguments]
 		let mainCommand = args[1];
 		let arguments = args.slice(2);
 		
         switch(mainCommand) {
             case 'help':
-                msg.channel.send("WALUIGI")
+                help(msg, client);
                 break;
 
             case 'create':
@@ -697,7 +785,7 @@ module.exports = {
 				break;
 			
 			default:
-				client.basicEmbed("Not Done", "Not Done Yet", msg.channel, moduleColor);
+				help(msg, client);
 				break;
         }
 	},

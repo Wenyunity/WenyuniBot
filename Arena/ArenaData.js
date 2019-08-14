@@ -7,6 +7,7 @@ const fs = require('fs');
 const rewardList = JSON.parse(fs.readFileSync('./Arena/rewards.json', 'utf8'));
 const arenasql = new SQLite('./Arena/Data/arena.sqlite');
 const moduleColor = "#FF9900"
+const cooldownTime = 1000 * 60 * 60 * 12 // 12 hours
 
 // -- BATTLE MANAGEMENT --
 // Battle is over, parse battle data
@@ -85,6 +86,17 @@ function createData(user, teamName) {
 		+ " VALUES (@user, @tag, @team, @level, @SP, @coins, @nextBattle, @battleTime);").run(data);
 }
 
+// Sets cooldown time
+function setTime(userID) {
+	data = arenasql.prepare(`UPDATE arena SET battleTime = ${(Date.now() + cooldownTime)} WHERE user = ?`).run(userID);	
+}
+
+// Gets cooldown time
+function getTime(userID) {
+	data = arenasql.prepare(`SELECT user, battleTime FROM arena WHERE user = ?`).get(userID);
+	return data.battleTime;
+}
+
 // Views user data
 function viewData(msg, client) {
 	data = arenasql.prepare(`SELECT * FROM arena WHERE user = ${msg.author.id}`).get();
@@ -102,13 +114,16 @@ function viewData(msg, client) {
 		.setDescription("Arena Statistics.")
 		.setFooter(client.footer());
 	
+	// Add fields
 	Object.entries(data).forEach(function([key, value]) {
-		if (!["user", "tag"].includes(key)) {
+		if (!["user", "tag", "battleTime"].includes(key)) {
 			arenadataEmbed.addField(`${(key[0].toUpperCase()+key.slice(1))}`, `${value}`, true)
 		}
 	});
-		
-		
+	
+	// Add battle time
+	arenadataEmbed.addField("Battle Available", new Date(data.battleTime).toLocaleString("default", {timeZone: "UTC", timeZoneName: "short"})); 
+			
 	msg.channel.send(arenadataEmbed);
 }
 
@@ -154,6 +169,22 @@ function getNextMatch(userID) {
 	data = arenasql.prepare(`SELECT user, nextBattle FROM arena WHERE user = ${userID}`).get();
 	return data.nextBattle;
 }
+
+// Check for levelup
+function checkLevelUp(userID) {
+	data = arenasql.prepare(`SELECT user, SP, level FROM arena WHERE user = ?`).get(userID);
+	
+	if (data.SP >= 100) {
+		data.SP -= 100;
+		data.level++;
+		arenasql.prepare(`UPDATE arena SET SP = ${data.SP}, level = ${data.level} WHERE user = ?;`).run(userID);	
+		return true;
+	}
+	else {
+		return false;
+	}
+}
+
 // -- EXPORTS --
 
 module.exports = {
@@ -162,5 +193,8 @@ module.exports = {
 	viewData: viewData,
 	createData: createData,
 	deleteUser: deleteUser,
-	getNextMatch: getNextMatch
+	getNextMatch: getNextMatch,
+	checkLevelUp: checkLevelUp,
+	setTime: setTime,
+	getTime: getTime
 }

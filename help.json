@@ -82,6 +82,19 @@
 				"profile": "Shows your personal statistics.",
 				"help": "Gives more info about this game."
 			}
+		},
+		"arena": {
+			"desc": "Welcome to the arena. Create your team, and then fight your way through 20 fights to reach the champion!",
+			"args": {
+				"create": "Creates a team, if you don't have one.",
+				"battle": "Starts a battle against the next team.",
+				"team": "Views your current team.",
+				"move": "Moves a character on your team.",
+				"view": "Views current battle state, if in a battle.",
+				"profile": "Views current profile.",
+				"help": "Gives more info about this game.",
+				"deleteUser": "Deletes all arena user data."
+			}
 		}
 	},
 	"Economy": {
@@ -113,7 +126,11 @@
 				"bestWork": "Shows the people who got the most in one work session.",
 				"bestEggplant": "Shows the best eggplant sales.",
 				"first": "Goes to easteregg's first command, showing all easteregg finders.",
-				"found": "Goes to easteregg's found command, showing all found easter eggs."
+				"found": "Goes to easteregg's found command, showing all found easter eggs.",
+				"countTime": "Shows the people who paid for count the most",
+				"find": "Shows the people who used find to find the right number the most",
+				"eggplant": "Shows the people with the most eggplants currently.",
+				"server/guild": "Shows the servers with the most Wenyunibot messages."
 			}
 		},
 		"profile": {

@@ -1,0 +1,22 @@
+{
+	"title": "Chess Help",
+	"description": "Play a game of chess, where the goal is to checkmate the other player's king.",
+	"fields": [
+		{
+			"title": "Moving",
+			"description": "Use `wy!chess move from to` to move, where from and to are coordinates in a1 format."
+		},
+		{
+			"title": "Castling",
+			"description": "Use `wy!chess move O-O` to castle Kingside, or `wy!chess move O-O-O` to castle Queenside."
+		},
+		{
+			"title": "En Passant",
+			"description": "When capturing En Passant, just use the space your pawn will end up as the destination square."
+		},
+		{
+			"title": "Style",
+			"description": "There are different styles of boards you can use. Try `wy!chess set` and see which style reads the best.\r\nMobile devices may not see the colors."
+		}
+	]
+}

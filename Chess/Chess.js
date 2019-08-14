@@ -14,6 +14,7 @@ const whitePiece = ["P", "R", "N", "B", "Q", "K"]
 const blackPiece = ["p", "r", "n", "b", "q", "k"]
 const boardStyleSet = ["highlight", "diagonal", "versus", "compact"]
 const columnName = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
+const helpText = JSON.parse(fs.readFileSync('./Chess/chessHelp.json', 'utf8'));
 			
 // -- VIEW BOARD --
 
@@ -990,27 +991,38 @@ function newBoard(msg, client) {
 	return boardInfo;
 }
 
-function helpText(msg, client) {
-	client.basicEmbed("Lol", "Whoops", msg.channel);
+// -- HELP --
+function help(msg, client) {
+	var helpEmbed = new Discord.RichEmbed()
+		.setColor(moduleColor)
+		.setAuthor("Wenyunibot")
+		.setFooter(client.footer())
+		.setTitle(helpText.title)
+		.setDescription(helpText.description)
+		
+	// Add fields	
+	helpText.fields.forEach(field => helpEmbed.addField(field.title, field.description));
+	
+	msg.channel.send(helpEmbed);
 }
 
 module.exports = {
     chessCommand: function(msg, client) {
 		// Here are the arguments
-		let args = msg.content.substring(3).split(' ');
+		let args = msg.content.substring(3).split(/ +/);
 		// We have the form WY!chess mainCommand [arguments]
 		let mainCommand = args[1];
 		let arguments = args.slice(2);
 		
 		if (!mainCommand) {
-			helpText(msg, client);
+			help(msg, client);
 			return;
 		}
 		
 		let [board, boardInfo] = loadBoard(msg, client, true);
         switch(mainCommand) {
             case 'help':
-                msg.channel.send("Unfinished! Ask Wenyunity.")
+                help(msg, client);
                 break;
 
             case 'view':

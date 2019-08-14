@@ -105,7 +105,7 @@ client.on('message', msg => {
     if ((msg.content.substring(0, 3) == 'WY!' || msg.content.substring(0, 3) == 'wy!') && !msg.author.bot) {
 		
 		// Get rid of WY!
-		let args = msg.content.substring(3).split(' ');
+		let args = msg.content.substring(3).split(/ +/);
 		// Find the main command
 		let mainCommand = args[0];
 		// And then the rest of the arguments
@@ -181,7 +181,14 @@ client.on('message', msg => {
 				// These have their own separate JS files.
 				
 				case 'arena':
-					arena.arenaCommand(sql, msg, client);
+					try {
+						arena.arenaCommand(sql, msg, client);
+					}
+					catch (err) {
+						console.log(err);
+						msg.channel.send("<@480132225661140997> (Please notify Wenyunity#2442 if not in server.)");
+						baseEmbed("Unknown Error!", "Contact Wenyunity, something went wrong with Arena", msg.channel, "#000000");
+					}
 					break;
 				case 'eggplant':
 					eggplant.eggplantCommand(sql, msg, client);
@@ -1046,6 +1053,11 @@ function leaderBoardCommand(commandArgs, msg) {
 	// Easter egg leaderboard commands
 	if (["first", "found"].includes(commandArgs[0].toLowerCase())) {
 		easterEggCommand(commandArgs, msg);
+		return;
+	}
+	// Serverlead/Guildlead
+	if (["server", "guild"].includes(commandArgs[0].toLowerCase())) {
+		guildLeaderboard(msg);
 		return;
 	}
 	// Otherwise

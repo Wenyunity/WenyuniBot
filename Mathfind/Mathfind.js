@@ -683,7 +683,7 @@ function questionHelp(client, msg, error) {
 module.exports = {
     mathfindCommand: function(msg, client) {
 		// Here are the arguments
-		let args = msg.content.substring(3).split(' ');
+		let args = msg.content.substring(3).split(/ +/);
 		// We have the form WY!question mainCommand [arguments]
 		let mainCommand = args[1];
 		let arguments = args.slice(2);

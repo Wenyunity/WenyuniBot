@@ -5,6 +5,12 @@
 		"extendable": true,
 		"counts": "after"
 	},
+	"blind": {
+		"type": "accuracy",
+		"effect": 0.75,
+		"extendable": false,
+		"counts": "after"
+	},
 	"atk-up": {
 		"type": "power",
 		"effect": 2,
@@ -20,6 +26,12 @@
 	"def-up": {
 		"type": "defense",
 		"effect": 2,
+		"extendable": true,
+		"counts": "before"
+	},
+	"def-down": {
+		"type": "defense",
+		"effect": -2,
 		"extendable": true,
 		"counts": "before"
 	},

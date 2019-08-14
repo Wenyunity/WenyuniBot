@@ -1,6 +1,32 @@
 # Version Control
 
-## Version 0.15.0
+# Version 1.0.0 (Release!)
+- Arena: Enemy teams added.
+- Arena: Help text added.
+- Arena: Level-up function added.
+- Arena: Added units able to move.
+- Arena: Battle now does not allow overwriting.
+- Arena: Cooldown added to battling.
+- Arena: Enemy team determined by player rank.
+- Arena: Checks for level-ups.
+- All: Regex function used for spaces.
+- Arena: Default uses help.
+- ArenaData: Getter/Setter for battleTime.
+- ArenaData: Profile's battleTime uses US format.
+- ArenaData: Check Levelup Function.
+- ArenaData: Added new exports.
+- arenaHelp.json: Added.
+- rewards.json: Buffed winning SP rewards.
+- status.json: Added def-down.
+- status.json: Added blind.
+- Chess: Added help.
+- chessHelp.json: Added.
+- help: Added arena to fun section.
+- help: Added more arguments to leaderboard.
+- Yuni: Added try/catch to arena.
+- Yuni: Added server/guild argument to leaderboard, which leads to serverlead.
+
+## Version 0.15.0 (Arena Profile, Rewards)
 - Arena: Profile function added.
 - Arena: Delete function added.
 - Arena: Delete function only occurs if user's tag is passed.

@@ -336,7 +336,7 @@ function helpCommand(client, msg, error) {
 module.exports = {
     eggplantCommand: function(sql, msg, client) {
 		// Here are the arguments
-		let args = msg.content.substring(3).split(' ');
+		let args = msg.content.substring(3).split(/ +/);
 		// We have the form WY!eggplant mainCommand [arguments]
 		let mainCommand = args[1];
 		let arguments = args.slice(2);
