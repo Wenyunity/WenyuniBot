@@ -616,6 +616,7 @@ function enemyPhase(msg, client, battle) {
 	else {
 		numEnemies = battle.back.characterList.length;
 	}
+	
 	var moveText = [];
 	var isWinner = false;
 	// While this is true

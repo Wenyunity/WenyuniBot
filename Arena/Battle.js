@@ -49,7 +49,7 @@ function useMove(battle, player, move, target) {
 		}
 		
 		// Target does not exist
-		if (!arguments[2] || target < 0 || target > lengthSelect) {
+		if (!target || target < 0 || target > lengthSelect) {
 			throw "Could not find the target!";
 		}
 	}
