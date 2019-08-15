@@ -560,7 +560,7 @@ function startGame(client, msg, difficult) {
 	// Get or create data
 	data = mathsql.prepare(`SELECT user, games FROM mathfind WHERE user = ${msg.author.id}`).get();
 	if (!data) {
-		data = createData(msg.author)
+		data = createUser(msg.author)
 	}
 	
 	// Check if there is already a game.
@@ -699,6 +699,8 @@ module.exports = {
 				break;
 				
 			case 'start':
+			case 'new':
+			case 'begin':
 				startGame(client, msg, arguments[0]);
 				break;
 				
@@ -716,6 +718,7 @@ module.exports = {
 				break;
 				
 			case 'view':
+			case 'info':
 				viewInfo(client, msg, false);
 				break;
 			

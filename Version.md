@@ -1,5 +1,12 @@
 # Version Control
 
+### Version 1.0.2
+- Mathfind: Fix for new players.
+- Mathfind: Alternate commands added.
+
+### Version 1.0.1
+- Arena: Fix for any target moves.
+
 # Version 1.0.0 (Release!)
 - Arena: Enemy teams added.
 - Arena: Help text added.
