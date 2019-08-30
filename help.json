@@ -24,9 +24,9 @@
 			}
 		},
 		"find": {
-			"desc": "Find a number between selected bounds. If you get it wrong, it'll tell you if your number is higher or lower.\r\nSabotaging bounds is allowed. Find available every 30 seconds.",
+			"desc": "Find a number between selected bounds. If you get it wrong, it'll tell you if your number is higher or lower.\r\n. Find available every 10 seconds.",
 			"args": {
-				"No Arguments": "See the current bounds.",
+				"No Arguments": "See the current bounds. Bounds are determined by the most recent number guessed above/below the number.",
 				"Number": "Attempt to find the number."
 			}
 		},
@@ -99,7 +99,7 @@
 	},
 	"Economy": {
 		"work": {
-			"desc": "Use this command to gain points. You will have to wait X minutes to work again, where X is the number of points you get.",
+			"desc": "Use this command to gain points. You will have to wait X minutes to work again, where X is the number of points you get./r/nBonus points can be gotten by using count. The more times you've counted, the more bonus points can be gotten./r/nBonus points do not increase the time until next work.",
 			"args": {
 				"detail": "If you are unable to work, shows exact time in UTC when you can work again."
 			}
@@ -116,7 +116,7 @@
 			}
 		},
 		"count": {
-			"desc": "Costs a lot of points to move this counter up. It starts at 1000 points for a single number, and it only gets higher the more you count.",
+			"desc": "Costs a lot of points to move this counter up. It starts at 1000 points for a single number, and it only gets higher the more you count.\r\nCount also gives bonus points for work (Up to 30x the number of times you've counted.)",
 			"args": {}
 		},
 		"leaderboard": {

@@ -1,5 +1,12 @@
 # Version Control
 
+### Version 1.0.3
+- Arena: Fixed reward error for ranks 9 and lower.
+- Easteregg: Fixed saving error.
+- Work: Added bonus points via count.
+- Help: Changed find description for the lowered time.
+- Help: Changed work and count description to indicate work change.
+
 ### Version 1.0.2
 - Mathfind: Fix for new players.
 - Mathfind: Alternate commands added.

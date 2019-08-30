@@ -38,7 +38,6 @@ function findRewards(winner, loser) {
 		rewards = rewardList.unofficial.normal;
 	}
 	
-	console.log(rewards);
 	// Winner was player
 	if (winner.type === "player") {
 		console.log(winner.ownerID);

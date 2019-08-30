@@ -800,7 +800,7 @@ function easterEggFound(mainCommand, msg) {
 		// Tell user it's first find
 		easterEggEmbed.addField("First find!", "Congrats!")
 		// Get tag of user
-		easterEgg[mainCommand]["found"] = msg.author.tag
+		easterEgg[mainCommand]["found"] = msg.author.tag;
 	}
 	else { // Not first find
 		// How many times used
@@ -814,7 +814,7 @@ function easterEggFound(mainCommand, msg) {
 	
 	// Write the number down
 	easterEgg[mainCommand]["num"] = easterEgg[mainCommand]["num"] + 1;
-	fs.writeFile (".Data/easterEgg.json", JSON.stringify(easterEgg, null, 4), function(err) {
+	fs.writeFile ("./Data/easterEgg.json", JSON.stringify(easterEgg, null, 4), function(err) {
 		if (err) throw err;
 		console.log('completed writing to easterEgg.json');
 	})
@@ -953,21 +953,31 @@ function workCommand(args, msg) {
 	
 	if (Date.now() > data.work) { // Get points
 		// Gain money
-		pointGain = Math.floor(Math.random() * 1200) + 600;
+		let baseGain = Math.floor(Math.random() * 1200) + 600;
+		let bonusGain = Math.floor((Math.random() * 29 + 1) * data.countTime);
+		let pointGain = baseGain + bonusGain;
+		
 		// Gain points
 		data.points += pointGain;
 		// Set date
-		data.work = Date.now() + pointGain * 1000 * 60 * 1;
+		data.work = Date.now() + baseGain * 1000 * 60 * 1;
 		let nextWork = new Date(data.work);
 		
 		let workEmbed = new Discord.RichEmbed()
 			.setColor("#982489")
 			.setTitle("Work Results for " + msg.author.tag)
 			.setAuthor('Wenyunibot')
-			.setDescription("You got **" + pointGain + "** points!")
-			.setFooter(textWenyuniFooter())
-			.addField("Total Points", data.points)
-			.addField("Work Cooldown Time", "About " + Math.floor((pointGain/60)*100)/100 + " hours.")
+			.setDescription("You got **" + baseGain + "** points!")
+			.setFooter(textWenyuniFooter());
+		
+		// Bonus points if you spent on count
+		if (bonusGain) {
+			workEmbed.addField("Count Bonus!", `You got **${bonusGain} extra points** due to your count!`);
+			workEmbed.addField("Total Point Gain", `The total from this session is **${pointGain} points**!`);
+		}
+		
+		workEmbed.addField("Total Points", data.points)
+			.addField("Work Cooldown Time", "About " + Math.floor((baseGain/60)*100)/100 + " hours.")
 			.addField("Exact Cooldown", nextWork.toLocaleString("default", {timeZone: "UTC", timeZoneName: "short"}));
 		
 		if (pointGain > data.bestWork) {

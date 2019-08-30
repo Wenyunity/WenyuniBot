@@ -658,6 +658,8 @@ function enemyPhase(msg, client, battle) {
 	// Send
 	msg.channel.send(displayBattle(msg, client, battle, moveText));
 	
+	console.log(moveText);
+	
 	// End battle, have winner.
 	if (moveText[moveText.length-1].winner) {
 		battleEnd(msg, client, battle, moveText[moveText.length-1].winner);

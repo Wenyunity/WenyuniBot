@@ -104,9 +104,8 @@ function useMove(battle, player, move, target) {
 // Usable for both player and enemy
 function doMove(moveSelected, moveUser, currentTeam, enemyTeam, target) {
 	
-	if (moveSelected.team === "ally" && target != -1 && currentTeam.characterList[target].HP <= 0) {
-		throw "Target is dead!";
-	}
+	// log move
+	console.log(target);
 	
 	// move array
 	let move = {};
@@ -186,6 +185,9 @@ function checkIfDead (member) {
 
 // Checks if status is good to go and gets text
 function checkStatus(move, user, target) {
+	
+	console.log(move);
+
 	// Life check
 	if (target.HP <= 0) {
 		return {};
@@ -208,6 +210,8 @@ function checkStatus(move, user, target) {
 
 // Attacks enemy
 function attack(move, user, enemy) {
+	
+	console.log(move);
 	
 	// Life check
 	if (enemy.HP <= 0) {
