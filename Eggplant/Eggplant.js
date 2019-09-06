@@ -338,8 +338,16 @@ module.exports = {
 		// Here are the arguments
 		let args = msg.content.substring(3).split(/ +/);
 		// We have the form WY!eggplant mainCommand [arguments]
-		let mainCommand = args[1];
+		if (!args[1]) {
+			return helpCommand(client, msg, true);
+		}
+		let mainCommand = args[1].toLowerCase();
 		let arguments = args.slice(2);
+		
+		if (mainCommand === "eggplant" && args[2]) {
+			mainCommand = args[2].toLowerCase();
+			arguments = args.slice(3);
+		}
 		
         switch(mainCommand) {
             case 'help':

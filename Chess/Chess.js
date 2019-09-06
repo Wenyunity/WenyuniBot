@@ -1011,13 +1011,20 @@ module.exports = {
 		// Here are the arguments
 		let args = msg.content.substring(3).split(/ +/);
 		// We have the form WY!chess mainCommand [arguments]
-		let mainCommand = args[1];
-		let arguments = args.slice(2);
-		
-		if (!mainCommand) {
+		if (!args[1]) {
 			help(msg, client);
 			return;
 		}
+		
+		let mainCommand = args[1].toLowerCase();
+		let arguments = args.slice(2);
+		
+		if (mainCommand === "chess" && args[2]) {
+			mainCommand = args[2].toLowerCase();
+			arguments = args.slice(3);
+		}
+		
+		
 		
 		let [board, boardInfo] = loadBoard(msg, client, true);
         switch(mainCommand) {

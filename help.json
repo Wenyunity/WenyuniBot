@@ -99,7 +99,7 @@
 	},
 	"Economy": {
 		"work": {
-			"desc": "Use this command to gain points. You will have to wait X minutes to work again, where X is the number of points you get./r/nBonus points can be gotten by using count. The more times you've counted, the more bonus points can be gotten./r/nBonus points do not increase the time until next work.",
+			"desc": "Use this command to gain points. You will have to wait X minutes to work again, where X is the number of points you get.\r\nBonus points can be gotten by using count. \r\nThe more times you've counted, the more bonus points can be gotten.\r\nBonus points do not increase the time until next work.",
 			"args": {
 				"detail": "If you are unable to work, shows exact time in UTC when you can work again."
 			}
@@ -116,7 +116,7 @@
 			}
 		},
 		"count": {
-			"desc": "Costs a lot of points to move this counter up. It starts at 1000 points for a single number, and it only gets higher the more you count.\r\nCount also gives bonus points for work (Up to 30x the number of times you've counted.)",
+			"desc": "Costs a lot of points to move this counter up. It starts at 1000 points for a single number, and it only gets higher the more you count.\r\nEach user has their own separate costs to count.\r\nCount also gives bonus points for work (Up to 150x the number of times you've counted.)",
 			"args": {}
 		},
 		"leaderboard": {
@@ -147,7 +147,11 @@
 			"args": {
 				"[command]": "Get help for a specific command"
 			}
-		}, 
+		},
+		"ping": {
+			"desc": "Gives the time between your message and the response, as well as the average check time for Wenyunibot.",
+			"args": {}
+		},
 		"invite": {
 			"desc": "Gives the link to invite Wenyunibot to another server.",
 			"args": {}

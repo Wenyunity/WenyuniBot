@@ -1,5 +1,11 @@
 # Version Control
 
+### Version 1.0.4
+- Work: Increased count bonus to up to 150x count.
+- ALL: Added support for "wy! command".
+- Count: Shows number of times counted personally upon success.
+- Ping: Command added.
+
 ### Version 1.0.3
 - Arena: Fixed reward error for ranks 9 and lower.
 - Easteregg: Fixed saving error.

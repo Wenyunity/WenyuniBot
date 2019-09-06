@@ -29,6 +29,7 @@ const second = 1000;
 const voteDelay = 1000 * 60 * 90; // 90 minutes
 const findDelay = 1000 * 10; // 10 seconds
 const findBounds = {min: 0, max: 9999} // Bounds for find
+const countMaxBonus = 150; // Maximum bonus per count for work
 
 
 // -- LISTS AND LINKS --
@@ -107,9 +108,14 @@ client.on('message', msg => {
 		// Get rid of WY!
 		let args = msg.content.substring(3).split(/ +/);
 		// Find the main command
-		let mainCommand = args[0];
+		let mainCommand = args[0].toLowerCase();
 		// And then the rest of the arguments
 		let commandArgs = args.slice(1);
+		
+		if (!mainCommand) {
+			mainCommand = args[1].toLowerCase();
+			commandArgs = args.slice(2);
+		}
 		
 		// -- MOD FUNCTIONS --
 		
@@ -252,6 +258,9 @@ client.on('message', msg => {
 				
 				case 'help':
 					helpCommand(commandArgs, msg)
+					break;
+				case 'ping':
+					pingCommand(msg)
 					break;
 				case 'invite':
 					inviteCommand(msg)
@@ -954,7 +963,7 @@ function workCommand(args, msg) {
 	if (Date.now() > data.work) { // Get points
 		// Gain money
 		let baseGain = Math.floor(Math.random() * 1200) + 600;
-		let bonusGain = Math.floor((Math.random() * 29 + 1) * data.countTime);
+		let bonusGain = Math.floor(((Math.random() * (countMaxBonus - 1)) + 1) * data.countTime);
 		let pointGain = baseGain + bonusGain;
 		
 		// Gain points
@@ -1113,7 +1122,7 @@ function countCommand(msg) {
 	let price = cost * (1+data.countTime)
 	
 	if (data.points < price) {
-		baseEmbed("Count Error", `You do not have **${price} points** to spend to count!`, msg.channel);
+		baseEmbed("Count Error", `Since you've counted ${data.countTime} times, you need **${price} points** to spend to count.\r\nYou do not have enough points to count.`, msg.channel);
 		return;
 	}
 	else {
@@ -1121,7 +1130,7 @@ function countCommand(msg) {
 		countBoard.counters[countBoard.number] = msg.author.id;
 		data.points -= price;
 		data.countTime++;
-		baseEmbed("Count Successful", `You spent **${price} points** to increase the count to **${countBoard.number}**!\r\nYou now have **${data.points} points.**`, msg.channel, "#ACECAB")
+		baseEmbed("Count Successful", `You spent **${price} points** to increase the count to **${countBoard.number}**!\r\nYou now have **${data.points} points.**\r\nYou've counted ${data.countTime} times now.`, msg.channel, "#ACECAB")
 	}
 	
 	// Save data
@@ -1187,6 +1196,26 @@ function helpCommand(commandArgs, msg) {
 			};
 		msg.channel.send(helpEmbed);
 	}
+}
+
+// Ping!
+async function pingCommand(msg) {
+	const pong = await msg.channel.send("Pong!");
+	const timeDiff = pong.createdTimestamp - msg.createdTimestamp;
+	const pingEmbed = new Discord.RichEmbed()
+		.setColor("#9720F4")
+		.setTitle("Pong!")
+		.setAuthor('Wenyunibot')
+		.setDescription(`It took about **${timeDiff} ms** between your message and the initial "Pong!" message.`)
+		.addField("Client Check Time (Average)", `Wenyunibot tends to check for updates every **${Math.round(client.ping)}** ms.`)
+		.setFooter(textWenyuniFooter());
+	
+	await pong.edit(pingEmbed);
+	
+	const editTime = pong.editedTimestamp - pong.createdTimestamp;
+	pingEmbed.addField("Edit Time", `It took about **${editTime} ms** to edit this message from when it was first posted.`);
+	
+	pong.edit(pingEmbed);
 }
 
 // Invite
