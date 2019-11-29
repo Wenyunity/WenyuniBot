@@ -7,6 +7,7 @@
 		"Active": 50,
 		"Fluid": 40,
 		"Unstable": 30,
+		"Unpredictable": 20,
 		"Chaotic": 0
 	},
 	"Price": {
