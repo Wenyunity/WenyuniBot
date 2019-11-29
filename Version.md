@@ -1,5 +1,25 @@
 # Version Control
 
+## Version 1.1.0
+- Eggplant: Renamed market externally; internally shall be kept as eggplant.
+- Eggplant: Changed demand formula to squared.
+- Eggplant: Added penalties for buying too many eggplants.
+- Eggplant: Count bonus increases the amount of eggplants buyable without penalty.
+- Eggplant: Added "buy max", which buys the maximum amount of eggplants without penalty.
+- Eggplant: Added limit of 10000 eggplants.
+- Eggplant: Added "sell all", which sells all eggplants owned.
+- Eggplant: Added ability to change emoji.
+- Eggplant: Changed descriptions for demand and stability.
+- Mod: Added clear function.
+- Yuni: Added daily function.
+- Work: Now between 360-2400 base points.
+- Work: Added support for daily, which gives a constant 23 hour cooldown.
+- Yuni: Added countList command.
+- Yuni: Added ticket adding function.
+- Admin: Added "users" function.
+- Find: Clarified text for wrong guesses.
+- Find: Gives one ticket upon finding the right number.
+
 ### Version 1.0.4
 - Work: Increased count bonus to up to 150x count.
 - ALL: Added support for "wy! command".

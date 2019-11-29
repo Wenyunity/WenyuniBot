@@ -30,6 +30,7 @@ const voteDelay = 1000 * 60 * 90; // 90 minutes
 const findDelay = 1000 * 10; // 10 seconds
 const findBounds = {min: 0, max: 9999} // Bounds for find
 const countMaxBonus = 150; // Maximum bonus per count for work
+const dailyConstant = hour * 23; // Hours worked for dailies
 
 
 // -- LISTS AND LINKS --
@@ -55,20 +56,33 @@ client.on('ready', function (evt) {
 		sql.prepare("CREATE TABLE scores (user TEXT PRIMARY KEY, tag TEXT, points INTEGER, work INTEGER, "
 		+ "bestWork INTEGER, eggplant INTEGER, eggplantExpire INTEGER, eggplantRandom INTEGER, "
 		+ "eggplantSellPrice INTEGER, eggplantMaxSellPrice INTEGER, eggplantReroll INTEGER, bestEggplant INTEGER, "
-		+ "countTime INTEGER, voteTime INTEGER, findTime INTEGER, find INTEGER);").run();
+		+ "countTime INTEGER, voteTime INTEGER, findTime INTEGER, find INTEGER, marketEmoji TEXT);").run();
 		// Ensure that the "id" row is always unique and indexed.
 		sql.prepare("CREATE UNIQUE INDEX idx_scores_id ON scores (user);").run();
 		sql.pragma("synchronous = 1");
 		sql.pragma("journal_mode = wal");
 	}
 
-    // And then we have two prepared statements to get and set the score data.
+	// And then we have two prepared statements to get and set the score data.
     client.getScore = sql.prepare("SELECT * FROM scores WHERE user = ?");
     client.setScore = sql.prepare("INSERT OR REPLACE INTO scores (user, tag, points, work, bestWork, eggplant,"
-		+ " eggplantExpire, eggplantRandom, eggplantSellPrice, eggplantMaxSellPrice, eggplantReroll, bestEggplant, countTime, voteTime, findTime, find)" 
+		+ " eggplantExpire, eggplantRandom, eggplantSellPrice, eggplantMaxSellPrice, eggplantReroll, bestEggplant, countTime, voteTime, findTime, find, marketEmoji)" 
 		+ " VALUES (@user, @tag, @points, @work, @bestWork, @eggplant, @eggplantExpire, @eggplantRandom, @eggplantSellPrice,"
-		+ " @eggplantMaxSellPrice, @eggplantReroll, @bestEggplant, @countTime, @voteTime, @findTime, @find);");
-	//client.addColumn = sql.prepare("ALTER TABLE scores ADD name = ? type = ? NOT NULL DEFAULT default = ?")
+		+ " @eggplantMaxSellPrice, @eggplantReroll, @bestEggplant, @countTime, @voteTime, @findTime, @find, @marketEmoji);");
+	//client.addColumn = sql.prepare("ALTER TABLE scores ADD name = ? type = ? NOT NULL DEFAULT default = ?")	
+
+	const table2 = sql.prepare("SELECT count(*) FROM sqlite_master WHERE type='table' AND name = 'tickets';").get();
+    if (!table2['count(*)']) {
+		// If the table isn't there, create it and setup the database correctly.
+		sql.prepare("CREATE TABLE tickets (user TEXT PRIMARY KEY, tag TEXT, ticket INTEGER, totalTicket INTEGER)").run();
+		// Ensure that the "id" row is always unique and indexed.
+		sql.prepare("CREATE UNIQUE INDEX idx_scores_id ON tickets (user);").run();
+		sql.pragma("synchronous = 1");
+		sql.pragma("journal_mode = wal");
+	}
+
+	client.getTicket = sql.prepare("SELECT * FROM tickets WHERE user = ?");
+	client.setTicket = sql.prepare("INSERT OR REPLACE INTO tickets (user, tag, ticket, totalTicket) VALUES (@user, @tag, @ticket, @totalTicket);");
 	
 	// Prepare guild table
 	guildTable();
@@ -148,6 +162,10 @@ client.on('message', msg => {
 					case 'reset':
 						resetChannels(msg);
 						break;
+						
+					case 'clear':
+						clearMessages(msg, commandArgs[1]);
+						break;
 					
 					default:
 						baseEmbed("Mod Command Failed", "Could not find the mod command!", msg.channel); // Couldn't find command
@@ -197,6 +215,8 @@ client.on('message', msg => {
 					}
 					break;
 				case 'eggplant':
+				case 'fruit':
+				case 'market':
 					eggplant.eggplantCommand(sql, msg, client);
 					break;
 				case 'chess':
@@ -242,7 +262,10 @@ client.on('message', msg => {
 				// -- ECONOMY FUNCTIONS --
 				
 				case 'work':
-					workCommand(commandArgs, msg)
+					workCommand(commandArgs, msg, false)
+					break;
+				case 'daily':
+					workCommand(commandArgs, msg, true)
 					break;
 				case 'leaderboard':
 					leaderBoardCommand(commandArgs, msg)
@@ -252,6 +275,9 @@ client.on('message', msg => {
 					break;
 				case 'count':
 					countCommand(msg)
+					break;
+				case 'countlist':
+					countListCommand(commandArgs, msg)
 					break;
 					
 				// -- AUXILIARY FUNCTIONS -- 
@@ -288,6 +314,9 @@ client.on('message', msg => {
 							case 'delete':
 								deleteRow(msg);
 								break;
+							case 'users':
+								users(msg);
+								break;
 							case 'crash':
 								// Doesn't crash it
 								baseEmbed("Crashing now!", "Why, Wenyunity?", msg.channel);
@@ -320,6 +349,38 @@ client.on('message', msg => {
      }
 });
 
+// -- TICKET FUNCTIONS --
+
+// Adds tickets
+function addTicket(user, tickets) {
+	let data2 = client.getTicket.get(user.id);
+	
+	if (!data2) {
+		data2 = createTicket(user);
+	}
+	
+	data2.ticket += tickets;
+	data2.totalTicket += tickets;
+	
+	client.setTicket.run(data2);
+}
+
+// Creates ticket
+function createTicket(user) {
+	data = {
+		user: user.id,
+		tag: user.tag,
+		ticket: 0,
+		totalTicket: 0
+	}
+	
+	// Save data
+	client.setTicket.run(data);
+	
+	// Return data
+	return data;
+}
+
 // -- ADMIN FUNCTIONS --
 
 // Syncs all user ids to current tag
@@ -335,7 +396,22 @@ function sync(msg) {
 				console.log(`Failed to get tag for ${data.user}`);
 			}
 		}
-		baseEmbed("Sync", "Complete!", msg.channel)
+	baseEmbed("Sync", "Complete!", msg.channel)
+}
+
+// Prints all users to console log
+function users(msg) {
+	const sync = sql.prepare(`SELECT user, tag FROM scores ORDER BY user`).all();
+		
+		for(const data of sync) {
+			try {
+				console.log(client.users.get(data.user).tag);
+			}
+			catch {
+				console.log(`Failed to get tag for ${data.user}`);
+			}
+		}
+		baseEmbed("Data", "All users printed out to console.", msg.channel)
 }
 
 // Deletes user
@@ -482,6 +558,25 @@ function removeChannel(channel, msg) {
 	}
 }
 
+// Clears messages
+function clearMessages(msg, number) {
+	let delNumber = 11;
+	if (number) {
+		delNumber = parseInt(number) + 1 || 11;
+		if (delNumber < 3 || delNumber > 99) {
+			baseEmbed("Deletion failed!", "Can't delete less than 2 or more than 98 messages.", msg.channel);
+			return;
+		}
+	}
+	try {
+		msg.channel.bulkDelete(delNumber);
+		baseEmbed("Successful deletion!", `Deleted ${delNumber - 1} messages from this channel. Requested by **${msg.author.tag}**`, msg.channel, "#900000");
+	}
+	catch {
+		baseEmbed("Deletion failed!", "Could not delete messages from this channel.", msg.channel);
+	}
+}
+
 // -- CLIENT FUNCTIONS -- 
 
 // Passes a simple embed.
@@ -533,7 +628,8 @@ function createData(user) {
 		countTime: 0,
 		voteTime: 0,
 		findTime: 0,
-		find: 0
+		find: 0,
+		marketEmoji: ":eggplant:"
 	}
 	
 	// Save data
@@ -714,19 +810,20 @@ function findCommand(commandArgs, msg) {
 	} // It's lower
 	else if (suggestedNumber < countBoard.findNumber) {
 		countBoard.findMin = suggestedNumber;
-		baseEmbed("Your Number is Lower", `You've updated the **lower bound** to ${countBoard.findMin}.`, msg.channel, "#AA1177");
+		baseEmbed("Your Number is Lower", `You've updated the **lower bound** to ${countBoard.findMin}.\r\n(The number is higher than your guess.)`, msg.channel, "#AA1177");
 	} // It's higher
 	else if (suggestedNumber > countBoard.findNumber) {
 		countBoard.findMax = suggestedNumber;
-		baseEmbed("Your Number is Higher", `You've updated the **upper bound** to ${countBoard.findMax}.`, msg.channel, "#AA1177");
+		baseEmbed("Your Number is Higher", `You've updated the **upper bound** to ${countBoard.findMax}.\r\n(The number is lower than your guess.)`, msg.channel, "#AA1177");
 	} // Exactly
 	else {
 		data.find = data.find + 1;
 		countBoard.findMin = findBounds.min - 1;
 		countBoard.findMax = findBounds.max + 1;
 		countBoard.findNumber = Math.floor(Math.random() * (findBounds.max - findBounds.min) + findBounds.min);
+		baseEmbed("You found the right number!", `You've now found the number **${data.find} times**!\r\n\r\nYou got *1 ticket*!`, msg.channel, "#AA1177");
 		sql.prepare(`UPDATE scores SET find = ${data.find} WHERE user = ${data.user};`).run();
-		baseEmbed("You found the right number!", `You've now found the number **${data.find} times**!`, msg.channel, "#AA1177");
+		addTicket(msg.author, 1);
 	}
 	
 	// Save user data
@@ -957,19 +1054,30 @@ function easterEggCommand(commandArgs, msg) {
 // -- ECONOMY FUNCTIONS --
 
 // Work for your money
-function workCommand(args, msg) {
+function workCommand(args, msg, daily) {
 	data = getData(msg.author);
 	
 	if (Date.now() > data.work) { // Get points
 		// Gain money
-		let baseGain = Math.floor(Math.random() * 1200) + 600;
+		let baseGain = Math.floor(Math.random() * 60 * 34) + (60 * 6);
 		let bonusGain = Math.floor(((Math.random() * (countMaxBonus - 1)) + 1) * data.countTime);
 		let pointGain = baseGain + bonusGain;
 		
 		// Gain points
 		data.points += pointGain;
 		// Set date
-		data.work = Date.now() + baseGain * 1000 * 60 * 1;
+		
+		let timeAdd = 0;
+		if (daily) {
+			data.work = Date.now() + dailyConstant;
+		}
+		else {
+			data.work = Date.now() + baseGain * minute;
+		}
+		
+		let hours = (data.work - Date.now()) / (60 * 60 * 1000) 
+		hours = Math.round(hours * 100)/100;
+
 		let nextWork = new Date(data.work);
 		
 		let workEmbed = new Discord.RichEmbed()
@@ -986,10 +1094,10 @@ function workCommand(args, msg) {
 		}
 		
 		workEmbed.addField("Total Points", data.points)
-			.addField("Work Cooldown Time", "About " + Math.floor((baseGain/60)*100)/100 + " hours.")
+			.addField("Work Cooldown Time", "About " + hours + " hours.")
 			.addField("Exact Cooldown", nextWork.toLocaleString("default", {timeZone: "UTC", timeZoneName: "short"}));
 		
-		if (pointGain > data.bestWork) {
+		if (pointGain > data.bestWork && data.bestWork > 0) {
 			workEmbed.addField("New best work session!", `Previous best was ${data.bestWork} points.`);
 			data.bestWork = pointGain;
 		}
@@ -1127,7 +1235,7 @@ function countCommand(msg) {
 	}
 	else {
 		countBoard.number += 1;
-		countBoard.counters[countBoard.number] = msg.author.id;
+		countBoard.counters.push(msg.author.id);
 		data.points -= price;
 		data.countTime++;
 		baseEmbed("Count Successful", `You spent **${price} points** to increase the count to **${countBoard.number}**!\r\nYou now have **${data.points} points.**\r\nYou've counted ${data.countTime} times now.`, msg.channel, "#ACECAB")
@@ -1141,6 +1249,88 @@ function countCommand(msg) {
 		if (err) throw err;
 		console.log('completed writing to countUp.json');
 	})
+}
+
+// List of counters
+function countListCommand(commandArgs, msg) {
+	let list = "";
+	let countEmbed = new Discord.RichEmbed()
+			.setColor("#CADD1E")
+			.setTitle("List of counters!")
+			.setAuthor('Wenyunibot')
+			.setFooter(textWenyuniFooter());
+	
+	if (commandArgs[0] == "full") {
+		// Add name simply
+		for (let x = 0; x < countBoard.counters.length; x++) {
+			try {
+				list += `\r\n${x+1} - ` + client.users.get(countBoard.counters[x]).tag;
+			}
+			catch {
+				list += `\r\n${x+1} - ID ` + countBoard.counters[x];
+			}
+			// Assuming max discord name length is < 100...
+			if (list.length > 900) {
+				countEmbed.addField(".", list, true);
+				list = "";
+			}
+		}
+	}
+	else {
+		// Initialize
+		let lastName = countBoard.counters[0];
+		let chain = 0;
+		// Find chains of the same name
+		for (let x = 1; x < countBoard.counters.length; x++) {
+			// Same name
+			if (countBoard.counters[x] === lastName) {
+				chain++;
+			}
+			else {
+				// New name, print old name
+				let prefix = "";
+				if (chain === 0) {
+					prefix = `\r\n**${x}** - `;
+				}
+				else {
+					prefix = `\r\n**${x-chain} to ${x}** - `
+				}
+				try {
+					list += prefix + client.users.get(lastName).tag;
+				}
+				catch {
+					list += prefix + "ID " + lastName;
+				}
+				// Assuming max discord name length is < 100...
+				if (list.length > 900) {
+					countEmbed.addField(".", list, true);
+					list = "";
+				}
+				lastName = countBoard.counters[x];
+				chain = 0;
+			}
+		}
+		// It's over but need to add the last name
+		let prefix = "";
+		if (chain === 0) {
+			prefix = `\r\n**${countBoard.counters.length}** - `;
+		}
+		else {
+			prefix = `\r\n**${countBoard.counters.length-chain} to ${countBoard.counters.length}** - `
+		}
+		try {
+			list += prefix + client.users.get(lastName).tag;
+		}
+		catch {
+			list += prefix + "ID " + lastName;
+		}
+	}
+	
+	if (list) {
+		countEmbed.addField(".", list, true);
+	}
+	
+	return msg.channel.send(countEmbed);
 }
 
 // -- AUXILIARY FUNCTIONS --

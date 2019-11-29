@@ -1,18 +1,25 @@
 {
 	"Stability": {
-		"Stagnant": 85,
-		"Stable": 60,
-		"Average": 40,
-		"Unstable": 20,
+		"Stagnant": 90,
+		"Predictable": 80,
+		"Stable": 70,
+		"Cautious": 60,
+		"Active": 50,
+		"Fluid": 40,
+		"Unstable": 30,
 		"Chaotic": 0
 	},
 	"Price": {
-		"Perfect": 600,
-		"Amazing": 500,
-		"Great": 400,
-		"Good": 300,
-		"Average": 200,
-		"Mediocre": 150,
-		"Bad": 0
+		"SuperMAX": 990,
+		"Perfect": 950,
+		"Amazing": 800,
+		"Excellent": 700,
+		"Great": 600,
+		"Good": 500,
+		"Average": 400,
+		"Mediocre": 300,
+		"Bad": 200,
+		"Horrible": 0
 	}
 }
+

@@ -99,20 +99,28 @@
 	},
 	"Economy": {
 		"work": {
-			"desc": "Use this command to gain points. You will have to wait X minutes to work again, where X is the number of points you get.\r\nBonus points can be gotten by using count. \r\nThe more times you've counted, the more bonus points can be gotten.\r\nBonus points do not increase the time until next work.",
+			"desc": "Use this command to gain points. You will have to wait X minutes to work or daily again, where X is the base number of points you get.\r\nBonus points can be gotten by using count. \r\nThe more times you've counted, the more bonus points can be gotten.\r\nBonus points do not increase the time until next work.\r\n\r\nWork and daily use the same timer, so only use one.",
 			"args": {
-				"detail": "If you are unable to work, shows exact time in UTC when you can work again."
+				"detail": "If you are unable to work/daily, shows exact time in UTC when you can work/daily again."
 			}
 		},
-		"eggplant": {
-			"desc": "Buy and sell eggplants in a variable market. Just be careful - eggplants only are good for a week.",
+		"daily": {
+			"desc": "Use this command to gain points. You will have to wait 23 hours to work or daily again.\r\nBonus points can be gotten by using count. \r\nThe more times you've counted, the more bonus points can be gotten.\r\n\r\nWork and daily use the same timer, so only use one.",
 			"args": {
-				"buy": "Buys eggplants for 100 points each.",
-				"view": "Views your current eggplant status.",
-				"reroll": "If you have no eggplants, rerolls the market. If you have eggplants, rerolls the sell price. Available every 6 hours.",
-				"sell": "Sells eggplants at the listed price.",
-				"throw": "Throws away expired eggplants.",
-				"help": "Gives a more detailed explanation of eggplant."
+				"detail": "If you are unable to work/daily, shows exact time in UTC when you can work/daily again."
+			}
+		},
+		"market": {
+			"desc": "Buy and sell in a variable market. Just be careful - these items are good for only a week.\r\nYour count determines how many items you can buy without penalty.\r\n\r\n*Aliases: eggplant, fruit*",
+			"args": {
+				"buy": "Buys items for 100 points each, plus any possible penalty.",
+				"check": "Checks how much the given number of items cost.",
+				"view": "Views your current items status.",
+				"reroll": "If you have no items, rerolls the market. If you have items, rerolls the sell price. Available every 6 hours.",
+				"sell": "Sells items at the listed price.",
+				"throw": "Throws away expired items.",
+				"help": "Gives a more detailed explanation of the market.",
+				"emoji": "Changes the item used to buy and sell."
 			}
 		},
 		"count": {
@@ -138,8 +146,13 @@
 			"args" : {
 				"user": "If given, tries to find a user. If not given, displays the profile of the message sender."
 			}
+		},
+		"countlist": {
+			"desc": "Returns the list of people who counted each number. For compactness, players who count multiple times in a row are listed once.",
+			"args": {
+				"full": "Using this argument prints out a tag per number; thus multiple numbers in a row will list the same person each time."
+			}
 		}
-		
 	},
 	"Auxiliary": {
 		"help": {
@@ -196,6 +209,12 @@
 			"args": {
 				"(No Args)": "Adds the current channel, if Wenyunibot is not enabled elsewhere.",
 				"(ID of channel)": "Enables the channel with the given ID."
+			}
+		},
+		"clear": {
+			"desc": "Removes between 2 and 98 messages from the channel, not including the command used to delete it.",
+			"args": {
+				"number": "Number of messages to delete. If not specified or invalid, defaults to 10."
 			}
 		}
 	}
