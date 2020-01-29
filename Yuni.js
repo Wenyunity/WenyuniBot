@@ -9,6 +9,7 @@ const chess = require('./Chess/Chess.js');
 const eggplant = require('./Eggplant/Eggplant.js');
 const mathfind = require('./Mathfind/Mathfind.js');
 const sillyboss = require('./Boss/Boss.js');
+const tenwords = require('./Ten/Ten.js');
 
 // -- JSON AND SQL FILES -- 
 const auth = require('./auth.json');
@@ -17,6 +18,7 @@ const easterEgg = JSON.parse(fs.readFileSync('./Data/easterEgg.json', 'utf8'));
 const botInfo = JSON.parse(fs.readFileSync('./package.json', 'utf8'));
 const countBoard = JSON.parse(fs.readFileSync('./Data/countBoard.json', 'utf8'));
 const channelAllow = JSON.parse(fs.readFileSync('./Data/channels.json', 'utf8'));
+const internal = JSON.parse(fs.readFileSync('./Data/internal.json', 'utf8'));
 const sql = new SQLite('./scores.sqlite');
 const guildSQL = new SQLite('./guild.sqlite');
 
@@ -31,14 +33,18 @@ const findDelay = 1000 * 10; // 10 seconds
 const findBounds = {min: 0, max: 9999} // Bounds for find
 const countMaxBonus = 150; // Maximum bonus per count for work
 const dailyConstant = hour * 23; // Hours worked for dailies
-
+const randomIntervalMin = hour * 1; // Minimum hours for randomEnd
+const randomInterval = hour * 3; // Variance for randomEnd
+const randomChanceMax = 100; // Maximum number of the RNG for randomEnd
+const discord_epoch = 1420070400000n; // Discord's Epoch  
 
 // -- LISTS AND LINKS --
 const sortRows = ["points", "bestWork", "eggplant", "bestEggplant", "countTime", "find"];
 const topTenEmoji = [":trophy:", ":two:", ":three:", ":four:", ":five:", ":six:", ":seven:", ":eight:", ":nine:", ":keycap_ten:"];
-const inviteLink = "https://discordapp.com/api/oauth2/authorize?client_id=599476939194892298&permissions=0&scope=bot";
+const inviteLink = "https://discordapp.com/api/oauth2/authorize?client_id=599476939194892298&permissions=268443648&scope=bot";
 const serverLink = "https://discord.gg/Y2fTCHM";
 let halfHourDelay = {};
+let countdown = {};
 
 // -- DISCORD FUNCTIONS --
 // Initialize Discord client
@@ -100,6 +106,15 @@ client.on('ready', function (evt) {
 	// Time bot started
 	timeOn = Date.now();
 	
+	// Expiration Timer
+	const timeSinceLast = timeOn - internal.lastUpdate;
+	expireTimeUpdate(timeSinceLast);
+	console.log(`It has been approximately ${Math.round((timeSinceLast/hour)*100)/100} hours since last time awake.`);
+	
+	// Keeping track of last time on
+	setInterval(updateLastOn, hour/4);
+	updateLastOn();
+	
 	// Get list of guilds
 	guildList = client.guilds.array().sort();
 	
@@ -133,6 +148,37 @@ client.on('message', msg => {
 		
 		// -- MOD FUNCTIONS --
 		
+		if (msg.guild && mainCommand === "role") {
+			if (msg.member.hasPermission("MANAGE_ROLES", false, true, true)) {
+				
+				// Increment number of posts in guild
+				countGuildPost(msg.guild);
+				
+				let roleCommand = commandArgs[0].toLowerCase();
+				let args = commandArgs.slice(1);
+			
+				switch(roleCommand) {
+					case 'copymembers':
+						copyRoleMembers(args, msg);
+						break;
+	
+					default:
+						baseEmbed("Role Command Failed", "Could not find the role command!", msg.channel); // Couldn't find command
+						break;
+				}
+			}
+			// Can't manage roles
+			else {
+				if (channelAllow[msg.guild.id]) { // Don't want to spam
+					if (!channelAllow[msg.guild.id].includes(msg.channel.id)) { // If not approved channel, end
+						return;
+					}
+				}
+				baseEmbed("Access Denied", "You do not have the ability to manage roles!", msg.channel); // Message only if approved
+			}
+			return;
+		}
+
 		// Placed before channel check so that mods can access Wenyunibot.
 		if (msg.guild && mainCommand === "mod") {
 			if (msg.member.hasPermission("MANAGE_MESSAGES", false, true, true)) {
@@ -228,6 +274,12 @@ client.on('message', msg => {
 				case 'sillyboss':
 					sillyboss.bossCommand(msg, client);
 					break;
+				case 'tenwords':
+					tenwords.tenCommand(msg, client, commandArgs[0]);
+					break;
+				case 'twowscreen':
+					tenwords.screenCommand(msg, client, commandArgs[0]);
+					break;
 					
 				// -- BASIC FUNCTIONS --
 				
@@ -246,7 +298,12 @@ client.on('message', msg => {
 				case 'halfhour':
 					halfHourCommand(msg)
 					break;
-					
+				case 'randomend':
+					randomEndCommand(msg);
+					break;
+				case 'timeid':
+					timeFromIDCommand(msg, commandArgs[0]);
+					break;
 				
 				// -- FUN FUNCTIONS --
 				
@@ -281,10 +338,6 @@ client.on('message', msg => {
 					break;
 					
 				// -- AUXILIARY FUNCTIONS -- 
-				
-				case 'help':
-					helpCommand(commandArgs, msg)
-					break;
 				case 'ping':
 					pingCommand(msg)
 					break;
@@ -301,7 +354,10 @@ client.on('message', msg => {
 				case 'guildlead':
 					guildLeaderboard(msg);
 					break;
-				
+				case 'help':
+					helpCommand(commandArgs, msg)
+					break;
+					
 				// -- ADMIN FUNCTIONS --
 				
 				case 'admin':
@@ -317,11 +373,21 @@ client.on('message', msg => {
 							case 'users':
 								users(msg);
 								break;
+							case 'time':
+								addTime(msg, commandArgs[1]);
+								break;
 							case 'crash':
 								// Doesn't crash it
 								baseEmbed("Crashing now!", "Why, Wenyunity?", msg.channel);
 								// Does crash it
 								baseEmbed("Crash", "Crash", msg);
+								break;
+							case 'addchain':
+								tenwords.addDictionary(commandArgs.slice(1));
+								baseEmbed("Added to dictionary!", "Thanks, Wenyunity!", msg.channel);
+								break;
+							case 'massadd':
+								tenwords.massAdd();
 								break;
 							default:
 								baseEmbed("Admin Command Failed", "Wenyunity, what are you doing?", msg.channel);
@@ -346,7 +412,17 @@ client.on('message', msg => {
 					break;
 			}
 		}
-     }
+		else {
+			switch(mainCommand) {
+				case 'help':
+					helpCommand(commandArgs, msg)
+					break;
+				case 'tenwords':
+					tenwords.tenCommand(msg, client);
+					break;
+			}
+		}
+	}
 });
 
 // -- TICKET FUNCTIONS --
@@ -379,6 +455,30 @@ function createTicket(user) {
 	
 	// Return data
 	return data;
+}
+
+// -- ROLE FUNCTIONS --
+
+async function copyRoleMembers(args, msg) {
+	try {
+		const firstRole = msg.guild.roles.get(args[0]).members.array();
+		const firstRoleName = msg.guild.roles.get(args[0]).name;
+		const addRole = msg.guild.roles.get(args[1]);
+		for (var member in firstRole) {
+			try {
+				await firstRole[member].addRole(addRole);
+			}
+			catch (err) {
+				console.log(firstRole[member].id);
+			}
+		}
+		baseEmbed("Role Copied", `Gave... probably all members with role **${firstRoleName}** the role **${addRole.name}**.`, msg.channel, addRole.hexColor);
+	}
+	catch (err) {
+		console.log(err);
+		baseEmbed("Failed to Copy", "Copying failed.", msg.channel);
+		return;
+	}
 }
 
 // -- ADMIN FUNCTIONS --
@@ -421,7 +521,17 @@ function deleteRow(msg) {
 	baseEmbed("Delete", `Deleted ${msg.author.tag}'s data!`, msg.channel)
 }
 
-// -- OWNER PERMISSIONS --
+// Adds time
+function addTime(msg, number) {
+	if (!number || isNaN(number)) {
+		baseEmbed("Add failed.", "Invalid input.", msg.channel);
+		return;
+	}
+	expireTimeUpdate(number * hour);
+	baseEmbed("Added Hours", `Added ${number} hours to all expiration dates.`, msg.channel);
+}
+
+// -- MOD PERMISSIONS --
 
 // Sets channel
 function addChannel(channel, msg) {
@@ -686,6 +796,32 @@ function countGuildPost(guild) {
 	saveGuildData(data);
 }
 
+// Gives time back
+function expireTimeUpdate(number) {
+	const sync = sql.prepare(`SELECT user, eggplantExpire FROM scores`).all();
+		
+	for(const data of sync) {
+		try {
+			const x = data.eggplantExpire + number;
+			const save = sql.prepare(`UPDATE scores SET eggplantExpire = ${x} WHERE user = ${data.user};`);
+			save.run(data);
+		}
+		catch {
+			console.log(`Failed to update number for ${data.user}`);
+		}
+	}
+}
+
+// Updates time on
+function updateLastOn() {
+	internal.lastUpdate = Date.now();
+	
+	// Save other data
+	fs.writeFile ("./Data/internal.json", JSON.stringify(internal, null, 4), function(err) {
+		if (err) throw err;
+	});
+}
+
 // -- BASIC FUNCTIONS -- 
 
 // Chooses between choices
@@ -856,6 +992,59 @@ function halfHourCommand(msg) {
 // Helper function for halfHourCommand. Actually sends the message.
 function halfHourMessage(channel) {
 	baseEmbed("Half Hour Notice", "It has been half an hour since the last message. Use **wy!halfhour** to stop messages.", channel, "#1B7740");
+}
+
+// Random End
+function randomEndCommand(msg) {
+	// Get channel name
+	let commandChannelName = `${msg.guild.id}CH${msg.channel.id}`;
+	
+	// Manually end timer
+	if (countdown[commandChannelName]) {
+		clearTimeout(countdown[commandChannelName]);
+		countdown[commandChannelName] = null;
+		baseEmbed("Random end terminated", "Manually ended the timer.", msg.channel, "#1B7740");
+	}
+	// Start timer
+	else {
+		randomEndRepeat(commandChannelName, msg.channel, 0);
+	}
+}
+
+// Helper function for random end
+function randomEndRepeat(commandChannelName, channel, endChance) {
+	let randomNum = Math.random() * randomChanceMax;
+	// Random ended
+	if (randomNum < endChance) {
+		countdown[commandChannelName] = null;
+		const roundNum = Math.ceil(randomNum*100)/100;
+		baseEmbed("Random End", `**This timer has come to an end.**\r\nThe last roll was ${roundNum}.`, channel, "#FF0000");
+	}
+	// Continue
+	else {
+		// Set up next end
+		const timer = randomIntervalMin + Math.random() * randomInterval;
+		const chanceNext = (Math.random()*randomChanceMax + endChance * 3.5)/4;
+		countdown[commandChannelName] = setTimeout(function() {randomEndRepeat(commandChannelName, channel, chanceNext);}, timer);
+		
+		// Create message
+		const roundTimer = Math.floor(timer*100/hour)/100;
+		const roundNum = Math.ceil(chanceNext*100)/100;
+		const date = new Date(Date.now() + timer - second);
+		baseEmbed("Random End Continues", `The next roll will occur in about **${roundTimer} hours.**\r\nThere will be a **${roundNum}% chance** that the next roll will end this timer.\r\nIn UTC: **${date.toLocaleString("default", {timeZone: "UTC", timeZoneName: "short"})}**`, channel, "#0000FF");
+	}
+}
+
+// Time ID
+function timeFromIDCommand(msg, time) {
+	if (isNaN(parseInt(time))) {
+		baseEmbed("Incorrect Usage", "Please give an ID", msg.channel, "#888888");
+		return;
+	}
+	ms = (BigInt(time) >> 22n) + discord_epoch;
+	ms = Number(ms);
+	date = new Date(ms);
+	baseEmbed("Time for ID", `The time the ${time} ID was sent was ${date.toLocaleString("default", {timeZone: "UTC", timeZoneName: "short"})}.`, msg.channel, "#123456");
 }
 
 // -- FUN FUNCTIONS --

@@ -1,5 +1,23 @@
 # Version Control
 
+## Version 1.2.0
+- Yuni: Invite link changed to show required permissions.
+- Yuni: Now, keeps track of the approximate time since last on.
+- Yuni: Added copymembers function, which grants a role to members with another role.
+- Yuni: Added tenwords and twowscreen command, code in Ten.js
+- Yuni: Added massadd and addchain admin commands, code in Ten.js
+- Yuni: Added randomend command.
+- Yuni: Added timeid command.
+- Yuni: tenwords and help commands work in DMs.
+- Yuni: Added time admin command, which increases Eggplant expiration time.
+- Help: tenwords and twowscreen commands added under "Fun" section.
+- Help: randomend added under "Basic" section.
+- Help: timeid added under "Utility" section.
+- Help: copymembers added under new "Role" section.
+- Race: Created, but does not function.
+- Ten: Functionality implemented for twowscreen, tenwords, massadd, and masschain commands.
+- Eggplant: Eggplants expiration time is frozen when Wenyunibot is down.
+
 ## Version 1.1.0
 - Eggplant: Renamed market externally; internally shall be kept as eggplant.
 - Eggplant: Changed demand formula to squared.

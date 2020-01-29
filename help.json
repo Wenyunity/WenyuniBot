@@ -44,6 +44,10 @@
 				"new": "Creates a new boss.",
 				"attack": "Attacks the boss."
 			}
+		},
+		"randomend": {
+			"desc": "Rolls random numbers at intervals until it reaches an end.\r\nCan be toggled off by repeating the command.",
+			"args": {}
 		}
 	},
 	"Fun":
@@ -94,6 +98,18 @@
 				"profile": "Views current profile.",
 				"help": "Gives more info about this game.",
 				"deleteUser": "Deletes all arena user data."
+			}
+		},
+		"tenwords": {
+			"desc": "Literally just gives you a ten word sentence.",
+			"args": {
+				"type": "Chooses which wordbase to use."
+			}
+		},
+		"twowscreen": {
+			"desc": "Gives ten different ten word sentences.",
+			"args": {
+				"type": "Chooses which wordbase to use."
 			}
 		}
 	},
@@ -180,6 +196,12 @@
 		"serverlead": {
 			"desc": "Shows which servers have used Wenyunibot the most.",
 			"args": {"Alias": "wy!guildlead will also work for serverlead."}
+		},
+		"timeid": {
+			"desc": "Given a discord ID, returns the timestamp.",
+			"args": {
+				"ID": "ID of message."
+			}
 		}
 	},
 	"Mod (wy!mod command || need Manage Messages)": {
@@ -187,7 +209,7 @@
 			"desc": "Resets all channels in the guild, so Wenyunibot can respond in all channels.\r\nWorks in all channels.",
 			"args": {}
 		},
-		"modhelp": {
+		"help": {
 			"desc": "Brings up Wenyunibot's help command. Works in all channels.",
 			"args": {
 				"[command]": "Get help for a specific command."
@@ -215,6 +237,15 @@
 			"desc": "Removes between 2 and 98 messages from the channel, not including the command used to delete it.",
 			"args": {
 				"number": "Number of messages to delete. If not specified or invalid, defaults to 10."
+			}
+		}
+	},
+	"Role (wy!role command || need Manage Roles)": {
+		"copymembers": {
+			"desc": "Copies all members with one role to another role.\r\nUses **Role ID** only.\r\n\r\n Usage: wy!role copymembers [IDcopy] [IDpaste]",
+			"args": {
+				"IDcopy": "The role whose members are eligible to get the new role.",
+				"IDpaste": "The role which all eligible members will be given."
 			}
 		}
 	}
